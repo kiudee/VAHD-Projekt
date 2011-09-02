@@ -1,0 +1,4 @@
+SubjectType(Supervisor){
+    protected:
+    public:
+}
