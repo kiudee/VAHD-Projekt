@@ -13,4 +13,4 @@ SubjectType(Node)
     Action LookUp(NumObj *key);
     Action Join(IdObj *id);
     Action Leave(IdObj *id);
-}
+};
