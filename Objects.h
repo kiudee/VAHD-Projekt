@@ -20,6 +20,13 @@ ObjectType(IdObj) {
         IdObj(int i, Identity *d){num=i;  id=d;}
 };
 
+ObjectType(IdPair) {
+    public:
+        IdObj *ido1;
+        IdObj *ido2;
+        IdPair(IdObj *i1, IdObj *i2){ido1=i1;ido2=i2;}
+};
+
 ObjectType(ConObj) {
     public:
         bool isReal;
@@ -31,4 +38,4 @@ ObjectType(ConObj) {
             delete r;
             delete pos;
         }
-}
+};
