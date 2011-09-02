@@ -18,33 +18,33 @@ public:
 
 Action Node::Init(ConObj *con) {
 
-};
+}
 
 Action Node::Wakeup(NumObj *num) {
 
-};
+}
 
 Action Node::BuildDeBruijn(IdObj *id) {
 
-};
+}
 
 Action Node::Insert(NumObj *num) {
 
-};
+}
 
 Action Node::Delete(NumObj *key) {
 
-};
+}
 
 Action Node::LookUp(NumObj *key) {
 
-};
+}
 
 Action Node::Join(IdObj *id) {
 
-};
+}
 
 
 Action Node::Leave(IdObj *id) {
 
-};
+}
