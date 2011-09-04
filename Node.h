@@ -9,6 +9,10 @@ protected:
     int id;
     bool isReal;
 
+    void checkDead(Relay *side);
+    void checkValid();
+
+
 public:
     FirstAction(Node,Init)
 
@@ -56,9 +60,50 @@ Action Node::Wakeup(NumObj *num)
     }
 }
 
+void Node::checkDead(Relay *side) {
+    if (side != NULL && outdeg(side->out) == 0) {
+        delete side->out;
+        delete side;
+        side = NULL;
+    }
+}
+
+void Node::checkValid() {
+    IdObj *tempido;
+    if (left != NULL && left->id > id) {
+        tempido = new IdObj(left->id, extractIdentity(left->out));
+        delete left;
+        left = NULL;
+        call(Node::BuildList, tempido);
+    }
+    if (right != NULL && right->id < id) {
+        tempido = new IdObj(right->id, extractIdentity(right->out));
+        delete right;
+        right = NULL;
+        call(Node::BuildList, tempido);
+    }
+}
+
 Action Node::BuildDeBruijn(IdObj *id)
 {
+    if (isReal && ido == NULL) {
+        // Probing:
+        if (left != NULL) {
+            // TODO: Probing to the left side for node0.
+        }
+        if (right != NULL) {
+            // TODO: Probing to the right side for node1
+        }
+    }
 
+    // Check if there are dead links from both sides:
+    //   -> Delete if dead.
+    checkDead(left);
+    checkDead(right);
+
+    // Check if both links are still valid:
+    //   -> Call BuildDeBruijn if not.
+    checkValid();
 }
 
 Action Node::Insert(NumObj *num)
