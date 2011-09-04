@@ -13,6 +13,7 @@ public:
     FirstAction(Node,Init)
 
     Action Init(ConObj *con);
+    Action RegisterChiled(IdObj *id);
     Action Wakeup(NumObj *num);
     Action BuildDeBruijn(IdObj *id);
     Action Insert(NumObj *num);
@@ -33,10 +34,15 @@ Action Node::Init(ConObj *con)
     left = NULL;
     right = NULL;
     in = new Relay;
-    idp = new IdPair(new IdObj(id, new Identity(in)),
-                     new IdObj(id, new Identity(in)));
-    // Connect to supervisor:
-    parent->call(Supervisor::SetLink, idp);
+    // Connect to supervisor or real node:
+    if (isReal) {
+        idp = new IdPair(new IdObj(id, new Identity(in)),
+                         new IdObj(id, new Identity(in)));
+        parent->call(Supervisor::SetLink, idp);
+    } else {
+        ido = new IdObj(id, new Identity(in));
+        parent->call(Node::RegisterChild, ido);
+    }
 }
 
 Action Node::Wakeup(NumObj *num)
