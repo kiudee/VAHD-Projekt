@@ -1,3 +1,5 @@
+#ifndef SUPERVISOR_H_
+#define SUPERVISOR_H_
 SubjectType(Supervisor)
 {
 protected:
@@ -72,3 +74,4 @@ Action Supervisor::Wakeup(NumObj* numo)
     }
 }
 
+#endif  // SUPERVISOR_H_

@@ -1,3 +1,6 @@
+#ifndef NODE_H_
+#define NODE_H_
+
 SubjectType(Node)
 {
 protected:
@@ -77,3 +80,5 @@ Action Node::Leave(IdObj *id)
 {
 
 }
+
+#endif  // NODE_H_

@@ -1,3 +1,5 @@
+#ifndef SUBJECTS1_6_H_
+#define SUBJECTS1_6_H_
 // **************************************************************
 // *                                                            *
 // *  Subjects.h  --  Version 1.6                               *
@@ -26,9 +28,9 @@ There are three basic data types: Subject, Relay and Object.
   to enforce in C++). That is, each time an object is passed from subject A
   to subject B, the ownership is also transferred from A to B, and A should
   have no access any more to the object.
-  Ideally, it should not be possible to copy an object via its reference 
-  (but only by explicitly copying its contents), and variables representing 
-  objects should not be able to point to the same object (though this is 
+  Ideally, it should not be possible to copy an object via its reference
+  (but only by explicitly copying its contents), and variables representing
+  objects should not be able to point to the same object (though this is
   difficult to enforce in C++).
 
   There are two predefined subclasses of objects.
@@ -36,9 +38,9 @@ There are three basic data types: Subject, Relay and Object.
   - Identity: contains relay point identification info.
 
   - Cocoon: contains a dormant subject.
-  
-  Identities and Cocoons are so-called dark objects, i.e., they cannot be 
-  inspected by the application but can only be used (once!) as arguments in 
+
+  Identities and Cocoons are so-called dark objects, i.e., they cannot be
+  inspected by the application but can only be used (once!) as arguments in
   calls.
 
   User-defined objects should be defined as
@@ -93,10 +95,10 @@ Identity commands:
 
 Cocoon commands:
 
-- Cocoon *publicCocoon(<UserSubject>, <UserObject> *o | NONE): this creates a 
+- Cocoon *publicCocoon(<UserSubject>, <UserObject> *o | NONE): this creates a
   public cocoon of type UserSubject.
 
-- Cocoon *privateCocoon(<UserSubject>, <UserObject> *o | NONE, Relay *r): this 
+- Cocoon *privateCocoon(<UserSubject>, <UserObject> *o | NONE, Relay *r): this
   creates a cocoon of the given subject for the base of relay point r.
 
 - delete c: this deletes a given cocoon c
@@ -123,12 +125,12 @@ Reserved subject variables (ONLY accessible within a subject):
 Reserved subject commands (can ONLY be called within a subject):
 (All functions with int return value 0 if not successful and 1 if successful.)
 
-- Subject *new(<UserSubject>, <UserObject> *o | NONE): this generates a new 
-  subject of type UserSubject and returns a Subject pointer to it. Do NOT use 
-  'new UserSubject' to generate a new subject because this subject will NOT 
-  work properly in the Subjects environment. 
+- Subject *new(<UserSubject>, <UserObject> *o | NONE): this generates a new
+  subject of type UserSubject and returns a Subject pointer to it. Do NOT use
+  'new UserSubject' to generate a new subject because this subject will NOT
+  work properly in the Subjects environment.
 
-- Subject *wakeupCocoon(c): this activates the cocoon c and returns a Subject 
+- Subject *wakeupCocoon(c): this activates the cocoon c and returns a Subject
   pointer to it. A cocoon can only be used ONCE to create a subject.
 
 - delete(s), s is of type UserSubject: this deletes s and all subjects spawned
@@ -139,14 +141,14 @@ Reserved subject commands (can ONLY be called within a subject):
 - new Relay: this creates a new relay point with a connection to the subject
   creating it.
 
-- new Relay(Identity *i): this creates a new relay point r with a connection 
-  to the relay point r' of identity i (if i is public or was meant for that 
+- new Relay(Identity *i): this creates a new relay point r with a connection
+  to the relay point r' of identity i (if i is public or was meant for that
   subject). Identity i is destroyed after the call and set to NULL.
 
 - delete r: this destructs relay point r. r must be owned by the subject for
   the operation to work.
 
-- int call(verb, object | NONE): generates a call for action verb(object) 
+- int call(verb, object | NONE): generates a call for action verb(object)
   within the given subject.
 
 - int wakeup(Subject *s): if the subject calling wakeup(s) also generated s,
@@ -168,7 +170,7 @@ Reserved subject commands (can ONLY be called within a subject):
 
 - int idle(Relay *r): is 0 if the local relay point r still has at least
   one message to process. Otherwise, it is 1.
-  
+
 - int indeg(Relay *r): returns number of incoming links into r
 
 - int outdeg(Relay *r): returns number of outgoing links of r (0 or 1)
@@ -181,14 +183,14 @@ relay point):
 
 - insigned long ID: identification number of the relay point
 
-- int call(verb, object | NONE): creates a request in the relay to call 
-  verb(object) (relay point MUST be local to subject executing "call"). The 
-  call will be forwarded along outgoing connections of relay points until it 
+- int call(verb, object | NONE): creates a request in the relay to call
+  verb(object) (relay point MUST be local to subject executing "call"). The
+  call will be forwarded along outgoing connections of relay points until it
   reaches the base subject of the relay path, where it will be executed.
 
 
 Remember:
-- do NOT use nested "new" operations! 
+- do NOT use nested "new" operations!
   (that is, operations like "new(subject(new object))" should be avoided)
 - create/delete subjects via new(...) and delete(...)
 - create/delete relay points and objects via new and delete without '()'
@@ -215,7 +217,7 @@ Background information and some tips:
   encapsulate an object within a subject enforcing these access rights before
   passing it on to another subject.
 
-- Dark objects (identities and cocoons) cannot be copied to avoid 
+- Dark objects (identities and cocoons) cannot be copied to avoid
   denial-of-service attacks.
 
 - The way the subjects environment is set up, relay points can never form
@@ -283,13 +285,13 @@ class _idLinks;   // list of identities
 
 #define FirstAction(type,verb) \
     type(Object* &object) { _handle((Subject *) this, new _Message((_SubjectCall) &type::verb, object)); }
-    
+
 #define ObjectType(type) \
     class type: public Object
-    
+
 #define RelayType(type) \
     class type: public Relay
-    
+
 #define Action void
 
 // start Subjects environment
@@ -306,7 +308,7 @@ class _idLinks;   // list of identities
 
 #define publicCocoon(subject,object) \
     _cocoon((Subject *) this, (Subject *) new subject((Object* &) object))
-    
+
 #define privateCocoon(subject, object, relay) \
     _cocoon((Subject *) this, (Subject *) new subject((Object* &) object), relay)
 
@@ -398,7 +400,7 @@ public:
 
   // copying of identity not allowed
   Identity(const Identity& d);
-  
+
   // destructor
   ~Identity();
 };
@@ -529,7 +531,7 @@ public:
 
   // set up subject
   virtual void _setup();
-  
+
   // processes a subject
   virtual int _process();
 
@@ -558,7 +560,7 @@ protected:
 
   // deletes relay point
   virtual int _kill(Subject *s, Relay *r);
-  
+
   // deletes relay point and returns identity
   Identity* _extract(Subject *s, Relay* &r);
 
@@ -582,7 +584,7 @@ protected:
 
   // subject checks whether r still has requests in its butter
   virtual int idle(Relay *r);
-  
+
   // subject returns number of incoming links of r
   virtual int indeg(Relay *r);
 
@@ -830,7 +832,7 @@ public:
   {
     _Link *r;
     int allidle;
-    
+
     allidle = 1;
     r = first;
     while (r!=NULL && allidle) {
@@ -840,13 +842,13 @@ public:
     }
     return allidle;
   }
-  
-    
+
+
   int count()
   {
     _Link *r;
     int i;
-    
+
     r = first; i=0;
     while (r!=NULL)
       { i++; r=r->next; }
@@ -1023,10 +1025,10 @@ public:
   _idLinks(Identity *ident)
   {
     prev=NULL; next=NULL; id=ident;
-  }  
+  }
 };
 
-  
+
 
 // =======================================================================
 //   Object functions
@@ -1117,7 +1119,7 @@ Object*  NONE = NULL;  // empty object
   Identity::Identity(Relay *r)
   {
     _idLinks *idl;
-                           
+
     _source = NULL;
     _sink = NULL;
     _base = NULL;
@@ -1156,7 +1158,7 @@ Object*  NONE = NULL;  // empty object
   Identity::Identity(Relay *r1, Relay *r2)
   {
     _idLinks *idl;
-                           
+
     _source = NULL;
     _sink = NULL;
     _base = NULL;
@@ -1212,15 +1214,15 @@ Object*  NONE = NULL;  // empty object
     if (WARNING)
       std::cout << "-- Warning! Identity cannot be copied.\n";
   }
-  
-  
+
+
   // destructor
   Identity::~Identity()
   {
     _idLinks *idl;
     _idLinks *delidl;
- 
-    if (_source!=NULL) { 
+
+    if (_source!=NULL) {
       idl = _source->_identities;  // remove identity from id list
       while (idl->next!=NULL && idl->next->id!=this)
         idl = idl->next;
@@ -1245,7 +1247,7 @@ Object*  NONE = NULL;  // empty object
   {
     _source = NULL;
     _sink = NULL;
-    _cocoon = NULL;  
+    _cocoon = NULL;
     if (home!=NULL && s!=NULL) {
       if (DEBUG)
         std::cout << "-- Creating cocoon of subject " << s->_debugID << ".\n";
@@ -1408,7 +1410,7 @@ Cocoon *_Cocoon = NULL;   // temporary cocoon for transfer
     _oLink = NULL;
     _oQueue = new _Queue();
     _iLinks = new _rLinks();
-    _identities = new _idLinks(NULL);  // dummy element for _identities    
+    _identities = new _idLinks(NULL);  // dummy element for _identities
 
     if (_home == NULL) {
       if (WARNING && ID>0)
@@ -1487,7 +1489,7 @@ Cocoon *_Cocoon = NULL;   // temporary cocoon for transfer
   Relay::~Relay()
   {
     _idLinks *idl;
-                 
+
     if (DEBUG)
       std::cout << "-- Relay " << ID << " deleted.\n";
     if (_oLink != NULL)
@@ -1650,16 +1652,16 @@ Cocoon *_Cocoon = NULL;   // temporary cocoon for transfer
   Cocoon* Subject::_cocoon(Subject *home, Subject *s)
   {
     Cocoon *c;
-    
+
     c = NULL;
     if (home == NULL)
     {
       if (WARNING)
-        std::cout << "-- Warning! Cocoon created outside of Subjects environment.\n"; 
+        std::cout << "-- Warning! Cocoon created outside of Subjects environment.\n";
       if (s!=NULL) s->_destruct();
     }
     else {
-      if (s == NULL) { 
+      if (s == NULL) {
         if (WARNING)
           std::cout << "-- Warning! Cocoon does not contain subject.\n";
       }
@@ -1671,7 +1673,7 @@ Cocoon *_Cocoon = NULL;   // temporary cocoon for transfer
           s->_destruct();
         }
         else {
-          _activeSubject = home;   
+          _activeSubject = home;
           c = new Cocoon(home, s);
         }
       }
@@ -1684,7 +1686,7 @@ Cocoon *_Cocoon = NULL;   // temporary cocoon for transfer
   Cocoon* Subject::_cocoon(Subject *home, Subject* s, Relay *r)
   {
     Cocoon *c;
-    
+
     c = NULL;
     if (home == NULL) {
       if (WARNING)
@@ -1701,7 +1703,7 @@ Cocoon *_Cocoon = NULL;   // temporary cocoon for transfer
         if (_activeSubject != NULL) {
           if (WARNING)
             std::cout << "-- Warning! Existing subject " << s->_debugID << " cannot be a cocoon.\n";
-          s->_destruct(); 
+          s->_destruct();
         }
         else {
           _activeSubject = home;
@@ -1715,7 +1717,7 @@ Cocoon *_Cocoon = NULL;   // temporary cocoon for transfer
     }
     return c;
   }
-  
+
 
   // self-destructor
   void Subject::_destruct()
@@ -1781,7 +1783,7 @@ Cocoon *_Cocoon = NULL;   // temporary cocoon for transfer
   {
     Identity* id;
     _idLinks *idl;
-    
+
     id = NULL;
     if (_activeSubject==NULL || (_parent==NULL && _debugID>0)) {
       if (WARNING)
@@ -2138,8 +2140,8 @@ Cocoon *_Cocoon = NULL;   // temporary cocoon for transfer
     }
     return 0;
   }
-  
-  
+
+
   // checks if Relay r has alive outgoing connection
   int Subject::indeg(Relay *r)
   {
@@ -2215,3 +2217,5 @@ void _runSubjects(Subject *s, unsigned long T)
     t++;
   }
 }
+
+#endif  // SUBJECTS1_6_H_

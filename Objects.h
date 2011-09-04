@@ -1,3 +1,5 @@
+#ifndef OBJECTS_H_
+#define OBJECTS_H_
 ObjectType(NumObj)
 {
 public:
@@ -54,3 +56,4 @@ public:
         delete pos;
     }
 };
+#endif  // OBJECTS_H_
