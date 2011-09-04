@@ -38,7 +38,13 @@ Action Node::Init(ConObj *con)
 
 Action Node::Wakeup(NumObj *num)
 {
-
+    // Periodically activate BuildDeBruijn:
+    if (num->num == 0) {
+        BuildDeBruijn(NULL);
+    } else {
+        num->num--;
+        call(Node::Wakeup, num);
+    }
 }
 
 Action Node::BuildDeBruijn(IdObj *id)
