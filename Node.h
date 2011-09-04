@@ -2,6 +2,9 @@ SubjectType(Node)
 {
 protected:
     Relay *left, *right, *node0, *node1;
+    Relay *in;
+    int id;
+    bool isReal;
 
 public:
     FirstAction(Node,Init)
@@ -18,7 +21,19 @@ public:
 
 Action Node::Init(ConObj *con)
 {
+    // Unpack constructor object:
+    id = con->position;
+    isReal = con->isReal;
+    delete con;
 
+    // Initialize pointers and relays
+    left = NULL;
+    right = NULL;
+    in = new Relay;
+    idp = new IdPair(new IdObj(id, new Identity(in)),
+                     new IdObj(id, new Identity(in)));
+    // Connect to supervisor:
+    parent->call(Supervisor::SetLink, idp);
 }
 
 Action Node::Wakeup(NumObj *num)
