@@ -6,7 +6,7 @@ SubjectType(Node)
 protected:
     NodeRelay *left, *right, *node0, *node1;
     Relay *in;
-    int id;
+    int id; //Simon: warum ist id nicht double und was ist value?
     double value;
     bool isReal;
 
@@ -26,6 +26,8 @@ public:
     Action LookUp(NumObj *key);
     Action Join(IdObj *id);
     Action Leave(IdObj *id);
+    Action Probing(IdObj *id);
+    Action BuildList(IdObj *id);
 };
 
 
