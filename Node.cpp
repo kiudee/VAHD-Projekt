@@ -34,11 +34,11 @@ Action Node::Wakeup(NumObj *num)
     }
 }
 
-void Node::checkDead(Relay *side) {
+void Node::checkDead(Relay **side) {
     if (side != NULL && outdeg(side->out) == 0) {
-        delete side->out;
-        delete side;
-        side = NULL;
+        delete *side->out;
+        delete *side;
+        *side = NULL;
     }
 }
 
@@ -72,8 +72,8 @@ Action Node::BuildDeBruijn(IdObj *id)
 
     // Check if there are dead links from both sides:
     //   -> Delete if dead.
-    checkDead(left);
-    checkDead(right);
+    checkDead(&left);
+    checkDead(&right);
 
     // Check if both links are still valid:
     //   -> Call BuildDeBruijn if not.

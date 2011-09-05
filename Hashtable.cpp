@@ -19,16 +19,8 @@ double mult_hash(int kk)
     return t/static_cast<double>(2 << 14);
 }
 
-void testfun(Relay *tr) {
-    tr = NULL;
-}
-
 int main()
 {
-    Relay *blub = new Relay;
-    testfun(blub);
-    if (blub == NULL) {
-        std::cout << "Hat geklappt!";
-    }
+    return 0;
 }
 
