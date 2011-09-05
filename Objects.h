@@ -23,11 +23,11 @@ public:
 ObjectType(IdObj)
 {
 public:
-    int num;
+    double value;
     Identity *id;
 
-    IdObj(int i, Identity *d) {
-        num=i;
+    IdObj(double value, Identity *d) {
+        value=value;
         id=d;
     }
 };
@@ -54,6 +54,19 @@ public:
         position = pos->num;
         delete r;
         delete pos;
+    }
+};
+
+ObjectType(NodeRelay)
+{
+public:
+    double value;
+    Relay *out;
+
+    NodeRelay(IdObj *ido) {
+        value = ido->value;
+        out = new Relay(ido->id);
+        delete ido;
     }
 };
 #endif  // OBJECTS_H_

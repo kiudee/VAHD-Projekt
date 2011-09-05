@@ -1,9 +1,10 @@
 #include <math.h>
 #include <iostream>
+#include <cstdint>
 #include "Subjects1-6.h"
 #include "Objects.h"
-#include "Node.h"
 #include "Supervisor.h"
+#include "Node.h"
 
 static const uint32_t s = 2654435769;
 
@@ -18,8 +19,16 @@ double mult_hash(int kk)
     return t/static_cast<double>(2 << 14);
 }
 
+void testfun(Relay *tr) {
+    tr = NULL;
+}
+
 int main()
 {
-
+    Relay *blub = new Relay;
+    testfun(blub);
+    if (blub == NULL) {
+        std::cout << "Hat geklappt!";
+    }
 }
 
