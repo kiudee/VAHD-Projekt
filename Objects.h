@@ -76,12 +76,22 @@ public:
  * Data to store at nodes
  */
 ObjectType(DateObj){
-	int key;
+	int num;
 	Object date;
 
 	DateObj(int k , Object d){
 		date = d;
-		key = k; //TODO key als hashwert ueber datum?
+		num = k;
+	}
+};
+
+ObjectType(KeyObj){
+	int num;
+	Identity *id;
+
+	KeyObj(int k, Identity *d){
+		num = k;
+		id = d;
 	}
 };
 

@@ -4,7 +4,8 @@
 SubjectType(Node)
 {
 protected:
-    NodeRelay *left, *right, *node0, *node1;
+    NodeRelay *left, *right;//, *node0, *node1;
+    Relay *node0, *node1;
     Relay *in;
     double num;
     bool isReal;
@@ -12,24 +13,26 @@ protected:
 
     void checkDead(NodeRelay *side);
     void checkValid();
-    void mult_hash();
+    double h(int kk);
+    double g(int kk)
 
 
 public:
     FirstAction(Node,Init)
 
-    Action Init(ConObj *con);
-    Action RegisterChild(IdObj *id);
+    Action Init(NumObj *con);
+    Action Init(DoubleObj *con);
     Action Wakeup(NumObj *num);
     Action BuildDeBruijn();
-    Action Insert(DateObj *num);
-    Action Delete(DoubleObj *key);
-    Action LookUp(DoubleObj *key);
+    Action Insert(DateObj *dob);
+    Action Delete(NumObj *key);
+    Action LookUp(NumObj *key);
     Action Join(IdObj *id);
     Action Leave(IdObj *id);
-    Action Probing(Probe *id);
+    Action Probing(Probe *ido);
     Action BuildList(IdObj *id);
-    Action BuildWeakConnectedComponent(IdObj *id);
+    Action BuildWeakConnectedComponent(NumObj *numo);
+    Action ReceiveLookUp(DateObj *dob);
 };
 
 

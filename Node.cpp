@@ -5,7 +5,7 @@
 static const uint32_t s = 2654435769;
 
 
-double mult_hash(int kk)
+double h(int kk)
 {
     uint32_t i = 15;  // m = 2^i
     uint64_t k = static_cast<uint32_t>(kk);
@@ -15,10 +15,16 @@ double mult_hash(int kk)
     return t/static_cast<double>(2 << 14);
 }
 
+//TODO extra hash function for data objects?
+double g(int kk)
+{
+	return h(kk);
+}
+
 Action Node::Init(NumObj *con)
 {
     // Unpack constructor object:
-    num = mult_hash(con->num);
+    num = h(con->num);
     isReal = true;
     delete con;
 
@@ -40,14 +46,11 @@ Action Node::Init(NumObj *con)
 	DoubleObj d = new DoubleObj(1+num/2);
 	Node n1 = *new(Node, d);
 
-	ido = new IdObj(num/2, new Identity(n0->in));
+	Identity id0 = new Identity(n0->in);
+	Identity id1 = new Identity(n1->in);
 
-	node0 = new NodeRelay(ido);
-	delete ido;
-
-	ido = new IdObj(1+num/2, new Identity(n1->in));
-	node1 = new NodeRelay(ido);
-	delete ido;
+	node0 = new Relay(id0);
+	node1 = new Relay(id1);
 }
 
 
@@ -77,7 +80,7 @@ Action Node::Wakeup(NumObj *num)
     }
 }
 
-void Node::checkDead(Relay *side) {
+void Node::checkDead(NodeRelay *side) {
     if (side != NULL && outdeg(side->out) == 0) {
         delete side->out;
         delete side;
@@ -101,7 +104,7 @@ void Node::checkValid() {
     }
 }
 
-Action Node::BuildDeBruijn(IdObj *id)
+Action Node::BuildDeBruijn()
 {
 	BuildList(NULL);
 	Probing(NULL);
@@ -112,27 +115,31 @@ Action Node::BuildDeBruijn(IdObj *id)
  * @author Simon
  * @param Date to insert
  */
+//TODO correct routing for insert, delete, lookup: take log n rounds into account and the search for ideal nodes.
 Action Node::Insert(DateObj *dob)
 {
-	if((right->num > dob->num && num < dob->num) || dob->num==num){
+	double hashedkey = g(dob->num);
+	if((right->num > hashedkey && num < hashedkey) || hashedkey==num){
 		data[dob->key] = dob->date;
+		delete dob;
+		return;
 	}
 
 	if(isReal){
-		if(dob->num < num){
-			node0->out->call(Node::Insert, dob);
+		if(hashedkey < num){
+			node0->call(Node::Insert, dob);
 			return;
 		}
-		else if(dob->num > num){
-			node1->out->call(Node::Insert, dob);
+		else if(hashedkey > num){
+			node1->call(Node::Insert, dob);
 			return;
 		}
 	}
 
-	if(dob->num < num){
+	if(hashedkey < num){
 		left->out->call(Node::Insert, dob);
 	}
-	else if(dob->num > num){
+	else if(hashedkey > num){
 		right->out-call(Node::Insert, dob);
 	}
 }
@@ -141,47 +148,84 @@ Action Node::Insert(DateObj *dob)
  * @author Simon
  * @param Key of the date to delete
  */
-Action Node::Delete(DoubleObj *key)
+Action Node::Delete(NumObj *key)
 {
-	if((right->num > key->num && num < key->num) || key->num==num){
+	double hashedkey = g(key->num);
+	if((right->num > hashedkey && num < hashedkey) || hashedkey==num){
 		//TODO does it work?
 		if(data[key->num]!=NULL){
 			delete data[key->num];
+			delete key;
 			return;
 		}
 
 	}
 
 	if(isReal){
-		if(key->num < num){
-			node0->out->call(Node::Delete, dob);
+		if(hashedkey < num){
+			node0->call(Node::Delete, key);
 			return;
 		}
-		else if(key->num > num){
-			node1->out->call(Node::Delete, dob);
+		else if(hashedkey > num){
+			node1->call(Node::Delete, key);
 			return;
 		}
 	}
 
-	if(key->num < num){
-		left->out->call(Node::Delete, dob);
+	if(hashedkey < num){
+		left->out->call(Node::Delete, key);
 	}
-	else if(key->num > num){
-		right->out-call(Node::Delete, dob);
+	else if(hashedkey > num){
+		right->out-call(Node::Delete, key);
 	}
 }
 
 /**
  * Returns the date with the key 'key' if existing, otherwise null
+ * Caution: key->num contains the key, that is searched for,
+ * key->id contains the Identity of the orgin, which started the request
+ *
  * @author Simon
  * @param key of the date in question
  * @return the date or null
  */
 Action Node::LookUp(KeyObj *key)
 {
+	double hashedkey = g(key->num);
+	if((right->num > hashedkey && num < hashedkey) || hashedkey==num){
+		//TODO does it work?
+		Object obj = data[key->num]; //might be null
+		Relay temprelay = new Relay(key->id);
+		DateObj dob = new DateObj(key->num, obj);
+		temprelay->call(Node::ReceiveLookUp, dob);
+		delete temprelay;
+		delete key;
+		return;
+	}
 
+	if(isReal){
+		if(hashedkey < num){
+			node0->call(Node::LookUp, key);
+			return;
+		}
+		else if(hashedkey > num){
+			node1->call(Node::LookUp, key);
+			return;
+		}
+	}
+
+	if(hashedkey < num){
+		left->out->call(Node::LookUp, key);
+	}
+	else if(hashedkey > num){
+		right->out-call(Node::LookUp, key);
+	}
 }
 
+Action Node::ReceiveLookUp(DateObj *dob){
+	std::cout << "Node " << num << ": receives data for key" << dob->num << ":" << dob->date;
+	delete dob;
+}
 
 Action Node::Join(IdObj *id)
 {
@@ -287,14 +331,16 @@ Action Node::BuildList(IdObj *id){
 
 /**
  * @author Simon
- * There is an example for a left probing in the comments. The single steps are ordered by their temporal appearance.
+ * There is an example for a left probing in the comments.
+ * The single steps are ordered by their temporal appearance.
+ * Example steps marked with braces: (<STEP>)
  */
 Action Node::Probing(Probe *ido){
 	if(isReal){
 		if(ido==NULL){
 			//If no left neighbor is set, set it to node0 and probing is done, else send probe to the left neighbor
 			if(left==NULL){
-				tempido = new IdObj(node0->num, new Identity(node0->in));
+				tempido = new IdObj(num/2, new Identity(node0->in));
 				left = new NodeRelay(tempido);
 			}else{
 				//(1) send probe to left introducing the first phase (indicating by parameter 0)
@@ -324,7 +370,7 @@ Action Node::Probing(Probe *ido){
 				//(3) we are on the real node w, so we switch the phase flag indicating, that we are on the left side of v.0.
 				tempido = new Probe(ido->num, extractIdentity(ido->out), 1);
 				delete ido;
-				node0->out->call(Node::Probing, tempido);
+				node0->call(Node::Probing, tempido);
 			}
 			/*probe came from the right, so we're searching for 1+ido->value/2
 			because we're on a real node, change the direction flag and
@@ -333,7 +379,7 @@ Action Node::Probing(Probe *ido){
 
 				tempido = new Probe(ido->num, extractIdentity(ido->out), 1);
 				delete ido;
-				node1->out->call(Node::Probing, tempido);
+				node1->call(Node::Probing, tempido);
 			}
 
 		}
@@ -369,8 +415,9 @@ Action Node::Probing(Probe *ido){
 				/*if the probe gets stuck (no left or right neighbor) or
 				the id was not found, establish link between v and v.0*/
 				//TODO does this work?
-				NodeRelay temprelay = new NodeRelay(ido);
-				temprelay->out->call(Node::BuildWeakConnectedComponent, 0);
+				Relay temprelay = new Relay(ido->id);
+				NumObj numo = new NumObj(0);
+				temprelay->call(Node::BuildWeakConnectedComponent, numo);
 				delete temprelay;
 			}
 			if(ido->num < num){
@@ -393,8 +440,10 @@ Action Node::Probing(Probe *ido){
 						}
 					}
 				}
-				NodeRelay temprelay = new NodeRelay(ido);
-				temprelay->out->call(Node::BuildWeakConnectedComponent, 1);
+				//TODO does this work?
+				Relay temprelay = new Relay(ido->id);
+				NumObj numo = new NumObj(1);
+				temprelay->call(Node::BuildWeakConnectedComponent, numo);
 				delete temprelay;
 			}
 
@@ -406,20 +455,20 @@ Action Node::Probing(Probe *ido){
  * @author Simon
  * @param 0=link to v.0, 1=link to v.1
  */
-Action Node::BuildWeakConnectedComponent(int node){
-	if(node==0){
+Action Node::BuildWeakConnectedComponent(NumObj *numo){
+	if(numo->num==0){
 		//envelope left neighbor
 		tempido = new IdObj(left->num, extractIdentity(left->out));
 		delete left;
 		//link to v.0
-		left = new NodeRelay(node0->num, new Identity(node0->in));
+		left = new NodeRelay(num/2, new Identity(node0->in));
 		//delegate old left neighbor to node0
 		left->out->call(Node::BuildList,tempido);
 	}
-	else if(node == 1){
+	else if(numo->num == 1){
 		tempido = new IdObj(right->num, extractIdentity(right->out));
 		delete right;
-		right = new NodeRelay(node1->num, new Identity(node1->in));
+		right = new NodeRelay(1+num/2, new Identity(node1->in));
 		right->out->call(Node::BuildList,tempido);
 	}
 }
