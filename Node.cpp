@@ -97,7 +97,7 @@ Action Node::LookUp(NumObj *key)
 
 Action Node::Join(IdObj *id)
 {
-
+    BuildDeBruijn(id);
 }
 
 

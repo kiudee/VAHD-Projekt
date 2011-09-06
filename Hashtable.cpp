@@ -21,6 +21,8 @@ double mult_hash(int kk)
 
 int main()
 {
-    return 0;
+    NumObj *numSubjects = new NumObj(10);
+    runSubjects(Supervisor,numSubjects,500);
+    sys_pause();
 }
 
