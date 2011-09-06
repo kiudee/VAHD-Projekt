@@ -69,4 +69,22 @@ public:
         delete ido;
     }
 };
+
+/**
+ * Probe is used for probing. It is the same as IdObj plus a flag witch
+ *  indicates the routing direction.
+ * @author Simon
+ */
+ObjectType(Probe){
+public:
+		int phase;
+		double value;
+		Identity *id;
+
+	    Probe(double v, Identity *d, int p) {
+	        value = v;
+	        phase = p;
+	        id = d;
+	    }
+}
 #endif  // OBJECTS_H_
