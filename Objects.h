@@ -10,24 +10,23 @@ public:
     }
 };
 
-ObjectType(BoolObj)
-{
+ObjectType(DoubleObj){
 public:
-    bool value;
+    double num;
 
-    BoolObj(bool v) {
-        value=v;
+    DoubleObj(double i) {
+        num=i;
     }
 };
 
 ObjectType(IdObj)
 {
 public:
-    double value;
+    double num;
     Identity *id;
 
     IdObj(double value, Identity *d) {
-        value=value;
+        num=value;
         id=d;
     }
 };
@@ -40,20 +39,6 @@ public:
     IdPair(IdObj *i1, IdObj *i2) {
         ido1=i1;
         ido2=i2;
-    }
-};
-
-ObjectType(ConObj)
-{
-public:
-    bool isReal;
-    int position;
-
-    ConObj(BoolObj *r, NumObj *pos) {
-        isReal = r->value;
-        position = pos->num;
-        delete r;
-        delete pos;
     }
 };
 
@@ -86,5 +71,20 @@ public:
 	        phase = p;
 	        id = d;
 	    }
-}
+};
+/**
+ * Data to store at nodes
+ */
+ObjectType(DateObj){
+	int key;
+	Object date;
+
+	DateObj(int k , Object d){
+		date = d;
+		key = k; //TODO key als hashwert ueber datum?
+	}
+};
+
+
+
 #endif  // OBJECTS_H_

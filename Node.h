@@ -6,12 +6,13 @@ SubjectType(Node)
 protected:
     NodeRelay *left, *right, *node0, *node1;
     Relay *in;
-    int id; //Simon: warum ist id nicht double und was ist value?
-    double value;
+    double num;
     bool isReal;
+    std::unordered_map<int, Object> data;//was soll gespeichert werden?
 
     void checkDead(NodeRelay *side);
     void checkValid();
+    void mult_hash();
 
 
 public:
@@ -20,10 +21,10 @@ public:
     Action Init(ConObj *con);
     Action RegisterChild(IdObj *id);
     Action Wakeup(NumObj *num);
-    Action BuildDeBruijn(IdObj *id);
-    Action Insert(NumObj *num);
-    Action Delete(NumObj *key);
-    Action LookUp(NumObj *key);
+    Action BuildDeBruijn();
+    Action Insert(DateObj *num);
+    Action Delete(DoubleObj *key);
+    Action LookUp(DoubleObj *key);
     Action Join(IdObj *id);
     Action Leave(IdObj *id);
     Action Probing(Probe *id);
