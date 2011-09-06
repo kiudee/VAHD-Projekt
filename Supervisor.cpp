@@ -2,10 +2,10 @@
 
 Action Supervisor::Init(NumObj *num)
 {
-    NumObj *tempnum;
+    ConObj *tempnum;
 
     for (int i = 1; i <= num->num; i++) {
-        tempnum = new NumObj(i);
+        ConObj = new ConObj(i);
         new(Node,tempnum);
     }
     count = 0;
@@ -26,17 +26,19 @@ Action Supervisor::SetLink(IdPair *idop)
     count++;
     if (count == total) {
         for (int i=1; i<=total; i++) {
-            numo = new NumObj(5);
             // make sure that node i periodically wakes up
+            numo = new NumObj(5);
             ListNode[i]->call(Node::Wakeup, numo);
+
             // initially connect node i to nodes 2i and 2i+1
             if (2*i<=total) {
-                ListNode[i]->call(Node::Insert, StartID[2*i]);
+                ListNode[i]->call(Node::Join, StartID[2*i]);
             }
             if (2*i+1<=total) {
-                ListNode[i]->call(Node::Insert, StartID[2*i+1]);
+                ListNode[i]->call(Node::Join, StartID[2*i+1]);
             }
         }
+
         // wait 100 rounds till testing Delete or Search
         numo = new NumObj(100);
         call(Supervisor::Wakeup, numo);
