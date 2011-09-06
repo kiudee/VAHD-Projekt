@@ -26,8 +26,9 @@ public:
     Action LookUp(NumObj *key);
     Action Join(IdObj *id);
     Action Leave(IdObj *id);
-    Action Probing(IdObj *id);
+    Action Probing(Probe *id);
     Action BuildList(IdObj *id);
+    Action BuildWeakConnectedComponent(IdObj *id);
 };
 
 
