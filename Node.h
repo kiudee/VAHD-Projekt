@@ -4,6 +4,8 @@
 #include "Subjects1-6.h"
 #include "Hash.h"
 
+typedef std::unordered_map<int, std::string> HashMap;
+
 
 SubjectType(Node)
 {
@@ -13,7 +15,7 @@ protected:
     Relay *in;
     double num;
     bool isReal;
-    std::unordered_map<int, Object> data;//was soll gespeichert werden?
+    HashMap data;//was soll gespeichert werden?
 
     void checkDead(NodeRelay *side);
     void checkValid();
