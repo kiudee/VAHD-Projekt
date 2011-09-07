@@ -1,5 +1,6 @@
 #ifndef OBJECTS_H_
 #define OBJECTS_H_
+
 ObjectType(NumObj)
 {
 public:
@@ -10,25 +11,36 @@ public:
     }
 };
 
-ObjectType(BoolObj)
-{
+ObjectType(DoubleObj){
 public:
-    bool value;
+    double num;
 
-    BoolObj(bool v) {
-        value=v;
+    DoubleObj(double i) {
+        num=i;
     }
 };
 
 ObjectType(IdObj)
 {
 public:
-    double value;
+    double num;
     Identity *id;
 
     IdObj(double value, Identity *d) {
-        value=value;
+        num=value;
         id=d;
+    }
+};
+
+ObjectType(InitObj)
+{
+public:
+    bool isReal;
+    double num;
+
+    InitObj(double value, bool real) {
+        isReal = real;
+        num = value;
     }
 };
 
@@ -43,20 +55,6 @@ public:
     }
 };
 
-ObjectType(ConObj)
-{
-public:
-    bool isReal;
-    int position;
-
-    ConObj(BoolObj *r, NumObj *pos) {
-        isReal = r->value;
-        position = pos->num;
-        delete r;
-        delete pos;
-    }
-};
-
 ObjectType(NodeRelay)
 {
 public:
@@ -64,7 +62,7 @@ public:
     Relay *out;
 
     NodeRelay(IdObj *ido) {
-        value = ido->value;
+        value = ido->num;
         out = new Relay(ido->id);
         delete ido;
     }
@@ -86,5 +84,46 @@ public:
 	        phase = p;
 	        id = d;
 	    }
-}
+};
+
+/**
+ * Data to store at nodes
+ */
+ObjectType(DateObj){
+public:
+	int num;
+	Object date;
+
+	DateObj(int k , Object d){
+		date = d;
+		num = k;
+	}
+};
+
+ObjectType(KeyObj){
+public:
+	int num;
+	Identity *id;
+
+	KeyObj(int k, Identity *d){
+		num = k;
+		id = d;
+	}
+};
+
+ObjectType(InsertObj){
+public:
+	DateObj *dob;
+	int round;
+	double bound;
+
+	InsertObj(DateObj *d, double b){
+		dob = d;
+		round = 0;
+		bound = b;
+	}
+};
+
+
+
 #endif  // OBJECTS_H_

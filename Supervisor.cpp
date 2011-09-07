@@ -2,11 +2,11 @@
 
 Action Supervisor::Init(NumObj *num)
 {
-    ConObj *tempnum;
+    InitObj *tempObj;
 
     for (int i = 1; i <= num->num; i++) {
-        ConObj = new ConObj(i);
-        new(Node,tempnum);
+        tempObj = new InitObj(h(i),true);
+        new(Node,tempObj);
     }
     count = 0;
     total = num->num;
