@@ -124,8 +124,8 @@ public:
 ObjectType(SearchJob){
 public:
 	int sid; //mandatory
-	DateObj dob; //required for Insert TODO pointer?
-	IdObj ido; //required for Lookup, Join TODO pointer?
+	DateObj *dob; //required for Insert TODO pointer?
+	IdObj *ido; //required for Lookup, Join TODO pointer?
 	int type; //indicates the job type (the operation)
 	double bound;
 	int round;
