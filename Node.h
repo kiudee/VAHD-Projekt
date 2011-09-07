@@ -10,7 +10,6 @@
 
 typedef std::unordered_map<int, std::string> HashMap;
 
-
 SubjectType(Node)
 {
 protected:
@@ -19,13 +18,17 @@ protected:
     Relay *in;
     double num;
     bool isReal;
-    HashMap data; //was soll gespeichert werden?
+    int leftstable;
+    int rightstable;
+    HashMap data;//was soll gespeichert werden?
 
     void checkDead(NodeRelay *side);
     void checkValid();
     double h(int kk);
     double g(int kk);
     double calcRoutingBound();
+    void checkStable(double id);
+    int isStable(); //TODO might be useless
 
 
 public:
@@ -35,15 +38,17 @@ public:
     Action ConnectChild(IdObj *id);
     Action Wakeup(NumObj *num);
     Action BuildDeBruijn();
-    Action Insert(InsertObj *iob);
+    Action Insert(DateObj *dob);
     Action Delete(NumObj *key);
-    Action LookUp(KeyObj *key);
+    Action LookUp(NumObj *key);
     Action Join(IdObj *id);
     Action Leave(IdObj *id);
     Action Probing(Probe *ido);
     Action BuildList(IdObj *id);
     Action BuildWeakConnectedComponent(NumObj *numo);
     Action ReceiveLookUp(DateObj *dob);
+    Action Search(SearchJob *sj);
+    Action TriggerDataTransfer(IdObj *ido);
 };
 
 

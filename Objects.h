@@ -1,6 +1,10 @@
 #ifndef OBJECTS_H_
 #define OBJECTS_H_
 
+#include <iostream>
+
+enum SearchJobType { INSERT, DELETE, LOOKUP, JOIN };
+
 ObjectType(NumObj)
 {
 public:
@@ -105,7 +109,10 @@ public:
 		num = k;
 	}
 };
-
+/**
+ * @deprecated
+ * @see SearchJob, DateObj
+ */
 ObjectType(KeyObj){
 public:
 	int num;
@@ -117,6 +124,53 @@ public:
 	}
 };
 
+/**
+ * Parameter for any search operation
+ *@author Simon
+ */
+ObjectType(SearchJob){
+public:
+	int sid; //mandatory
+	DateObj *dob; //required for Insert TODO pointer?
+	IdObj *ido; //required for Lookup, Join TODO pointer?
+	int type; //indicates the job type (the operation)
+	double bound;
+	int round;
+
+	//if overloading not possible: one constructor with all arguments! (unneeded arguments are NULL)
+	SearchJob(int s, int t, double b){
+		sid = s;
+		dob = NULL;
+		ido = NULL;
+		type = t;
+		round = 0;
+		bound = b;
+	}
+
+	SearchJob(int s, int t, double b, DateObj *d){
+		sid = s;
+		dob = d;
+		ido = NULL;
+		type = t;
+		round = 0;
+		bound = b;
+	}
+
+	SearchJob(int s, int t, double b, IdObj *i){
+		sid = s;
+		dob = NULL;
+		ido = i;
+		type = t;
+		round = 0;
+		bound = b;
+	}
+
+};
+
+/**
+ * @deprecated
+ * @see SearchJob
+ */
 ObjectType(InsertObj){
 public:
 	DateObj *dob;
