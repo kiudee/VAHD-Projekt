@@ -2,6 +2,7 @@
 #define NODE_H_
 #include <unordered_map>
 
+
 SubjectType(Node)
 {
 protected:

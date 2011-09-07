@@ -1,6 +1,8 @@
 #include "Subjects1-6.h"
 #include "Node.h"
 
+#define MAX 1
+
 static const uint32_t s = 2654435769;
 
 
@@ -274,7 +276,13 @@ Action Node::Join(IdObj *id)
 
 Action Node::Leave(IdObj *id)
 {
-	//TODO copy data to predecessor
+    for (HashMap::iterator it = data.begin(); it != data.end(); ++it){
+    	DateObj dob = new DateObj(it->first, it->second);
+    	InsertObj iob = new InsertObj(dob, Node::calcRoutingBound());
+    	left->out->call(Node::Insert, dob);
+    }
+    data.clear();
+
     std::cout << "Node " << num << ": preparing to leave system.\n";
     num = num+MAX;    // increase num to get to end of list
     delete in;       // invalidate existing links/identities to 'in'
