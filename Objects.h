@@ -123,7 +123,7 @@ public:
  */
 ObjectType(SearchJob){
 public:
-	double sid; //mandatory
+	int sid; //mandatory
 	DateObj dob; //required for Insert TODO pointer?
 	IdObj ido; //required for Lookup, Join TODO pointer?
 	int type; //indicates the job type (the operation)
@@ -132,7 +132,7 @@ public:
 
 
 	//if overloading not possible: one constructor with all arguments! (unneeded arguments are NULL)
-	SearchJob(double s, int t, double b){
+	SearchJob(int s, int t, double b){
 		sid = s;
 		dob = NULL;
 		ido = NULL;
@@ -141,7 +141,7 @@ public:
 		bound = b;
 	}
 
-	SearchJob(double s, int t, double b, DateObj d){
+	SearchJob(int s, int t, double b, DateObj d){
 		sid = s;
 		dob = d;
 		ido = NULL;
@@ -150,7 +150,7 @@ public:
 		bound = b;
 	}
 
-	SearchJob(double s, int t, double b, IdObj i){
+	SearchJob(int s, int t, double b, IdObj i){
 		sid = s;
 		dob = NULL;
 		ido = i;
