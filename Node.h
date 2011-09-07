@@ -1,7 +1,11 @@
 #ifndef NODE_H_
 #define NODE_H_
+
+#include <string>
 #include <unordered_map>
 #include "Subjects1-6.h"
+#include "Objects.h"
+#include "Supervisor.h"
 #include "Hash.h"
 
 typedef std::unordered_map<int, std::string> HashMap;
@@ -15,7 +19,7 @@ protected:
     Relay *in;
     double num;
     bool isReal;
-    HashMap data;//was soll gespeichert werden?
+    HashMap data; //was soll gespeichert werden?
 
     void checkDead(NodeRelay *side);
     void checkValid();
@@ -33,7 +37,7 @@ public:
     Action BuildDeBruijn();
     Action Insert(InsertObj *iob);
     Action Delete(NumObj *key);
-    Action LookUp(NumObj *key);
+    Action LookUp(KeyObj *key);
     Action Join(IdObj *id);
     Action Leave(IdObj *id);
     Action Probing(Probe *ido);

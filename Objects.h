@@ -58,13 +58,19 @@ public:
 ObjectType(NodeRelay)
 {
 public:
-    double value;
+    double num;
     Relay *out;
 
     NodeRelay(IdObj *ido) {
-        value = ido->num;
+        num = ido->num;
         out = new Relay(ido->id);
         delete ido;
+    }
+
+    NodeRelay(double n, Identity *i) {
+        num = n;
+        out = new Relay(i);
+        delete i;
     }
 };
 
@@ -76,11 +82,11 @@ public:
 ObjectType(Probe){
 public:
 		int phase;
-		double value;
+		double num;
 		Identity *id;
 
-	    Probe(double v, Identity *d, int p) {
-	        value = v;
+	    Probe(double n, Identity *d, int p) {
+	        num = n;
 	        phase = p;
 	        id = d;
 	    }
