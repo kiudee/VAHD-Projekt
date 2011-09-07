@@ -15,6 +15,7 @@ protected:
     void checkValid();
     double h(int kk);
     double g(int kk);
+    double calcRoutingBound();
 
 
 public:

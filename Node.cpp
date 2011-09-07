@@ -103,6 +103,19 @@ void Node::checkValid() {
         call(Node::BuildList, tempido);
     }
 }
+/**
+ * Calculates the routing step bound
+ *
+ * @author Simon
+ * @return the bound
+ */
+double Node::calcRoutingBound(){
+	if(right !=NULL){
+		return -2*log(fabs(num - right->num));
+	}else{
+		return 0.0;//TODO what about this case?
+	}
+}
 
 Action Node::BuildDeBruijn()
 {
@@ -128,7 +141,7 @@ Action Node::Insert(InsertObj *iob)
 	}
 
 	//last phase for routing
-	if(iob->round >= -2*log(fabs(iob->orginid-num))){
+	if(iob->round >= iob->bound){
 		if(hashedkey < num){
 			left->out->call(Node::Insert, iob);
 			return;
