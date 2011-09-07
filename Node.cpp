@@ -187,13 +187,13 @@ Action Node::Search(SearchJob *sj)
 	//TODO how to determine the responsibility area for the last node? ring needed?
 	//TODO doing searchjob allowed only at real nodes!
 
-	if(!isStable()){//TODO it is not necessary, that both links are stable!
+/*	if(!isStable()){//TODO it is not necessary, that both links are stable!
 		//TODO. what if routing gets stuck? it cannot get stuck, because we are only routing in stable state
 		call(Node::Search, sj);
 		return;
-	}
+	}*/
 
-    sj->round++;
+    //sj->round++;
     double hashedkey = g(sj->sid);
     //responsible node for date was found
     if((right->num > hashedkey && num <= hashedkey)) {
@@ -211,12 +211,13 @@ Action Node::Search(SearchJob *sj)
             //TODO does it work?
             Object obj = data[sj->sid]; //might be null TODO make consistent with HashMap
             Relay *temprelay = new Relay(sj->ido->id);
-            DateObj dob = new DateObj(sj->sid, obj);
+            DateObj *dob = new DateObj(sj->sid, obj);
             temprelay->call(Node::ReceiveLookUp, dob);
             delete temprelay;
             break;
     	case JOIN:
-    		BuildList(sj->ido);  // just connect to given reference; BuildList will add it to the right!
+    		IdObj *ido = sj->ido;
+    		BuildList(ido);  // just connect to given reference; BuildList will add it to the right!
     		right->out->call(Node::TriggerDataTransfer, extractIdentity(right->out));
     	}
     	delete sj;
@@ -226,20 +227,30 @@ Action Node::Search(SearchJob *sj)
     //last phase for routing
     if(sj->round >= sj->bound) {
         if(hashedkey < num) {
-            left->out->call(Node::Search, sj);
-            return;
+            if(leftstable){
+            	sj->round++;
+            	left->out->call(Node::Search, sj);
+            	return;
+            }else{
+            	call(Node::Search, sj);
+            }
         } else if(hashedkey > num) {
-            right->out->call(Node::Search, sj);
-            return;
+            if(rightstable){
+            	sj->round++;
+				right->out->call(Node::Search, sj);
+				return;
+            }
         }
     }
 
     //do next debruijn hop
     if(isReal) {
         if(hashedkey < num) {
+        	sj->round++;
             node0->call(Node::Search, sj);
             return;
         } else if(hashedkey > num) {
+        	sj->round++;
             node1->call(Node::Search, sj);
             return;
         }
@@ -248,19 +259,37 @@ Action Node::Search(SearchJob *sj)
     //find next ideal position along list
     if(hashedkey > num) {
         if(fabs((1+left->num)/2 - hashedkey) < fabs((1+right->num)/2 - hashedkey)) {
-            left->out->call(Node::Search, sj);
-            return;
+            if(leftstable){
+            	sj->round++;
+				left->out->call(Node::Search, sj);
+				return;
+            }
+            else{
+            	call(Node::Search, sj);
+            }
         } else {
             right->out->call(Node::Search, sj);
             return;
         }
     } else {
         if(fabs(left->num/2 - hashedkey) < fabs(right->num/2 - hashedkey)) {
-            left->out->call(Node::Search, sj);
-            return;
+            if(leftstable){
+            	sj->round++;
+				left->out->call(Node::Search, sj);
+				return;
+            }
+            else{
+            	call(Node::Search, sj);
+            }
         } else {
-            right->out->call(Node::Search, sj);
-            return;
+            if(rightstable){
+            	sj->round++;
+				right->out->call(Node::Search, sj);
+				return;
+            }
+            else{
+            	call(Node::Search, sj);
+            }
         }
     }
 
@@ -430,6 +459,7 @@ void Node::checkStable(double id){
 /**
  * @author Simon
  * @return returns true, if left and right are stable; otherwise false
+ * @deprecated
  */
 int Node::isStable(){
 	return rightstable && leftstable;
