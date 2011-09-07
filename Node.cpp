@@ -1,5 +1,6 @@
 #include "Node.h"
 
+#define MAX 1
 
 Action Node::Init(InitObj *init)
 {
@@ -119,6 +120,8 @@ Action Node::BuildDeBruijn()
 //TODO correct routing for delete, lookup
 Action Node::Insert(InsertObj *iob)
 {
+	//TODO what if routing gets stuck?
+	//TODO how to determine the responsibility area for the last node?
     iob->round++;
     double hashedkey = g(iob->dob->num);
     //responsible node for date was found
@@ -253,11 +256,19 @@ Action Node::ReceiveLookUp(DateObj *dob)
 
 Action Node::Join(IdObj *id)
 {
+	//TODO move data from predecessor to the new node
     BuildList(ido);  // just connect to given reference
 }
 
 Action Node::Leave(IdObj *id)
 {
+    for (HashMap::iterator it = data.begin(); it != data.end(); ++it){
+    	DateObj dob = new DateObj(it->first, it->second);
+    	InsertObj iob = new InsertObj(dob, Node::calcRoutingBound());
+    	left->out->call(Node::Insert, dob);
+    }
+    data.clear();
+
     std::cout << "Node " << num << ": preparing to leave system.\n";
     num = num+MAX;    // increase num to get to end of list
     delete in;       // invalidate existing links/identities to 'in'
@@ -482,6 +493,7 @@ Action Node::BuildWeakConnectedComponent(NumObj *numo)
 {
     if(numo->num==0) {
         //envelope left neighbor
+    	//TODO check if left is existing before delegating. maybe this is not necessary because if the left is not exisiting, we would not come so far. otherwise the link to left might be broken.
         tempido = new IdObj(left->num, extractIdentity(left->out));
         delete left;
         //link to v.0

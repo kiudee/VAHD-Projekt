@@ -4,6 +4,7 @@
 #include "Subjects1-6.h"
 #include "Hash.h"
 
+
 SubjectType(Node)
 {
 protected:
