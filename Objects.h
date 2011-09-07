@@ -76,6 +76,7 @@ public:
  * Data to store at nodes
  */
 ObjectType(DateObj){
+public:
 	int num;
 	Object date;
 
@@ -86,6 +87,7 @@ ObjectType(DateObj){
 };
 
 ObjectType(KeyObj){
+public:
 	int num;
 	Identity *id;
 
@@ -96,16 +98,17 @@ ObjectType(KeyObj){
 };
 
 ObjectType(InsertObj){
-	DateObj dob;
+public:
+	DateObj *dob;
 	int round;
 	double bound;
 
-	InsertObj(DateObj d, double b){
-		dob =d;
+	InsertObj(DateObj *d, double b){
+		dob = d;
 		round = 0;
 		bound = b;
 	}
-}
+};
 
 
 
