@@ -98,12 +98,12 @@ ObjectType(KeyObj){
 ObjectType(InsertObj){
 	DateObj dob;
 	int round;
-	double orginid;
+	double bound;
 
-	InsertObj(DateObj d, double oid){
+	InsertObj(DateObj d, double b){
 		dob =d;
 		round = 0;
-		orginid = oid;
+		bound = b;
 	}
 }
 
