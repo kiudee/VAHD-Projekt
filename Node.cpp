@@ -67,9 +67,11 @@ Action Node::Init(DoubleObj *con)
     in = new Relay;
 }
 
+/**
+ * Activates BuildDeBruijn periodically.
+ */
 Action Node::Wakeup(NumObj *num)
 {
-    // Periodically activate BuildDeBruijn:
     if (num->num == 0) {
         BuildDeBruijn(NULL);
     } else {
@@ -78,6 +80,9 @@ Action Node::Wakeup(NumObj *num)
     }
 }
 
+/**
+ * Checks if the given NodeRelay is dead and deletes it.
+ */
 void Node::checkDead(NodeRelay *side)
 {
     if (side != NULL && outdeg(side->out) == 0) {
@@ -87,6 +92,12 @@ void Node::checkDead(NodeRelay *side)
     }
 }
 
+/**
+ * Checks if both neighbors (left, right) are still valid.
+ * Valid means:
+ *      left->num < num < right->num
+ * If one side is invalid, the pointer will be deleted and BuildList is called.
+ */
 void Node::checkValid()
 {
     IdObj *tempido;
