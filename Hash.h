@@ -1,6 +1,8 @@
 #ifndef HASH_H_
 #define HASH_H_
 
+#include <cstdint>
+
 static const uint32_t s = 2654435769;
 
 double h(int kk)

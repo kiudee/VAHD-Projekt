@@ -1,6 +1,7 @@
 #ifndef OBJECTS_H_
 #define OBJECTS_H_
 
+#include <iostream>
 
 enum SearchJobType { INSERT, DELETE, LOOKUP, JOIN };
 
@@ -61,13 +62,19 @@ public:
 ObjectType(NodeRelay)
 {
 public:
-    double value;
+    double num;
     Relay *out;
 
     NodeRelay(IdObj *ido) {
-        value = ido->num;
+        num = ido->num;
         out = new Relay(ido->id);
         delete ido;
+    }
+
+    NodeRelay(double n, Identity *i) {
+        num = n;
+        out = new Relay(i);
+        delete i;
     }
 };
 
@@ -79,11 +86,11 @@ public:
 ObjectType(Probe){
 public:
 		int phase;
-		double value;
+		double num;
 		Identity *id;
 
-	    Probe(double v, Identity *d, int p) {
-	        value = v;
+	    Probe(double n, Identity *d, int p) {
+	        num = n;
 	        phase = p;
 	        id = d;
 	    }
@@ -130,7 +137,6 @@ public:
 	double bound;
 	int round;
 
-
 	//if overloading not possible: one constructor with all arguments! (unneeded arguments are NULL)
 	SearchJob(int s, int t, double b){
 		sid = s;
@@ -141,7 +147,7 @@ public:
 		bound = b;
 	}
 
-	SearchJob(int s, int t, double b, DateObj d){
+	SearchJob(int s, int t, double b, DateObj *d){
 		sid = s;
 		dob = d;
 		ido = NULL;
@@ -150,7 +156,7 @@ public:
 		bound = b;
 	}
 
-	SearchJob(int s, int t, double b, IdObj i){
+	SearchJob(int s, int t, double b, IdObj *i){
 		sid = s;
 		dob = NULL;
 		ido = i;

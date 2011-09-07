@@ -1,73 +1,70 @@
+#include "math.h"
 #include "Node.h"
-//#include "Objects.h"
+#include "Objects.h"
 
 #define MAX 1
 
-Action Node::Init(InitObj *init)
-{
-    // Initialize pointers and relays
-    left = NULL;
-    right = NULL;
-    node0 = NULL;
-    node1 = NULL;
-    in = new Relay;
+Action Node::Init(InitObj *init) {
+	// Initialize pointers and relays
+	left = NULL;
+	right = NULL;
+	node0 = NULL;
+	node1 = NULL;
+	in = new Relay;
 
-    // Unpack initstructor object:
-    num = init->num;
-    isReal = init->isReal;
-    delete init;
+	// Unpack initstructor object:
+	num = init->num;
+	isReal = init->isReal;
+	delete init;
 
+	if (isReal) {
+		// connect to supervisor:
+		IdPair *idp = new IdPair(new IdObj(num, new Identity(in)),
+				new IdObj(num, new Identity(in)));
+		parent->call(Supervisor::SetLink, idp);
 
-    if (isReal) {
-        // connect to supervisor:
-        IdPair *idp = new IdPair(new IdObj(num, new Identity(in)),
-                                 new IdObj(num, new Identity(in)));
-        parent->call(Supervisor::SetLink, idp);
+		// create virtual nodes:
+		InitObj *n0 = new InitObj(num / 2, false);
+		new(Node, n0);
 
-        // create virtual nodes:
-        new(Node, new InitObj(num/2,false));
-        new(Node, new InitObj((1+num)/2,false));
-    } else {
-        parent->call(Node::ConnectChild, new IdObj(num, new Identity(in)));
-    }
+		InitObj *n1 = new InitObj((1 + num) / 2, false);
+		new(Node, n1);
+	} else {
+		IdObj *tempid = new IdObj(num, new Identity(in));
+		parent->call(Node::ConnectChild, tempid);
+	}
 }
 
 /**
  * Establish a relay to the virtual node which called us.
- */
-Action Node::ConnectChild(IdObj *id)
-{
-    if (id->num == num/2) {
-        node0 = new Relay(id);
-    } else {
-        node1 = new Relay(id);
-    }
+ */Action Node::ConnectChild(IdObj *ido) {
+	if (ido->num == num / 2) {
+		node0 = new Relay(ido->id);
+	} else {
+		node1 = new Relay(ido->id);
+	}
 }
-
 
 /**
  * Activates BuildDeBruijn periodically.
- */
-Action Node::Wakeup(NumObj *num)
-{
-    if (num->num == 0) {
-        BuildDeBruijn(NULL);
-    } else {
-        num->num--;
-        call(Node::Wakeup, num);
-    }
+ */Action Node::Wakeup(NumObj *num) {
+	if (num->num == 0) {
+		BuildDeBruijn();
+	} else {
+		num->num--;
+		call(Node::Wakeup, num);
+	}
 }
 
 /**
  * Checks if the given NodeRelay is dead and deletes it.
  */
-void Node::checkDead(NodeRelay **side)
-{
-    if (side != NULL && outdeg(side->out) == 0) {
-        delete *side->out;
-        delete *side;
-        *side = NULL;
-    }
+void Node::checkDead(NodeRelay *side) {
+	if (side != NULL && outdeg(side->out) == 0) {
+		delete side->out;
+		delete side;
+		side = NULL;
+	}
 }
 
 /**
@@ -76,21 +73,20 @@ void Node::checkDead(NodeRelay **side)
  *      left->num < num < right->num
  * If one side is invalid, the pointer will be deleted and BuildList is called.
  */
-void Node::checkValid()
-{
-    IdObj *tempido;
-    if (left != NULL && left->num > num) {
-        tempido = new IdObj(left->num, extractIdentity(left->out));
-        delete left;
-        left = NULL;
-        call(Node::BuildList, tempido);
-    }
-    if (right != NULL && right->num < num) {
-        tempido = new IdObj(right->num, extractIdentity(right->out));
-        delete right;
-        right = NULL;
-        call(Node::BuildList, tempido);
-    }
+void Node::checkValid() {
+	IdObj *tempido;
+	if (left != NULL && left->num > num) {
+		tempido = new IdObj(left->num, extractIdentity(left->out));
+		delete left;
+		left = NULL;
+		call(Node::BuildList, tempido);
+	}
+	if (right != NULL && right->num < num) {
+		tempido = new IdObj(right->num, extractIdentity(right->out));
+		delete right;
+		right = NULL;
+		call(Node::BuildList, tempido);
+	}
 }
 /**
  * Calculates the routing step bound
@@ -98,19 +94,17 @@ void Node::checkValid()
  * @author Simon
  * @return the bound
  */
-double Node::calcRoutingBound()
-{
-    if(right !=NULL) {
-        return -2*log(fabs(num - right->num));
-    } else {
-        return 0.0;//TODO what about this case?
-    }
+double Node::calcRoutingBound() {
+	if (right != NULL) {
+		return -2 * log(fabs(num - right->num));
+	} else {
+		return 0.0; //TODO what about this case?
+	}
 }
 
-Action Node::BuildDeBruijn()
-{
-    BuildList(NULL);
-    Probing(NULL);
+Action Node::BuildDeBruijn() {
+	BuildList(NULL);
+	Probing(NULL);
 
 }
 /**
@@ -176,7 +170,7 @@ Action Node::Insert(DateObj *dob)
         }
     }*/
 
-	SearchJob sj = new SearchJob(dob->num, INSERT, Node::calcRoutingBound(), dob);
+	SearchJob *sj = new SearchJob(dob->num, INSERT, Node::calcRoutingBound(), dob);
 	Search(sj);
 
 }
@@ -216,7 +210,7 @@ Action Node::Search(SearchJob *sj)
     	case LOOKUP:
             //TODO does it work?
             Object obj = data[sj->sid]; //might be null TODO make consistent with HashMap
-            Relay temprelay = new Relay(sj->ido->id);
+            Relay *temprelay = new Relay(sj->ido->id);
             DateObj dob = new DateObj(sj->sid, obj);
             temprelay->call(Node::ReceiveLookUp, dob);
             delete temprelay;
@@ -305,7 +299,7 @@ Action Node::Delete(NumObj *key)
         right->out-call(Node::Delete, key);
     }*/
 
-	SearchJob sj = new SearchJob(key->num, DELETE, Node::calcRoutingBound());
+	SearchJob *sj = new SearchJob(key->num, DELETE, Node::calcRoutingBound());
 	Search(sj);
 }
 
@@ -347,18 +341,17 @@ Action Node::LookUp(NumObj *key)
     } else if(hashedkey > num) {
         right->out-call(Node::LookUp, key);
     }*/
-	IdObj ido = new IdObj(num, new Identity(in));
-	SearchJob sj = new SearchJob(key->num, LOOKUP, Node::calcRoutingBound(), ido);
+	IdObj *ido = new IdObj(num, new Identity(in));
+	SearchJob *sj = new SearchJob(key->num, LOOKUP, Node::calcRoutingBound(), ido);
 	Search(sj);
 }
 
-Action Node::ReceiveLookUp(DateObj *dob)
-{
-    std::cout << "Node " << num << ": receives data for key" << dob->num << ":" << dob->date;
-    delete dob;
+Action Node::ReceiveLookUp(DateObj *dob) {
+	std::cout << "Node " << num << ": receives data for key" << dob->num << ":" << dob->date;
+	delete dob;
 }
 
-Action Node::Join(IdObj *id)
+Action Node::Join(IdObj *ido)
 {
 	/*TODO. move data from predecessor to the new node. but how
 	 * and when do we trigger the data transfer at the predecessor???
@@ -367,9 +360,8 @@ Action Node::Join(IdObj *id)
 	 * joins at the right place!
 	 */
 	//TODO spawn virtual nodes
-	SearchJob sj = new SearchJob(id, JOIN, Node::calcRoutingBound(), id);
+	SearchJob *sj = new SearchJob(ido->num, JOIN, Node::calcRoutingBound(), ido);
 	Search(sj);
-
 }
 
 /**
@@ -379,15 +371,15 @@ Action Node::Join(IdObj *id)
  */
 Action Node::TriggerDataTransfer(IdObj *ido){
 
-	if(num < ido->id && right->out->num = ido->num){//should be always true, when request appears!
+	if(num < ido->num && right->num = ido->num){//should be always true, when request appears!
 
-		Relay temprelay = new Relay(ido);
+		Relay *temprelay = new Relay(ido->id);
 		for (HashMap::iterator it = data.begin(); it != data.end(); ++it){
 
 			if(g(it->first) > ido->num){
-				DateObj dob = new DateObj(it->first, it->second);
-				InsertObj iob = new InsertObj(dob, Node::calcRoutingBound());
-				temprelay->out->call(Node::Insert, dob);
+				DateObj *dob = new DateObj(it->first, it->second);
+				InsertObj *iob = new InsertObj(dob, Node::calcRoutingBound());
+				temprelay->call(Node::Insert, dob);
 			}
 		}
 		delete temprelay;
@@ -398,12 +390,12 @@ Action Node::TriggerDataTransfer(IdObj *ido){
 
 }
 
-Action Node::Leave(IdObj *id)
+Action Node::Leave(IdObj *ido)
 {
 	if(leftstable){
 		for (HashMap::iterator it = data.begin(); it != data.end(); ++it){
-			DateObj dob = new DateObj(it->first, it->second);
-			InsertObj iob = new InsertObj(dob, Node::calcRoutingBound());
+			DateObj *dob = new DateObj(it->first, it->second);
+			InsertObj *iob = new InsertObj(dob, Node::calcRoutingBound());
 			left->out->call(Node::Insert, dob);
 		}
 		data.clear();
@@ -414,7 +406,7 @@ Action Node::Leave(IdObj *id)
 		in = new Relay;  // create new 'in' to be used for new 'num'
 	}
 	else{
-		call(Node::Leave, id);
+		call(Node::Leave, ido);
 	}
 }
 
@@ -446,8 +438,9 @@ int Node::isStable(){
 /**
  * @author Simon
  */
-Action Node::BuildList(IdObj *id)
+Action Node::BuildList(IdObj *ido)
 {
+	IdObj *tempido;
     // Check if there are dead links from both sides:
     //   -> Delete if dead.
     checkDead(left);
@@ -456,7 +449,7 @@ Action Node::BuildList(IdObj *id)
     // Check if both links are still valid:
     //   -> Call BuildDeBruijn if not.
     checkValid();
-    checkStable(id->num);
+    checkStable(ido->num);
 
     if (ido==NULL) {
         // timeout: ask neighbors to create return links
@@ -469,7 +462,7 @@ Action Node::BuildList(IdObj *id)
             right->out->call(Node::BuildList, tempido);
         }
         // prepare next timeout
-        counter = new NumObj(5);
+        NumObj counter = new NumObj(5);
         call(Node::Wakeup, counter);
     } else {
         if (ido->num > num) {
@@ -536,144 +529,143 @@ Action Node::BuildList(IdObj *id)
  * There is an example for a left probing in the comments.
  * The single steps are ordered by their temporal appearance.
  * Example steps marked with braces: (<STEP>)
- */
-Action Node::Probing(Probe *ido)
-{
-    if(isReal) {
-        if(ido==NULL) {
-            //If no left neighbor is set, set it to node0 and probing is done, else send probe to the left neighbor
-            if(left==NULL) {
-                tempido = new IdObj(num/2, new Identity(node0->in));
-                left = new NodeRelay(tempido);
-            } else {
-                //(1) send probe to left introducing the first phase (indicating by parameter 0)
-                tempido = new Probe(num, new Identity(in), 0);
-                left->out->call(Node::Probing, tempido);
-            }
-            //If no right neighbor is set, set it to node1 and probing is done, else send the probe to the right neighbor
-            if(right==NULL) {
-                tempido = new IdObj(node1->num, new Identity(node1->in));
-                right = new NodeRelay(tempido);
-            } else {
-                tempido = new Probe(num, new Identity(in), 0);
-                right->out->call(Node::Probing, tempido);
-            }
-        } else {
-            //probe reaches v.0 or v.1. finish probing.
-            if(num==ido->num/2 || num==(1+ido->num)/2) {
-                delete ido;
-                return;
-            }
+ */Action Node::Probing(Probe *ido) {
+	IdObj *tempido;
+	Probe *tempprobe;
+	if (isReal) {
+		if (ido == NULL) {
+			//If no left neighbor is set, set it to node0 and probing is done, else send probe to the left neighbor
+			if (left == NULL) {
+				tempido = new IdObj(num / 2, new Identity(node0));
+				left = new NodeRelay(tempido);
+			} else {
+				//(1) send probe to left introducing the first phase (indicating by parameter 0)
+				tempprobe = new Probe(num, new Identity(in), 0);
+				left->out->call(Node::Probing, tempido);
+			}
+			//If no right neighbor is set, set it to node1 and probing is done, else send the probe to the right neighbor
+			if (right == NULL) {
+				tempido = new IdObj((1+num)/ 2, new Identity(node1));
+				right = new NodeRelay(tempido);
+			} else {
+				tempprobe = new Probe(num, new Identity(in), 0);
+				right->out->call(Node::Probing, tempido);
+			}
+		} else {
+			//probe reaches v.0 or v.1. finish probing.
+			if (num == ido->num / 2 || num == (1 + ido->num) / 2) {
+				delete ido;
+				return;
+			}
 
-            /*probe came from the left, so we're searching for ido->num/2
-            because we're on a real node, change the direction flag and
-            send probe to node0*/
-            if(ido->num > num) {
-                //(3) we are on the real node w, so we switch the phase flag indicating, that we are on the left side of v.0.
-                //tempido = new Probe(ido->num, extractIdentity(ido->out), 1);
-                //delete ido;
-                ido->phase = 1;
-                node0->call(Node::Probing, ido);
-            }
-            /*probe came from the right, so we're searching for 1+ido->value/2
-            because we're on a real node, change the direction flag and
-            send probe to node1*/
-            if(ido->num < num) {
+			/*probe came from the left, so we're searching for ido->num/2
+			 because we're on a real node, change the direction flag and
+			 send probe to node0*/
+			if (ido->num > num) {
+				//(3) we are on the real node w, so we switch the phase flag indicating, that we are on the left side of v.0.
+				//tempido = new Probe(ido->num, extractIdentity(ido->out), 1);
+				//delete ido;
+				ido->phase = 1;
+				node0->call(Node::Probing, ido);
+			}
+			/*probe came from the right, so we're searching for 1+ido->value/2
+			 because we're on a real node, change the direction flag and
+			 send probe to node1*/
+			if (ido->num < num) {
 
-                //tempido = new Probe(ido->num, extractIdentity(ido->out), 1);
-                //delete ido;
-                ido->phase = 1;
-                node1->call(Node::Probing, ido);
-            }
+				//tempido = new Probe(ido->num, extractIdentity(ido->out), 1);
+				//delete ido;
+				ido->phase = 1;
+				node1->call(Node::Probing, ido);
+			}
 
-        }
+		}
 
+	} else {
+		if (ido != NULL) {
+			//probe came from the left
+			if (ido->num > num) {
+				//probe reaches v.0. finish probing
+				if (num == ido->num / 2) {
+					delete ido;
+					return;
+				}
+				//probe hit no real node yet, so send it to left
+				if (ido->phase == 0) {
+					if (left != NULL) {
+						//(2) send probe to the left
+						left->out->call(Node::Probing, ido);
+						return;
+					}
+				}
+				//probe hit real node, so send it to right
+				else if (ido->phase == 1) {
+					if (num < ido->num / 2) {
+						if (right != NULL) {
+							//(4) send probe to the right
+							right->out->call(Node::Probing, ido);
+							return;
+						}
+					}
+				}
+				/*if the probe gets stuck (no left or right neighbor) or
+				 the id was not found, establish link between v and v.0*/
+				//TODO does this work?
+				Relay *temprelay = new Relay(ido->id);
+				NumObj *numo = new NumObj(0);
+				temprelay->call(Node::BuildWeakConnectedComponent, numo);
+				delete temprelay;
+			}
+			if (ido->num < num) {
 
-    } else {
-        if(ido!=NULL) {
-            //probe came from the left
-            if(ido->num > num) {
-                //probe reaches v.0. finish probing
-                if(num == ido->num/2) {
-                    delete ido;
-                    return;
-                }
-                //probe hit no real node yet, so send it to left
-                if(ido->phase == 0) {
-                    if(left!=NULL) {
-                        //(2) send probe to the left
-                        left->out->call(Node::Probing, ido);
-                        return;
-                    }
-                }
-                //probe hit real node, so send it to right
-                else if(ido->phase == 1) {
-                    if(num < ido->num/2) {
-                        if(right!=NULL) {
-                            //(4) send probe to the right
-                            right->out->call(Node::Probing, ido);
-                            return;
-                        }
-                    }
-                }
-                /*if the probe gets stuck (no left or right neighbor) or
-                the id was not found, establish link between v and v.0*/
-                //TODO does this work?
-                Relay temprelay = new Relay(ido->id);
-                NumObj numo = new NumObj(0);
-                temprelay->call(Node::BuildWeakConnectedComponent, numo);
-                delete temprelay;
-            }
-            if(ido->num < num) {
+				//probe reaches v.1. finish probing
+				if (num == (1 + ido->num) / 2) {
+					delete ido;
+					return;
+				}
+				if (ido->phase == 0) {
+					if (right != NULL) {
+						right->out->call(Node::Probing, ido);
+						return;
+					}
+				} else if (ido->phase == 1) {
+					if (num > (1 + ido->num) / 2) {
+						if (left != NULL) {
+							left->out->call(Node::Probing, ido);
+							return;
+						}
+					}
+				}
+				//TODO does this work?
+				Relay *temprelay = new Relay(ido->id);
+				NumObj *numo = new NumObj(1);
+				temprelay->call(Node::BuildWeakConnectedComponent, numo);
+				delete temprelay;
+			}
 
-                //probe reaches v.1. finish probing
-                if(num == (1+ido->num)/2) {
-                    delete ido;
-                    return;
-                }
-                if(ido->phase == 0) {
-                    if(right!=NULL) {
-                        right->out->call(Node::Probing, ido);
-                        return;
-                    }
-                } else if(ido->phase == 1) {
-                    if(num > (1+ido->num)/2) {
-                        if(left!=NULL) {
-                            left->out->call(Node::Probing, ido);
-                            return;
-                        }
-                    }
-                }
-                //TODO does this work?
-                Relay temprelay = new Relay(ido->id);
-                NumObj numo = new NumObj(1);
-                temprelay->call(Node::BuildWeakConnectedComponent, numo);
-                delete temprelay;
-            }
-
-        }
-    }
+		}
+	}
 }
 /**
  * Builds a link from v to v.0 or v.1
  * @author Simon
  * @param 0=link to v.0, 1=link to v.1
- */
-Action Node::BuildWeakConnectedComponent(NumObj *numo)
-{
-    if(numo->num==0) {
-        //envelope left neighbor
-    	//TODO check if left is existing before delegating. maybe this is not necessary because if the left is not exisiting, we would not come so far. otherwise the link to left might be broken.
-        tempido = new IdObj(left->num, extractIdentity(left->out));
-        delete left;
-        //link to v.0
-        left = new NodeRelay(num/2, new Identity(node0->in));
-        //delegate old left neighbor to node0
-        left->out->call(Node::BuildList,tempido);
-    } else if(numo->num == 1) {
-        tempido = new IdObj(right->num, extractIdentity(right->out));
-        delete right;
-        right = new NodeRelay((1+num)/2, new Identity(node1->in));
-        right->out->call(Node::BuildList,tempido);
-    }
+ */Action Node::BuildWeakConnectedComponent(NumObj *numo) {
+	 IdObj *tempido;
+
+	if (numo->num == 0) {
+		//envelope left neighbor
+		//TODO check if left is existing before delegating. maybe this is not necessary because if the left is not exisiting, we would not come so far. otherwise the link to left might be broken.
+		tempido = new IdObj(left->num, extractIdentity(left->out));
+		delete left;
+		//link to v.0
+		left = new NodeRelay(num / 2, new Identity(node0));
+		//delegate old left neighbor to node0
+		left->out->call(Node::BuildList,tempido);
+	} else if (numo->num == 1) {
+		tempido = new IdObj(right->num, extractIdentity(right->out));
+		delete right;
+		right = new NodeRelay((1 + num) / 2, new Identity(node1));
+		right->out->call(Node::BuildList,tempido);
+	}
 }
