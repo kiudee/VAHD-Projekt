@@ -268,11 +268,13 @@ Action Node::ReceiveLookUp(DateObj *dob)
 
 Action Node::Join(IdObj *id)
 {
+	//TODO move data from predecessor to the new node
     BuildList(ido);  // just connect to given reference
 }
 
 Action Node::Leave(IdObj *id)
 {
+	//TODO copy data to predecessor
     std::cout << "Node " << num << ": preparing to leave system.\n";
     num = num+MAX;    // increase num to get to end of list
     delete in;       // invalidate existing links/identities to 'in'
