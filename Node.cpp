@@ -43,7 +43,7 @@ Action Node::Init(NumObj *con)
 	DoubleObj d = new DoubleObj(num/2);
 	Node n0 = *new(Node, d);
 	delete d;
-	DoubleObj d = new DoubleObj(1+num/2);
+	DoubleObj d = new DoubleObj((1+num)/2);
 	Node n1 = *new(Node, d);
 
 	Identity id0 = new Identity(n0->in);
@@ -115,33 +115,63 @@ Action Node::BuildDeBruijn()
  * @author Simon
  * @param Date to insert
  */
-//TODO correct routing for insert, delete, lookup: take log n rounds into account and the search for ideal nodes.
-Action Node::Insert(DateObj *dob)
+//TODO correct routing for delete, lookup
+Action Node::Insert(InsertObj *iob)
 {
-	double hashedkey = g(dob->num);
+	iob->round++;
+	double hashedkey = g(iob->num);
+	//responsible node for date was found
 	if((right->num > hashedkey && num < hashedkey) || hashedkey==num){
-		data[dob->key] = dob->date;
-		delete dob;
+		data[iob->dob->key] = iob->dob->date;
+		delete iob;
 		return;
 	}
 
-	if(isReal){
+	//last phase for routing
+	if(iob->round >= -2*log(fabs(iob->orginid-num))){
 		if(hashedkey < num){
-			node0->call(Node::Insert, dob);
+			left->out->call(Node::Insert, iob);
 			return;
 		}
 		else if(hashedkey > num){
-			node1->call(Node::Insert, dob);
+			right->out->call(Node::Insert, iob);
 			return;
 		}
 	}
 
-	if(hashedkey < num){
-		left->out->call(Node::Insert, dob);
+	//do next debruijn hop
+	if(isReal){
+		if(hashedkey < num){
+			node0->call(Node::Insert, iob);
+			return;
+		}
+		else if(hashedkey > num){
+			node1->call(Node::Insert, iob);
+			return;
+		}
 	}
-	else if(hashedkey > num){
-		right->out-call(Node::Insert, dob);
+	//find next ideal position along list
+	if(hashedkey > num){
+		if(fabs((1+left->num)/2 - hashedkey) < fabs((1+right->num)/2 - hashedkey)){
+			left->out->call(Node::Insert, iob);
+			return;
+		}
+		else{
+			right->out->call(Node::Insert, iob);
+			return;
+		}
 	}
+	else{
+		if(fabs(left->num/2 - hashedkey) < fabs(right->num/2 - hashedkey)){
+			left->out->call(Node::Insert, iob);
+			return;
+		}
+		else{
+			right->out->call(Node::Insert, iob);
+			return;
+		}
+	}
+
 }
 /**
  * Deletes a date from a node
@@ -358,7 +388,7 @@ Action Node::Probing(Probe *ido){
 		}
 		else{
 			//probe reaches v.0 or v.1. finish probing.
-			if(num==ido->num/2 || num==1+ido->num/2){
+			if(num==ido->num/2 || num==(1+ido->num)/2){
 				delete ido;
 				return;
 			}
@@ -368,18 +398,20 @@ Action Node::Probing(Probe *ido){
 			send probe to node0*/
 			if(ido->num > num){
 				//(3) we are on the real node w, so we switch the phase flag indicating, that we are on the left side of v.0.
-				tempido = new Probe(ido->num, extractIdentity(ido->out), 1);
-				delete ido;
-				node0->call(Node::Probing, tempido);
+				//tempido = new Probe(ido->num, extractIdentity(ido->out), 1);
+				//delete ido;
+				ido->phase = 1;
+				node0->call(Node::Probing, ido);
 			}
 			/*probe came from the right, so we're searching for 1+ido->value/2
 			because we're on a real node, change the direction flag and
 			send probe to node1*/
 			if(ido->num < num){
 
-				tempido = new Probe(ido->num, extractIdentity(ido->out), 1);
-				delete ido;
-				node1->call(Node::Probing, tempido);
+				//tempido = new Probe(ido->num, extractIdentity(ido->out), 1);
+				//delete ido;
+				ido->phase = 1;
+				node1->call(Node::Probing, ido);
 			}
 
 		}
@@ -423,7 +455,7 @@ Action Node::Probing(Probe *ido){
 			if(ido->num < num){
 
 				//probe reaches v.1. finish probing
-				if(num == 1+ido->num/2){
+				if(num == (1+ido->num)/2){
 					delete ido;
 					return;
 				}
@@ -433,7 +465,7 @@ Action Node::Probing(Probe *ido){
 						return;
 					}
 				}else if(ido->phase == 1){
-					if(num > 1+ido->num/2){
+					if(num > (1+ido->num)/2){
 						if(left!=NULL){
 							left->out->call(Node::Probing, ido);
 							return;
@@ -468,7 +500,7 @@ Action Node::BuildWeakConnectedComponent(NumObj *numo){
 	else if(numo->num == 1){
 		tempido = new IdObj(right->num, extractIdentity(right->out));
 		delete right;
-		right = new NodeRelay(1+num/2, new Identity(node1->in));
+		right = new NodeRelay((1+num)/2, new Identity(node1->in));
 		right->out->call(Node::BuildList,tempido);
 	}
 }

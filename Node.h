@@ -14,7 +14,7 @@ protected:
     void checkDead(NodeRelay *side);
     void checkValid();
     double h(int kk);
-    double g(int kk)
+    double g(int kk);
 
 
 public:
@@ -24,7 +24,7 @@ public:
     Action Init(DoubleObj *con);
     Action Wakeup(NumObj *num);
     Action BuildDeBruijn();
-    Action Insert(DateObj *dob);
+    Action Insert(InsertObj *iob);
     Action Delete(NumObj *key);
     Action LookUp(NumObj *key);
     Action Join(IdObj *id);

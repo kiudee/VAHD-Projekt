@@ -95,6 +95,18 @@ ObjectType(KeyObj){
 	}
 };
 
+ObjectType(InsertObj){
+	DateObj dob;
+	int round;
+	double orginid;
+
+	InsertObj(DateObj d, double oid){
+		dob =d;
+		round = 0;
+		orginid = oid;
+	}
+}
+
 
 
 #endif  // OBJECTS_H_
