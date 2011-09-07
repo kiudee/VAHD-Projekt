@@ -1,4 +1,5 @@
 #include "Node.h"
+//#include "Objects.h"
 
 #define MAX 1
 
@@ -117,17 +118,18 @@ Action Node::BuildDeBruijn()
  * @author Simon
  * @param Date to insert
  */
-//TODO correct routing for delete, lookup
-//TODO find a way to separate search() and the operation. then we can reuse search for delete, lookup, etc.
-Action Node::Insert(InsertObj *iob)
+Action Node::Insert(DateObj *dob)
 {
-	//TODO what if routing gets stuck?
-	//TODO how to determine the responsibility area for the last node?
-	//TODO insert allowed only at real nodes!
+
+/*	if(!isStable()){
+		call(Node::Insert, iob);
+		return;
+	}
+
     iob->round++;
     double hashedkey = g(iob->dob->num);
     //responsible node for date was found
-    if((right->num > hashedkey && num < hashedkey) || hashedkey==num) {
+    if((right->num > hashedkey && num <= hashedkey)) {
         data[iob->dob->num] = iob->dob->date;
         delete iob;
         return;
@@ -172,6 +174,100 @@ Action Node::Insert(InsertObj *iob)
             right->out->call(Node::Insert, iob);
             return;
         }
+    }*/
+
+	SearchJob sj = new SearchJob(dob->num, INSERT, Node::calcRoutingBound(), dob);
+	Search(sj);
+
+}
+
+
+/**
+ * Adds a date to a node
+ * @author Simon
+ * @param Date to insert
+ */
+Action Node::Search(SearchJob *sj)
+{
+
+	//TODO how to determine the responsibility area for the last node? ring needed?
+	//TODO doing searchjob allowed only at real nodes!
+
+	if(!isStable()){//TODO it is not necessary, that both links are stable!
+		//TODO. what if routing gets stuck? it cannot get stuck, because we are only routing in stable state
+		call(Node::Search, sj);
+		return;
+	}
+
+    sj->round++;
+    double hashedkey = g(sj->sid);
+    //responsible node for date was found
+    if((right->num > hashedkey && num <= hashedkey)) {
+
+    	switch(sj->type){
+    	case INSERT:
+        	data[sj->dob->num] = sj->dob->date;
+            break;
+    	case DELETE:
+            if(data[sj->sid] != NULL) {
+                data.erase(sj->sid);
+            }
+            break;
+    	case LOOKUP:
+            //TODO does it work?
+            Object obj = data[sj->sid]; //might be null TODO make consistent with HashMap
+            Relay temprelay = new Relay(sj->ido->id);
+            DateObj dob = new DateObj(sj->sid, obj);
+            temprelay->call(Node::ReceiveLookUp, dob);
+            delete temprelay;
+            break;
+    	case JOIN:
+    		BuildList(sj->ido);  // just connect to given reference; BuildList will add it to the right!
+    		right->out->call(Node::TriggerDataTransfer, extractIdentity(right->out));
+    	}
+    	delete sj;
+    	return;
+    }
+
+    //last phase for routing
+    if(sj->round >= sj->bound) {
+        if(hashedkey < num) {
+            left->out->call(Node::Search, sj);
+            return;
+        } else if(hashedkey > num) {
+            right->out->call(Node::Search, sj);
+            return;
+        }
+    }
+
+    //do next debruijn hop
+    if(isReal) {
+        if(hashedkey < num) {
+            node0->call(Node::Search, sj);
+            return;
+        } else if(hashedkey > num) {
+            node1->call(Node::Search, sj);
+            return;
+        }
+    }
+
+    //find next ideal position along list
+    if(hashedkey > num) {
+        if(fabs((1+left->num)/2 - hashedkey) < fabs((1+right->num)/2 - hashedkey)) {
+            left->out->call(Node::Search, sj);
+            return;
+        } else {
+            right->out->call(Node::Search, sj);
+            return;
+        }
+    } else {
+        if(fabs(left->num/2 - hashedkey) < fabs(right->num/2 - hashedkey)) {
+            left->out->call(Node::Search, sj);
+            return;
+        } else {
+            right->out->call(Node::Search, sj);
+            return;
+        }
     }
 
 }
@@ -182,7 +278,7 @@ Action Node::Insert(InsertObj *iob)
  */
 Action Node::Delete(NumObj *key)
 {
-    double hashedkey = g(key->num);
+/*    double hashedkey = g(key->num);
     if((right->num > hashedkey && num < hashedkey) || hashedkey==num) {
         //TODO does it work?
         if(data[key->num] != NULL) {
@@ -207,7 +303,10 @@ Action Node::Delete(NumObj *key)
         left->out->call(Node::Delete, key);
     } else if(hashedkey > num) {
         right->out-call(Node::Delete, key);
-    }
+    }*/
+
+	SearchJob sj = new SearchJob(key->num, DELETE, Node::calcRoutingBound());
+	Search(sj);
 }
 
 /**
@@ -219,9 +318,9 @@ Action Node::Delete(NumObj *key)
  * @param key of the date in question
  * @return the date or null
  */
-Action Node::LookUp(KeyObj *key)
+Action Node::LookUp(NumObj *key)
 {
-    double hashedkey = g(key->num);
+/*    double hashedkey = g(key->num);
     if((right->num > hashedkey && num < hashedkey) || hashedkey==num) {
         //TODO does it work?
         Object obj = data[key->num]; //might be null
@@ -247,7 +346,10 @@ Action Node::LookUp(KeyObj *key)
         left->out->call(Node::LookUp, key);
     } else if(hashedkey > num) {
         right->out-call(Node::LookUp, key);
-    }
+    }*/
+	IdObj ido = new IdObj(num, new Identity(in));
+	SearchJob sj = new SearchJob(key->num, LOOKUP, Node::calcRoutingBound(), ido);
+	Search(sj);
 }
 
 Action Node::ReceiveLookUp(DateObj *dob)
@@ -258,53 +360,89 @@ Action Node::ReceiveLookUp(DateObj *dob)
 
 Action Node::Join(IdObj *id)
 {
-	//TODO move data from predecessor to the new node. but how and when do we trigger the data transfer at the predecessor??? the predecessor does not know the new node and vice versa.
+	/*TODO. move data from predecessor to the new node. but how
+	 * and when do we trigger the data transfer at the predecessor???
+	 * the predecessor does not know the new node and vice versa.
+	 * solution: we are routing only in stable state and the node
+	 * joins at the right place!
+	 */
 	//TODO spawn virtual nodes
-    BuildList(ido);  // just connect to given reference
+	SearchJob sj = new SearchJob(id, JOIN, Node::calcRoutingBound(), id);
+	Search(sj);
+
 }
 
 /**
  * A node, which has joined will trigger a data transfer for the data of its predecessor,
- * witch is no longer in the responsibility of the predecessor
+ * which is no longer in the responsibility of the predecessor
  * @author Simon
  */
-/*Action Node::TriggerDataTransfer(IdObj *ido){
+Action Node::TriggerDataTransfer(IdObj *ido){
 
-	if(){
+	if(num < ido->id && right->out->num = ido->num){//should be always true, when request appears!
 
+		Relay temprelay = new Relay(ido);
+		for (HashMap::iterator it = data.begin(); it != data.end(); ++it){
 
-	Relay temprelay = new Relay(ido);
-	for (HashMap::iterator it = data.begin(); it != data.end(); ++it){
-
-		if(g(it->first) > ido->num){
-			DateObj dob = new DateObj(it->first, it->second);
-	    	InsertObj iob = new InsertObj(dob, Node::calcRoutingBound());
-	    	temprelay->out->call(Node::Insert, dob);
+			if(g(it->first) > ido->num){
+				DateObj dob = new DateObj(it->first, it->second);
+				InsertObj iob = new InsertObj(dob, Node::calcRoutingBound());
+				temprelay->out->call(Node::Insert, dob);
+			}
 		}
-    }
-	delete temprelay;
-	delete ido;
-	return;
+		delete temprelay;
+		delete ido;
+	}else{
+		//must not happen!
 	}
-	else{
-		//send to next
-	}
-}*/
+
+}
 
 Action Node::Leave(IdObj *id)
 {
-    for (HashMap::iterator it = data.begin(); it != data.end(); ++it){
-    	DateObj dob = new DateObj(it->first, it->second);
-    	InsertObj iob = new InsertObj(dob, Node::calcRoutingBound());
-    	left->out->call(Node::Insert, dob);
-    }
-    data.clear();
+	if(leftstable){
+		for (HashMap::iterator it = data.begin(); it != data.end(); ++it){
+			DateObj dob = new DateObj(it->first, it->second);
+			InsertObj iob = new InsertObj(dob, Node::calcRoutingBound());
+			left->out->call(Node::Insert, dob);
+		}
+		data.clear();
 
-    std::cout << "Node " << num << ": preparing to leave system.\n";
-    num = num+MAX;    // increase num to get to end of list
-    delete in;       // invalidate existing links/identities to 'in'
-    in = new Relay;  // create new 'in' to be used for new 'num'
+		std::cout << "Node " << num << ": preparing to leave system.\n";
+		num = num+MAX;    // increase num to get to end of list
+		delete in;       // invalidate existing links/identities to 'in'
+		in = new Relay;  // create new 'in' to be used for new 'num'
+	}
+	else{
+		call(Node::Leave, id);
+	}
 }
+
+/**
+ * Checks if list is stable.
+ *
+ * @author Simon
+ * @param id of the node which was the argument for a BuildList Call
+ */
+void Node::checkStable(double id){
+	//TODO quorum needed? or is it checked by subjects environment?
+	if(id < num){
+		leftstable = left->num==id;
+	}
+
+	else if(id > num){
+		rightstable = right->num==id;
+	}
+}
+
+/**
+ * @author Simon
+ * @return returns true, if left and right are stable; otherwise false
+ */
+int Node::isStable(){
+	return rightstable && leftstable;
+}
+
 /**
  * @author Simon
  */
@@ -318,6 +456,7 @@ Action Node::BuildList(IdObj *id)
     // Check if both links are still valid:
     //   -> Call BuildDeBruijn if not.
     checkValid();
+    checkStable(id->num);
 
     if (ido==NULL) {
         // timeout: ask neighbors to create return links
