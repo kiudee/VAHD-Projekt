@@ -1,32 +1,8 @@
-#include "Subjects1-6.h"
 #include "Node.h"
 
-static const uint32_t s = 2654435769;
 
-
-double h(int kk)
+Action Node::Init(InitObj *init)
 {
-    uint32_t i = 15;  // m = 2^i
-    uint64_t k = static_cast<uint32_t>(kk);
-    uint64_t t = s * k & 0x00000000FFFFFFFF;
-    t = t >> (32 - i);
-
-    return t/static_cast<double>(2 << 14);
-}
-
-//TODO extra hash function for data objects?
-double g(int kk)
-{
-    return h(kk);
-}
-
-Action Node::Init(NumObj *con)
-{
-    // Unpack constructor object:
-    num = h(con->num);
-    isReal = true;
-    delete con;
-
     // Initialize pointers and relays
     left = NULL;
     right = NULL;
@@ -34,38 +10,38 @@ Action Node::Init(NumObj *con)
     node1 = NULL;
     in = new Relay;
 
-    // Connect to supervisor:
-    IdPair *idp = new IdPair(new IdObj(num, new Identity(in)),
-                             new IdObj(num, new Identity(in)));
-    parent->call(Supervisor::SetLink, idp);
+    // Unpack initstructor object:
+    num = init->num;
+    isReal = init->isReal;
+    delete init;
 
-    DoubleObj d1 = new DoubleObj(num/2);
-    Node n0 = *new(Node, d1);
-    DoubleObj d2 = new DoubleObj(1+num/2);
-    Node n1 = *new(Node, d2);
 
-    Identity id0 = new Identity(n0->in);
-    Identity id1 = new Identity(n1->in);
+    if (isReal) {
+        // connect to supervisor:
+        IdPair *idp = new IdPair(new IdObj(num, new Identity(in)),
+                                 new IdObj(num, new Identity(in)));
+        parent->call(Supervisor::SetLink, idp);
 
-    node0 = new Relay(id0);
-    node1 = new Relay(id1);
+        // create virtual nodes:
+        new(Node, new InitObj(num/2,false));
+        new(Node, new InitObj(1+num/2,false));
+    } else {
+        parent->call(Node::ConnectChild, new IdObj(num, new Identity(in)));
+    }
 }
 
-
-Action Node::Init(DoubleObj *con)
+/**
+ * Establish a relay to the virtual node which called us.
+ */
+Action Node::ConnectChild(IdObj *id)
 {
-    // Unpack constructor object:
-    num = con->num;
-    isReal = false;
-    delete con;
-
-    // Initialize pointers and relays
-    left = NULL;
-    right = NULL;
-    node0 = NULL;
-    node1 = NULL;
-    in = new Relay;
+    if (id->num == num/2) {
+        node0 = new Relay(id)
+    } else {
+        node1 = new Relay(id)
+    }
 }
+
 
 /**
  * Activates BuildDeBruijn periodically.

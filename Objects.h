@@ -1,5 +1,6 @@
 #ifndef OBJECTS_H_
 #define OBJECTS_H_
+
 ObjectType(NumObj)
 {
 public:
@@ -28,6 +29,18 @@ public:
     IdObj(double value, Identity *d) {
         num=value;
         id=d;
+    }
+};
+
+ObjectType(InitObj)
+{
+public:
+    bool isReal;
+    double num;
+
+    InitObj(double value, bool real) {
+        isReal = real;
+        num = value;
     }
 };
 
@@ -72,6 +85,7 @@ public:
 	        id = d;
 	    }
 };
+
 /**
  * Data to store at nodes
  */

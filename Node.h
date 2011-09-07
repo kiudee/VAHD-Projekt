@@ -1,6 +1,8 @@
 #ifndef NODE_H_
 #define NODE_H_
 #include <unordered_map>
+#include "Subjects1-6.h"
+#include "Hash.h"
 
 SubjectType(Node)
 {
@@ -22,8 +24,8 @@ protected:
 public:
     FirstAction(Node,Init)
 
-    Action Init(NumObj *con);
-    Action Init(DoubleObj *con);
+    Action Init(InitObj *init);
+    Action ConnectChild(IdObj *id);
     Action Wakeup(NumObj *num);
     Action BuildDeBruijn();
     Action Insert(InsertObj *iob);
