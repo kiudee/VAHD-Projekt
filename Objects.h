@@ -49,7 +49,7 @@ public:
     Relay *out;
 
     NodeRelay(IdObj *ido) {
-        value = ido->value;
+        value = ido->num;
         out = new Relay(ido->id);
         delete ido;
     }

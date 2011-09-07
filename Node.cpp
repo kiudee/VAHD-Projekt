@@ -1,6 +1,5 @@
 #include "Subjects1-6.h"
 #include "Node.h"
-#include <unordered_map>
 
 static const uint32_t s = 2654435769;
 
@@ -34,17 +33,16 @@ Action Node::Init(NumObj *con)
     node0 = NULL;
     node1 = NULL;
     in = new Relay;
-    // Connect to supervisor or real node:
 
+    // Connect to supervisor:
 	IdPair *idp = new IdPair(new IdObj(num, new Identity(in)),
 					 new IdObj(num, new Identity(in)));
 	parent->call(Supervisor::SetLink, idp);
 
-	DoubleObj d = new DoubleObj(num/2);
-	Node n0 = *new(Node, d);
-	delete d;
-	DoubleObj d = new DoubleObj((1+num)/2);
-	Node n1 = *new(Node, d);
+	DoubleObj d1 = new DoubleObj(num/2);
+	Node n0 = *new(Node, d1);
+	DoubleObj d2 = new DoubleObj(1+num/2);
+	Node n1 = *new(Node, d2);
 
 	Identity id0 = new Identity(n0->in);
 	Identity id1 = new Identity(n1->in);
