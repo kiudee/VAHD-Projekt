@@ -132,6 +132,8 @@ Action Node::BuildDeBruijn()
 //TODO correct routing for delete, lookup
 Action Node::Insert(InsertObj *iob)
 {
+	//TODO what if routing gets stuck?
+	//TODO how to determine the responsibility area for the last node?
     iob->round++;
     double hashedkey = g(iob->dob->num);
     //responsible node for date was found
@@ -495,6 +497,7 @@ Action Node::BuildWeakConnectedComponent(NumObj *numo)
 {
     if(numo->num==0) {
         //envelope left neighbor
+    	//TODO check if left is existing before delegating. maybe this is not necessary because if the left is not exisiting, we would not come so far. otherwise the link to left might be broken.
         tempido = new IdObj(left->num, extractIdentity(left->out));
         delete left;
         //link to v.0
