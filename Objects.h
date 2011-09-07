@@ -92,7 +92,7 @@ public:
 ObjectType(DateObj){
 public:
 	int num;
-	Object date;
+	Object date;//TODO make datatype consistent with HashMap
 
 	DateObj(int k , Object d){
 		date = d;

@@ -25,7 +25,7 @@ Action Node::Init(InitObj *init)
 
         // create virtual nodes:
         new(Node, new InitObj(num/2,false));
-        new(Node, new InitObj(1+num/2,false));
+        new(Node, new InitObj((1+num)/2,false));
     } else {
         parent->call(Node::ConnectChild, new IdObj(num, new Identity(in)));
     }
@@ -37,9 +37,9 @@ Action Node::Init(InitObj *init)
 Action Node::ConnectChild(IdObj *id)
 {
     if (id->num == num/2) {
-        node0 = new Relay(id)
+        node0 = new Relay(id);
     } else {
-        node1 = new Relay(id)
+        node1 = new Relay(id);
     }
 }
 
@@ -118,10 +118,12 @@ Action Node::BuildDeBruijn()
  * @param Date to insert
  */
 //TODO correct routing for delete, lookup
+//TODO find a way to separate search() and the operation. then we can reuse search for delete, lookup, etc.
 Action Node::Insert(InsertObj *iob)
 {
 	//TODO what if routing gets stuck?
 	//TODO how to determine the responsibility area for the last node?
+	//TODO insert allowed only at real nodes!
     iob->round++;
     double hashedkey = g(iob->dob->num);
     //responsible node for date was found
@@ -256,9 +258,38 @@ Action Node::ReceiveLookUp(DateObj *dob)
 
 Action Node::Join(IdObj *id)
 {
-	//TODO move data from predecessor to the new node
+	//TODO move data from predecessor to the new node. but how and when do we trigger the data transfer at the predecessor??? the predecessor does not know the new node and vice versa.
+	//TODO spawn virtual nodes
     BuildList(ido);  // just connect to given reference
 }
+
+/**
+ * A node, which has joined will trigger a data transfer for the data of its predecessor,
+ * witch is no longer in the responsibility of the predecessor
+ * @author Simon
+ */
+/*Action Node::TriggerDataTransfer(IdObj *ido){
+
+	if(){
+
+
+	Relay temprelay = new Relay(ido);
+	for (HashMap::iterator it = data.begin(); it != data.end(); ++it){
+
+		if(g(it->first) > ido->num){
+			DateObj dob = new DateObj(it->first, it->second);
+	    	InsertObj iob = new InsertObj(dob, Node::calcRoutingBound());
+	    	temprelay->out->call(Node::Insert, dob);
+		}
+    }
+	delete temprelay;
+	delete ido;
+	return;
+	}
+	else{
+		//send to next
+	}
+}*/
 
 Action Node::Leave(IdObj *id)
 {
