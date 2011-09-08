@@ -108,7 +108,7 @@ Action Node::BuildDeBruijn() {
 
 }
 /**
- * Adds a date to a node
+ * Adds a date to a the responsible node
  * @author Simon
  * @param Date to insert
  */
@@ -170,48 +170,33 @@ Action Node::Insert(DateObj *dob)
         }
     }*/
 
-	SearchJob *sj = new SearchJob(dob->num, INSERT, Node::calcRoutingBound(), dob);
+	SearchJob *sj = new SearchJob(g(dob->num), INSERT, Node::calcRoutingBound(), dob);
 	Search(sj);
 
 }
 
-
 /**
- * Adds a date to a node
+ * When the search stops at an vitual node, search at the left side for the next real node.
+ *
  * @author Simon
- * @param Date to insert
+ * @param the SearchJob
  */
-Action Node::Search(SearchJob *sj)
+Action Node::FinishSearch(SearchJob *sj)
 {
-
-	//TODO how to determine the responsibility area for the last node? ring needed?
-	//TODO doing searchjob allowed only at real nodes!
-
-/*	if(!isStable()){//TODO it is not necessary, that both links are stable!
-		//TODO. what if routing gets stuck? it cannot get stuck, because we are only routing in stable state
-		call(Node::Search, sj);
-		return;
-	}*/
-
-    //sj->round++;
-    double hashedkey = g(sj->sid);
-    //responsible node for date was found
-    if((right->num > hashedkey && num <= hashedkey)) {
-
+    if(isReal && (right==NULL &&  num <= hashedkey || right->num > hashedkey && num <= hashedkey)){
     	switch(sj->type){
     	case INSERT:
         	data[sj->dob->num] = sj->dob->date;
             break;
     	case DELETE:
-            if(data[sj->sid] != NULL) {
+            if(data[sj->key] != NULL) {
                 data.erase(sj->sid);
             }
             break;
     	case LOOKUP:
-            //TODO does it work?
-            Object obj = data[sj->sid]; //might be null TODO make consistent with HashMap
+            Object obj = data[sj->key]; //might be null TODO make consistent with HashMap
             Relay *temprelay = new Relay(sj->ido->id);
-            DateObj *dob = new DateObj(sj->sid, obj);
+            DateObj *dob = new DateObj(sj->key, obj);
             temprelay->call(Node::ReceiveLookUp, dob);
             delete temprelay;
             break;
@@ -223,16 +208,81 @@ Action Node::Search(SearchJob *sj)
     	delete sj;
     	return;
     }
+    else{
+    	if(leftstable){
+    		left->out->call(Node::FinishSearch, sj);
+    		return;
+    	}
+    	else{
+    		call(Node::FinishSearch, sj);
+    		return;
+    	}
+    }
+}
+
+/**
+ * Routes to the next best node and does a dictionary operation
+ * @author Simon
+ * @param the SearchJob
+ */
+Action Node::Search(SearchJob *sj)
+{
+
+	//TO DO how to determine the responsibility area for the last node? ring needed? solution: send job to MAX!
+	//TO DO doing searchjob allowed only at real nodes!
+
+/*	if(!isStable()){//TO DO it is not necessary, that both links are stable!
+		//TO DO what if routing gets stuck? it cannot get stuck, because we are only routing in stable state
+		call(Node::Search, sj);
+		return;
+	}*/
+
+    //sj->round++;
+    double hashedkey = sj->sid;
+
 
     //last phase for routing
     if(sj->round >= sj->bound) {
-        if(hashedkey < num) {
-            if(leftstable){
+
+    	//responsible node for date was found
+    	if(right==NULL &&  num <= hashedkey || right->num > hashedkey && num <= hashedkey){
+    		//it is prohibited to do operations on virtual nodes (TODO except for Join?)
+    		if(isReal){
+    			FinishSearch(sj);
+    			return;
+    		}
+    		else{
+    			//the actual node is the end of the list. send searchjob to the other end.
+    			if(left==NULL){
+    				sj->sid = MAX;
+    				Search(sj);
+    				return;
+    			}
+
+        		else if(leftstable){
+                	sj->round++;
+                	left->out->call(Node::FinishSearch, sj);
+                	return;
+                }else{
+                	call(Node::Search, sj);
+                	return;
+                }
+    		}
+    	}
+    	//search accoringly to the order of the list
+    	if(hashedkey < num) {
+    		if(left==NULL){
+    			sj->sid = MAX;//TO DO this won't work because we want to search for MAX and not for g(MAX)! adjust searchjob=> fixed
+    			Search(sj);
+    			return;
+    		}
+    		else if(leftstable){
             	sj->round++;
             	left->out->call(Node::Search, sj);
             	return;
             }else{
             	call(Node::Search, sj);
+            	return;
             }
         } else if(hashedkey > num) {
             if(rightstable){
@@ -255,7 +305,7 @@ Action Node::Search(SearchJob *sj)
             return;
         }
     }
-
+    //TODO take end points into account:
     //find next ideal position along list
     if(hashedkey > num) {
         if(fabs((1+left->num)/2 - hashedkey) < fabs((1+right->num)/2 - hashedkey)) {
@@ -266,6 +316,7 @@ Action Node::Search(SearchJob *sj)
             }
             else{
             	call(Node::Search, sj);
+            	return;
             }
         } else {
             right->out->call(Node::Search, sj);
@@ -280,6 +331,7 @@ Action Node::Search(SearchJob *sj)
             }
             else{
             	call(Node::Search, sj);
+            	return;
             }
         } else {
             if(rightstable){
@@ -289,6 +341,7 @@ Action Node::Search(SearchJob *sj)
             }
             else{
             	call(Node::Search, sj);
+            	return;
             }
         }
     }
@@ -303,7 +356,6 @@ Action Node::Delete(NumObj *key)
 {
 /*    double hashedkey = g(key->num);
     if((right->num > hashedkey && num < hashedkey) || hashedkey==num) {
-        //TODO does it work?
         if(data[key->num] != NULL) {
             data.erase(key->num);
             delete key;
@@ -328,7 +380,7 @@ Action Node::Delete(NumObj *key)
         right->out-call(Node::Delete, key);
     }*/
 
-	SearchJob *sj = new SearchJob(key->num, DELETE, Node::calcRoutingBound());
+	SearchJob *sj = new SearchJob(g(key->num), DELETE, Node::calcRoutingBound(), key->num);
 	Search(sj);
 }
 
@@ -345,7 +397,6 @@ Action Node::LookUp(NumObj *key)
 {
 /*    double hashedkey = g(key->num);
     if((right->num > hashedkey && num < hashedkey) || hashedkey==num) {
-        //TODO does it work?
         Object obj = data[key->num]; //might be null
         Relay temprelay = new Relay(key->id);
         DateObj dob = new DateObj(key->num, obj);
@@ -371,7 +422,7 @@ Action Node::LookUp(NumObj *key)
         right->out-call(Node::LookUp, key);
     }*/
 	IdObj *ido = new IdObj(num, new Identity(in));
-	SearchJob *sj = new SearchJob(key->num, LOOKUP, Node::calcRoutingBound(), ido);
+	SearchJob *sj = new SearchJob(g(key->num), LOOKUP, Node::calcRoutingBound(), ido, key->num);
 	Search(sj);
 }
 
@@ -382,14 +433,14 @@ Action Node::ReceiveLookUp(DateObj *dob) {
 
 Action Node::Join(IdObj *ido)
 {
-	/*TODO. move data from predecessor to the new node. but how
+	/*TO DO move data from predecessor to the new node. but how
 	 * and when do we trigger the data transfer at the predecessor???
 	 * the predecessor does not know the new node and vice versa.
 	 * solution: we are routing only in stable state and the node
 	 * joins at the right place!
 	 */
 	//TODO spawn virtual nodes
-	SearchJob *sj = new SearchJob(ido->num, JOIN, Node::calcRoutingBound(), ido);
+	SearchJob *sj = new SearchJob(g(ido->num), JOIN, Node::calcRoutingBound(), ido);
 	Search(sj);
 }
 
@@ -400,8 +451,9 @@ Action Node::Join(IdObj *ido)
  */
 Action Node::TriggerDataTransfer(IdObj *ido){
 
-	if(num < ido->num && right->num = ido->num){//should be always true, when request appears!
+	//if(num < ido->num && right->num = ido->num){//should be always true, when request appears!
 
+	if(isReal){
 		Relay *temprelay = new Relay(ido->id);
 		for (HashMap::iterator it = data.begin(); it != data.end(); ++it){
 
@@ -414,7 +466,12 @@ Action Node::TriggerDataTransfer(IdObj *ido){
 		delete temprelay;
 		delete ido;
 	}else{
-		//must not happen!
+		if(leftstable){
+			left->out->call(Node::TriggerDataTransfer, ido);
+		}
+		else{
+			call(Node::TriggerDataTransfer, ido);
+		}
 	}
 
 }
@@ -456,14 +513,7 @@ void Node::checkStable(double id){
 	}
 }
 
-/**
- * @author Simon
- * @return returns true, if left and right are stable; otherwise false
- * @deprecated
- */
-int Node::isStable(){
-	return rightstable && leftstable;
-}
+
 
 /**
  * @author Simon
@@ -640,7 +690,6 @@ Action Node::BuildList(IdObj *ido)
 				}
 				/*if the probe gets stuck (no left or right neighbor) or
 				 the id was not found, establish link between v and v.0*/
-				//TODO does this work?
 				Relay *temprelay = new Relay(ido->id);
 				NumObj *numo = new NumObj(0);
 				temprelay->call(Node::BuildWeakConnectedComponent, numo);
@@ -666,7 +715,6 @@ Action Node::BuildList(IdObj *ido)
 						}
 					}
 				}
-				//TODO does this work?
 				Relay *temprelay = new Relay(ido->id);
 				NumObj *numo = new NumObj(1);
 				temprelay->call(Node::BuildWeakConnectedComponent, numo);

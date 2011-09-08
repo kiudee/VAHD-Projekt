@@ -130,39 +130,62 @@ public:
  */
 ObjectType(SearchJob){
 public:
-	int sid; //mandatory
-	DateObj *dob; //required for Insert TODO pointer?
-	IdObj *ido; //required for Lookup, Join TODO pointer?
+	double sid; //mandatory
+	DateObj *dob; //required for Insert
+	IdObj *ido; //required for Lookup, Join
 	int type; //indicates the job type (the operation)
 	double bound;
 	int round;
+	int key;
 
 	//if overloading not possible: one constructor with all arguments! (unneeded arguments are NULL)
-	SearchJob(int s, int t, double b){
+	SearchJob(double s, int t, double b){
 		sid = s;
 		dob = NULL;
 		ido = NULL;
 		type = t;
 		round = 0;
 		bound = b;
+		key = 0;
 	}
 
-	SearchJob(int s, int t, double b, DateObj *d){
+	SearchJob(double s, int t, double b, DateObj *d){//insert
 		sid = s;
 		dob = d;
 		ido = NULL;
 		type = t;
 		round = 0;
 		bound = b;
+		key = 0;
 	}
 
-	SearchJob(int s, int t, double b, IdObj *i){
+	SearchJob(double s, int t, double b, IdObj *i){//join
 		sid = s;
 		dob = NULL;
 		ido = i;
 		type = t;
 		round = 0;
 		bound = b;
+		key = 0;
+	}
+	SearchJob(double s, int t, double b, IdObj *i, int k){//lookup
+		sid = s;
+		dob = NULL;
+		ido = i;
+		type = t;
+		round = 0;
+		bound = b;
+		key = k;
+	}
+
+	SearchJob(double s, int t, double b, int k){//delete
+		sid = s;
+		dob = NULL;
+		ido = i;
+		type = t;
+		round = 0;
+		bound = b;
+		key = k;
 	}
 
 };

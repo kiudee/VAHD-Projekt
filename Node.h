@@ -28,7 +28,6 @@ protected:
     double g(int kk);
     double calcRoutingBound();
     void checkStable(double id);
-    int isStable(); //TODO might be useless
 
 
 public:
