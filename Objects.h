@@ -109,6 +109,7 @@ public:
 		num = k;
 	}
 };
+
 /**
  * @deprecated
  * @see SearchJob, DateObj
@@ -181,7 +182,7 @@ public:
 	SearchJob(double s, int t, double b, int k){//delete
 		sid = s;
 		dob = NULL;
-		ido = i;
+		ido = NULL;
 		type = t;
 		round = 0;
 		bound = b;
