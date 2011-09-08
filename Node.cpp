@@ -352,7 +352,6 @@ Action Node::TriggerDataTransfer(IdObj *ido)
         for (HashMap::iterator it = data.begin(); it != data.end(); ++it) {
             if (g(it->first) > ido->num) {
                 DateObj *dob = new DateObj(it->first, it->second);
-                InsertObj *iob = new InsertObj(dob, Node::calcRoutingBound());
                 temprelay->call(Node::Insert, dob);
             }
         }
@@ -377,7 +376,6 @@ Action Node::Leave(IdObj *ido)
     if (leftstable) {
         for (HashMap::iterator it = data.begin(); it != data.end(); ++it) {
             DateObj *dob = new DateObj(it->first, it->second);
-            InsertObj *iob = new InsertObj(dob, Node::calcRoutingBound());
             left->out->call(Node::Insert, dob);
         }
         data.clear();
@@ -525,7 +523,7 @@ Action Node::Probing(Probe *ido)
             } else {
                 //(1) send probe to left introducing the first phase (indicating by parameter 0)
                 tempprobe = new Probe(num, new Identity(in), 0);
-                left->out->call(Node::Probing, tempido);
+                left->out->call(Node::Probing, tempprobe);
             }
             //If no right neighbor is set, set it to node1 and probing is done, else send the probe to the right neighbor
             if (right == NULL) {
@@ -533,7 +531,7 @@ Action Node::Probing(Probe *ido)
                 right = new NodeRelay(tempido);
             } else {
                 tempprobe = new Probe(num, new Identity(in), 0);
-                right->out->call(Node::Probing, tempido);
+                right->out->call(Node::Probing, tempprobe);
             }
         } else {
             //probe reaches v.0 or v.1. finish probing.
