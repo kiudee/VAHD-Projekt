@@ -2,16 +2,16 @@
 
 Action Supervisor::Init(NumObj *num)
 {
-    InitObj *tempObj;
 
+    total = num->num;
+    count = 0;
+
+    InitObj *tempObj;
     for (int i = 1; i <= num->num; i++) {
         tempObj = new InitObj(h(i),true);
         new(Node,tempObj);
     }
-    count = 0;
-    total = num->num;
-    ListNode = new Relay *[total];
-    StartID = new IdObj *[total];
+
     delete num;
 }
 
@@ -19,23 +19,25 @@ Action Supervisor::SetLink(IdPair *idop)
 {
     NumObj *numo;
 
-    ListNode[idop->ido1->num] = new Relay(idop->ido1->id);
+    Nodes.push_back(new Relay(idop->ido1->id));
     delete idop->ido1;
-    StartID[idop->ido2->num] = idop->ido2;
+    StartID.push_back(idop->ido2);
     delete idop;
     count++;
+
+    // If the last Node has registered we can link them with relays
     if (count == total) {
         for (int i=1; i<=total; i++) {
             // make sure that node i periodically wakes up
             numo = new NumObj(5);
-            ListNode[i]->call(Node::Wakeup, numo);
+            Nodes[i]->call(Node::Wakeup, numo);
 
             // initially connect node i to nodes 2i and 2i+1
             if (2*i<=total) {
-                ListNode[i]->call(Node::Join, StartID[2*i]);
+                Nodes[i]->call(Node::Join, StartID[2*i]);
             }
             if (2*i+1<=total) {
-                ListNode[i]->call(Node::Join, StartID[2*i+1]);
+                Nodes[i]->call(Node::Join, StartID[2*i+1]);
             }
         }
 
