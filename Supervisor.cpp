@@ -8,8 +8,8 @@ Action Supervisor::Init(NumObj *num)
 
     InitObj *tempObj;
     for (int i = 1; i <= num->num; i++) {
-        tempObj = new InitObj(h(i),true);
-        new(Node,tempObj);
+        tempObj = new InitObj(h(i), true);
+        new(Node, tempObj);
     }
 
     delete num;
@@ -27,17 +27,17 @@ Action Supervisor::SetLink(IdPair *idop)
 
     // If the last Node has registered we can link them with relays
     if (count == total) {
-        for (int i=1; i<=total; i++) {
+        for (int i = 1; i <= total; i++) {
             // make sure that node i periodically wakes up
             numo = new NumObj(5);
             Nodes[i]->call(Node::Wakeup, numo);
 
             // initially connect node i to nodes 2i and 2i+1
-            if (2*i<=total) {
-                Nodes[i]->call(Node::Join, StartID[2*i]);
+            if (2 * i <= total) {
+                Nodes[i]->call(Node::Join, StartID[2 * i]);
             }
-            if (2*i+1<=total) {
-                Nodes[i]->call(Node::Join, StartID[2*i+1]);
+            if (2 * i + 1 <= total) {
+                Nodes[i]->call(Node::Join, StartID[2 * i + 1]);
             }
         }
 
@@ -46,7 +46,7 @@ Action Supervisor::SetLink(IdPair *idop)
         call(Supervisor::Wakeup, numo);
     }
 }
-Action Supervisor::Wakeup(NumObj* numo)
+Action Supervisor::Wakeup(NumObj *numo)
 {
     //NumObj *searchnum;
 

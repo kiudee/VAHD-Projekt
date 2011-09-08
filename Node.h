@@ -24,31 +24,31 @@ protected:
     int rightstable;
     HashMap data;//was soll gespeichert werden?
 
-    void checkDead(NodeRelay *side);
+    void checkDead(NodeRelay * side);
     void checkValid();
     double calcRoutingBound();
     void checkStable(double id);
 
 
 public:
-    FirstAction(Node,Init)
+    FirstAction(Node, Init)
 
-    Action Init(InitObj *init);
-    Action ConnectChild(IdObj *id);
-    Action Wakeup(NumObj *num);
+    Action Init(InitObj * init);
+    Action ConnectChild(IdObj * id);
+    Action Wakeup(NumObj * num);
     Action BuildDeBruijn();
-    Action Insert(DateObj *dob);
-    Action Delete(NumObj *key);
-    Action LookUp(NumObj *key);
-    Action Join(IdObj *id);
-    Action Leave(IdObj *id);
-    Action Probing(Probe *ido);
-    Action BuildList(IdObj *id);
-    Action BuildWeakConnectedComponent(NumObj *numo);
-    Action ReceiveLookUp(DateObj *dob);
-    Action FinishSearch(SearchJob *sj);
-    Action Search(SearchJob *sj);
-    Action TriggerDataTransfer(IdObj *ido);
+    Action Insert(DateObj * dob);
+    Action Delete(NumObj * key);
+    Action LookUp(NumObj * key);
+    Action Join(IdObj * id);
+    Action Leave(IdObj * id);
+    Action Probing(Probe * ido);
+    Action BuildList(IdObj * id);
+    Action BuildWeakConnectedComponent(NumObj * numo);
+    Action ReceiveLookUp(DateObj * dob);
+    Action FinishSearch(SearchJob * sj);
+    Action Search(SearchJob * sj);
+    Action TriggerDataTransfer(IdObj * ido);
 };
 
 

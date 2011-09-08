@@ -7,7 +7,7 @@ double h(int kk)
     uint64_t t = s * k & 0x00000000FFFFFFFF;
     t = t >> (32 - i);
 
-    return t/static_cast<double>(2 << 14);
+    return t / static_cast<double>(2 << 14);
 }
 
 //TODO extra hash function for data objects?

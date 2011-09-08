@@ -511,7 +511,6 @@ Action Node::BuildList(IdObj *ido)
  * There is an example for a left probing in the comments.
  * The single steps are ordered by their temporal appearance.
  * Example steps marked with braces: (<STEP>)
-<<<<<<< HEAD
  */
 Action Node::Probing(Probe *ido)
 {

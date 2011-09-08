@@ -13,7 +13,7 @@ public:
     int num;
 
     NumObj(int i) {
-        num=i;
+        num = i;
     }
 };
 
@@ -23,7 +23,7 @@ public:
     double num;
 
     DoubleObj(double i) {
-        num=i;
+        num = i;
     }
 };
 
@@ -33,9 +33,9 @@ public:
     double num;
     Identity *id;
 
-    IdObj(double value, Identity *d) {
-        num=value;
-        id=d;
+    IdObj(double value, Identity * d) {
+        num = value;
+        id = d;
     }
 };
 
@@ -56,9 +56,9 @@ ObjectType(IdPair)
 public:
     IdObj *ido1;
     IdObj *ido2;
-    IdPair(IdObj *i1, IdObj *i2) {
-        ido1=i1;
-        ido2=i2;
+    IdPair(IdObj * i1, IdObj * i2) {
+        ido1 = i1;
+        ido2 = i2;
     }
 };
 
@@ -68,13 +68,13 @@ public:
     double num;
     Relay *out;
 
-    NodeRelay(IdObj *ido) {
+    NodeRelay(IdObj * ido) {
         num = ido->num;
         out = new Relay(ido->id);
         delete ido;
     }
 
-    NodeRelay(double n, Identity *i) {
+    NodeRelay(double n, Identity * i) {
         num = n;
         out = new Relay(i);
         delete i;
@@ -93,7 +93,7 @@ public:
     double num;
     Identity *id;
 
-    Probe(double n, Identity *d, int p) {
+    Probe(double n, Identity * d, int p) {
         num = n;
         phase = p;
         id = d;
@@ -125,7 +125,7 @@ public:
     int num;
     Identity *id;
 
-    KeyObj(int k, Identity *d) {
+    KeyObj(int k, Identity * d) {
         num = k;
         id = d;
     }
@@ -157,7 +157,7 @@ public:
         key = 0;
     }
 
-    SearchJob(double s, int t, double b, DateObj *d) { //insert
+    SearchJob(double s, int t, double b, DateObj * d) { //insert
         sid = s;
         dob = d;
         ido = NULL;
@@ -167,7 +167,7 @@ public:
         key = 0;
     }
 
-    SearchJob(double s, int t, double b, IdObj *i) { //join
+    SearchJob(double s, int t, double b, IdObj * i) { //join
         sid = s;
         dob = NULL;
         ido = i;
@@ -176,7 +176,7 @@ public:
         bound = b;
         key = 0;
     }
-    SearchJob(double s, int t, double b, IdObj *i, int k) { //lookup
+    SearchJob(double s, int t, double b, IdObj * i, int k) { //lookup
         sid = s;
         dob = NULL;
         ido = i;
@@ -209,7 +209,7 @@ public:
     int round;
     double bound;
 
-    InsertObj(DateObj *d, double b) {
+    InsertObj(DateObj * d, double b) {
         dob = d;
         round = 0;
         bound = b;
