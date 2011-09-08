@@ -122,63 +122,8 @@ Action Node::BuildDeBruijn()
  */
 Action Node::Insert(DateObj *dob)
 {
-
-    /*	if(!isStable()){
-    		call(Node::Insert, iob);
-    		return;
-    	}
-
-        iob->round++;
-        double hashedkey = g(iob->dob->num);
-        //responsible node for date was found
-        if((right->num > hashedkey && num <= hashedkey)) {
-            data[iob->dob->num] = iob->dob->date;
-            delete iob;
-            return;
-        }
-
-        //last phase for routing
-        if(iob->round >= iob->bound) {
-            if(hashedkey < num) {
-                left->out->call(Node::Insert, iob);
-                return;
-            } else if(hashedkey > num) {
-                right->out->call(Node::Insert, iob);
-                return;
-            }
-        }
-
-        //do next debruijn hop
-        if(isReal) {
-            if(hashedkey < num) {
-                node0->call(Node::Insert, iob);
-                return;
-            } else if(hashedkey > num) {
-                node1->call(Node::Insert, iob);
-                return;
-            }
-        }
-
-        //find next ideal position along list
-        if(hashedkey > num) {
-            if(fabs((1+left->num)/2 - hashedkey) < fabs((1+right->num)/2 - hashedkey)) {
-                left->out->call(Node::Insert, iob);
-                return;
-            } else {
-                right->out->call(Node::Insert, iob);
-                return;
-            }
-        } else {
-            if(fabs(left->num/2 - hashedkey) < fabs(right->num/2 - hashedkey)) {
-                left->out->call(Node::Insert, iob);
-                return;
-            } else {
-                right->out->call(Node::Insert, iob);
-                return;
-            }
-        }*/
-
-    SearchJob *sj = new SearchJob(g(dob->num), INSERT, Node::calcRoutingBound(), dob);
+    SearchJob *sj = new SearchJob(g(dob->num), INSERT,
+                                  Node::calcRoutingBound(), dob);
     Search(sj);
 
 }
@@ -192,8 +137,10 @@ Action Node::Insert(DateObj *dob)
 Action Node::FinishSearch(SearchJob *sj)
 {
     double hashedkey = sj->sid;
-    if(isReal && (right==NULL &&  (num <= hashedkey || (right->num > hashedkey && num <= hashedkey)))) {
-        switch(sj->type) {
+    if (isReal && (right == NULL &&
+                   (num <= hashedkey ||
+                    (right->num > hashedkey && num <= hashedkey)))) {
+        switch (sj->type) {
         case INSERT:
             data[sj->dob->num] = sj->dob->date;
             break;
@@ -219,12 +166,12 @@ Action Node::FinishSearch(SearchJob *sj)
         return;
     } else {
         //the actual node is the end of the list. send searchjob to the other end.
-        if(left==NULL) {
+        if (left == NULL) {
             sj->sid = MAX;
             sj->round = 0;
             Search(sj);
             return;
-        } else if(leftstable) {
+        } else if (leftstable) {
             left->out->call(Node::FinishSearch, sj);
             return;
         } else {
@@ -256,21 +203,24 @@ Action Node::Search(SearchJob *sj)
 
 
     //last phase for routing
-    if(sj->round >= sj->bound) {
+    if (sj->round >= sj->bound) {
 
         //responsible node for date was found
-        if(right==NULL &&  (num <= hashedkey || (right->num > hashedkey && num <= hashedkey))) {
+        if (right == NULL &&
+            (num <= hashedkey ||
+             (right->num > hashedkey && num <= hashedkey))) {
             //it is prohibited to do operations on virtual nodes (TODO except for Join?)
             FinishSearch(sj);
+            return;
         }
         //search accoringly to the order of the list
-        if(hashedkey < num) {
-            if(left==NULL) {
+        if (hashedkey < num) {
+            if (left == NULL) {
                 sj->sid = MAX;//TO DO this won't work because we want to search for MAX and not for g(MAX)! adjust searchjob=> fixed
                 sj->round = 0;
                 Search(sj);
                 return;
-            } else if(leftstable) {
+            } else if (leftstable) {
                 sj->round++;
                 left->out->call(Node::Search, sj);
                 return;
@@ -278,8 +228,8 @@ Action Node::Search(SearchJob *sj)
                 call(Node::Search, sj);
                 return;
             }
-        } else if(hashedkey > num) {
-            if(rightstable) {
+        } else if (hashedkey > num) {
+            if (rightstable) {
                 sj->round++;
                 right->out->call(Node::Search, sj);
                 return;
@@ -288,12 +238,12 @@ Action Node::Search(SearchJob *sj)
     }
 
     //do next debruijn hop
-    if(isReal) {
-        if(hashedkey < num) {
+    if (isReal) {
+        if (hashedkey < num) {
             sj->round++;
             node0->call(Node::Search, sj);
             return;
-        } else if(hashedkey > num) {
+        } else if (hashedkey > num) {
             sj->round++;
             node1->call(Node::Search, sj);
             return;
@@ -301,9 +251,10 @@ Action Node::Search(SearchJob *sj)
     }
     //TODO take end points into account:
     //find next ideal position along list
-    if(hashedkey > num) {
-        if(fabs((1+left->num)/2 - hashedkey) < fabs((1+right->num)/2 - hashedkey)) {
-            if(leftstable) {
+    if (hashedkey > num) {
+        if (fabs((1 + left->num) / 2 - hashedkey) <
+            fabs((1 + right->num) / 2 - hashedkey)) {
+            if (leftstable) {
                 sj->round++;
                 left->out->call(Node::Search, sj);
                 return;
@@ -316,8 +267,8 @@ Action Node::Search(SearchJob *sj)
             return;
         }
     } else {
-        if(fabs(left->num/2 - hashedkey) < fabs(right->num/2 - hashedkey)) {
-            if(leftstable) {
+        if (fabs(left->num / 2 - hashedkey) < fabs(right->num / 2 - hashedkey)) {
+            if (leftstable) {
                 sj->round++;
                 left->out->call(Node::Search, sj);
                 return;
@@ -326,7 +277,7 @@ Action Node::Search(SearchJob *sj)
                 return;
             }
         } else {
-            if(rightstable) {
+            if (rightstable) {
                 sj->round++;
                 right->out->call(Node::Search, sj);
                 return;
@@ -336,7 +287,6 @@ Action Node::Search(SearchJob *sj)
             }
         }
     }
-
 }
 /**
  * Deletes a date from a node
@@ -345,33 +295,8 @@ Action Node::Search(SearchJob *sj)
  */
 Action Node::Delete(NumObj *key)
 {
-    /*    double hashedkey = g(key->num);
-        if((right->num > hashedkey && num < hashedkey) || hashedkey==num) {
-            if(data[key->num] != NULL) {
-                data.erase(key->num);
-                delete key;
-                return;
-            }
-
-        }
-
-        if(isReal) {
-            if(hashedkey < num) {
-                node0->call(Node::Delete, key);
-                return;
-            } else if(hashedkey > num) {
-                node1->call(Node::Delete, key);
-                return;
-            }
-        }
-
-        if(hashedkey < num) {
-            left->out->call(Node::Delete, key);
-        } else if(hashedkey > num) {
-            right->out-call(Node::Delete, key);
-        }*/
-
-    SearchJob *sj = new SearchJob(g(key->num), DELETE, Node::calcRoutingBound(), key->num);
+    SearchJob *sj = new SearchJob(g(key->num), DELETE,
+                                  Node::calcRoutingBound(), key->num);
     Search(sj);
 }
 
@@ -386,53 +311,30 @@ Action Node::Delete(NumObj *key)
  */
 Action Node::LookUp(NumObj *key)
 {
-    /*    double hashedkey = g(key->num);
-        if((right->num > hashedkey && num < hashedkey) || hashedkey==num) {
-            Object obj = data[key->num]; //might be null
-            Relay temprelay = new Relay(key->id);
-            DateObj dob = new DateObj(key->num, obj);
-            temprelay->call(Node::ReceiveLookUp, dob);
-            delete temprelay;
-            delete key;
-            return;
-        }
-
-        if(isReal) {
-            if(hashedkey < num) {
-                node0->call(Node::LookUp, key);
-                return;
-            } else if(hashedkey > num) {
-                node1->call(Node::LookUp, key);
-                return;
-            }
-        }
-
-        if(hashedkey < num) {
-            left->out->call(Node::LookUp, key);
-        } else if(hashedkey > num) {
-            right->out-call(Node::LookUp, key);
-        }*/
     IdObj *ido = new IdObj(num, new Identity(in));
-    SearchJob *sj = new SearchJob(g(key->num), LOOKUP, Node::calcRoutingBound(), ido, key->num);
+    SearchJob *sj = new SearchJob(g(key->num), LOOKUP,
+                                  Node::calcRoutingBound(), ido, key->num);
     Search(sj);
 }
 
 Action Node::ReceiveLookUp(DateObj *dob)
 {
-    std::cout << "Node " << num << ": receives data for key" << dob->num << ":" << dob->date;
+    std::cout << "Node " << num << ": receives data for key" << dob->num << ":"
+              << dob->date;
     delete dob;
 }
 
 Action Node::Join(IdObj *ido)
 {
-    /*TO DO move data from predecessor to the new node. but how
+    /* TODO move data from predecessor to the new node. but how
      * and when do we trigger the data transfer at the predecessor???
      * the predecessor does not know the new node and vice versa.
      * solution: we are routing only in stable state and the node
      * joins at the right place!
      */
     //TODO spawn virtual nodes
-    SearchJob *sj = new SearchJob(g(ido->num), JOIN, Node::calcRoutingBound(), ido);
+    SearchJob *sj = new SearchJob(g(ido->num), JOIN, Node::calcRoutingBound(),
+                                  ido);
     Search(sj);
 }
 
@@ -444,11 +346,11 @@ Action Node::Join(IdObj *ido)
 Action Node::TriggerDataTransfer(IdObj *ido)
 {
     //if(num < ido->num && right->num = ido->num){//should be always true, when request appears!
-    if(isReal) {
+
+    if (isReal) {
         Relay *temprelay = new Relay(ido->id);
         for (HashMap::iterator it = data.begin(); it != data.end(); ++it) {
-
-            if(g(it->first) > ido->num) {
+            if (g(it->first) > ido->num) {
                 DateObj *dob = new DateObj(it->first, it->second);
                 InsertObj *iob = new InsertObj(dob, Node::calcRoutingBound());
                 temprelay->call(Node::Insert, dob);
@@ -457,7 +359,7 @@ Action Node::TriggerDataTransfer(IdObj *ido)
         delete temprelay;
         delete ido;
     } else {
-        if(leftstable) {
+        if (leftstable) {
             left->out->call(Node::TriggerDataTransfer, ido);
         } else {
             call(Node::TriggerDataTransfer, ido);
@@ -465,9 +367,14 @@ Action Node::TriggerDataTransfer(IdObj *ido)
     }
 }
 
+/**
+ * Removes a real node from the data structure and transfer its data to the predecessor
+ * @author Simon
+ * @param the IdObj of the node, that is going to leave.
+ */
 Action Node::Leave(IdObj *ido)
 {
-    if(leftstable) {
+    if (leftstable) {
         for (HashMap::iterator it = data.begin(); it != data.end(); ++it) {
             DateObj *dob = new DateObj(it->first, it->second);
             InsertObj *iob = new InsertObj(dob, Node::calcRoutingBound());
@@ -476,7 +383,7 @@ Action Node::Leave(IdObj *ido)
         data.clear();
 
         std::cout << "Node " << num << ": preparing to leave system.\n";
-        num = num+MAX;    // increase num to get to end of list
+        num = num + MAX;    // increase num to get to end of list
         delete in;       // invalidate existing links/identities to 'in'
         in = new Relay;  // create new 'in' to be used for new 'num'
     } else {
@@ -493,18 +400,17 @@ Action Node::Leave(IdObj *ido)
 void Node::checkStable(double id)
 {
     //TODO quorum needed? or is it checked by subjects environment?
-    if(id < num) {
-        leftstable = left->num==id;
+    if (id < num) {
+        leftstable = left->num == id;
     }
 
-    else if(id > num) {
-        rightstable = right->num==id;
+    else if (id > num) {
+        rightstable = right->num == id;
     }
 }
 
-
-
 /**
+ * Standard implementation of BuildList. Stable flags added
  * @author Simon
  */
 Action Node::BuildList(IdObj *ido)
@@ -520,13 +426,13 @@ Action Node::BuildList(IdObj *ido)
     checkValid();
     checkStable(ido->num);
 
-    if (ido==NULL) {
+    if (ido == NULL) {
         // timeout: ask neighbors to create return links
-        if (left!=NULL) {
+        if (left != NULL) {
             tempido = new IdObj(num, new Identity(in));
             left->out->call(Node::BuildList, tempido);
         }
-        if (right!=NULL) {
+        if (right != NULL) {
             tempido = new IdObj(num, new Identity(in));
             right->out->call(Node::BuildList, tempido);
         }
@@ -535,7 +441,7 @@ Action Node::BuildList(IdObj *ido)
         call(Node::Wakeup, counter);
     } else {
         if (ido->num > num) {
-            if (right==NULL) {                // right link not yet defined
+            if (right == NULL) {              // right link not yet defined
                 std::cout << "Node " << num << ": creating link to " << ido->num << ".\n";
                 right = new NodeRelay(ido);
             } else {
@@ -545,7 +451,9 @@ Action Node::BuildList(IdObj *ido)
                 } else {
                     if (right->num > ido->num) {  // ido between node and right link
                         if (idle(right->out)) {
-                            std::cout << "Node " << num << ": new right " << ido->num << ", forwarding " << right->num << ".\n";
+                            std::cout << "Node " << num << ": new right "
+                                      << ido->num << ", forwarding "
+                                      << right->num << ".\n";
                             tempido = new IdObj(right->num, extractIdentity(right->out));
                             delete right;
                             right = new NodeRelay(ido);
@@ -553,40 +461,43 @@ Action Node::BuildList(IdObj *ido)
                         } else {
                             call(Node::BuildList, ido);
                         }
-                    } else {                      // ido->num = right->num
+                    } else {  // ido->num = right->num
                         delete ido->id;
                         delete ido;
                     }
                 }
             }
-        } else {                            // ido->num < num
+        } else {  // ido->num < num
             if (ido->num < num) {
-                if (left==NULL) {               // left link not yet defined
-                    std::cout << "Node " << num << ": creating link to " << ido->num << ".\n";
+                if (left == NULL) {  // left link not yet defined
+                    std::cout << "Node " << num << ": creating link to "
+                              << ido->num << ".\n";
                     left = new NodeRelay(ido);
                 } else {
-                    if (ido->num < left->num) {   // ido below left link
-                        std::cout << "Node " << num << ": forwarding " << ido->num << " to " << left->num << ".\n";
+                    if (ido->num < left->num) {  // ido below left link
+                        std::cout << "Node " << num << ": forwarding "
+                                  << ido->num << " to " << left->num << ".\n";
                         left->out->call(Node::BuildList, ido);
                     } else {
-                        if (left->num < ido->num) { // ido between node and left link
+                        if (left->num < ido->num) {  // ido between node and left link
                             if (idle(left->out)) {
                                 std::cout << "Node " << num << ": new left " << ido->num << ", forwarding " << left->num << ".\n";
-                                tempido = new IdObj(left->num, extractIdentity(left->out));
+                                tempido = new IdObj(left->num,
+                                                    extractIdentity(left->out));
                                 delete left;
                                 left = new NodeRelay(ido);
                                 left->out->call(Node::BuildList, tempido);
                             } else {
                                 call(Node::BuildList, ido);
                             }
-                        } else {                    // ido->num = left->num
+                        } else {  // ido->num = left->num
                             delete ido->id;
                             delete ido;
                         }
                     }
                 }
             } else {
-                delete ido->id;    // ido->num = num
+                delete ido->id;  // ido->num = num
                 delete ido;
             }
         }
@@ -594,10 +505,13 @@ Action Node::BuildList(IdObj *ido)
 }
 
 /**
+ * Ensures weak connected component to its de bruijn neighbors.
  * @author Simon
+ * @param the IdObj of the node, which started probing
  * There is an example for a left probing in the comments.
  * The single steps are ordered by their temporal appearance.
  * Example steps marked with braces: (<STEP>)
+<<<<<<< HEAD
  */
 Action Node::Probing(Probe *ido)
 {
@@ -616,7 +530,7 @@ Action Node::Probing(Probe *ido)
             }
             //If no right neighbor is set, set it to node1 and probing is done, else send the probe to the right neighbor
             if (right == NULL) {
-                tempido = new IdObj((1+num)/ 2, new Identity(node1));
+                tempido = new IdObj((1 + num) / 2, new Identity(node1));
                 right = new NodeRelay(tempido);
             } else {
                 tempprobe = new Probe(num, new Identity(in), 0);
@@ -711,10 +625,10 @@ Action Node::Probing(Probe *ido)
                 temprelay->call(Node::BuildWeakConnectedComponent, numo);
                 delete temprelay;
             }
-
         }
     }
 }
+
 /**
  * Builds a link from v to v.0 or v.1
  * @author Simon
@@ -732,11 +646,12 @@ Action Node::BuildWeakConnectedComponent(NumObj *numo)
         //link to v.0
         left = new NodeRelay(num / 2, new Identity(node0));
         //delegate old left neighbor to node0
-        left->out->call(Node::BuildList,tempido);
+        left->out->call(Node::BuildList, tempido);
     } else if (numo->num == 1) {
         tempido = new IdObj(right->num, extractIdentity(right->out));
         delete right;
         right = new NodeRelay((1 + num) / 2, new Identity(node1));
-        right->out->call(Node::BuildList,tempido);
+        right->out->call(Node::BuildList, tempido);
     }
+    delete numo;
 }
