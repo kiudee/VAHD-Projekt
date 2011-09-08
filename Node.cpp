@@ -209,7 +209,14 @@ Action Node::FinishSearch(SearchJob *sj)
     	return;
     }
     else{
-    	if(leftstable){
+		//the actual node is the end of the list. send searchjob to the other end.
+		if(left==NULL){
+			sj->sid = MAX;
+			sj->round = 0;
+			Search(sj);
+			return;
+		}
+		else if(leftstable){
     		left->out->call(Node::FinishSearch, sj);
     		return;
     	}
@@ -247,32 +254,13 @@ Action Node::Search(SearchJob *sj)
     	//responsible node for date was found
     	if(right==NULL &&  num <= hashedkey || right->num > hashedkey && num <= hashedkey){
     		//it is prohibited to do operations on virtual nodes (TODO except for Join?)
-    		if(isReal){
-    			FinishSearch(sj);
-    			return;
-    		}
-    		else{
-    			//the actual node is the end of the list. send searchjob to the other end.
-    			if(left==NULL){
-    				sj->sid = MAX;
-    				Search(sj);
-    				return;
-    			}
-
-        		else if(leftstable){
-                	sj->round++;
-                	left->out->call(Node::FinishSearch, sj);
-                	return;
-                }else{
-                	call(Node::Search, sj);
-                	return;
-                }
-    		}
+    		FinishSearch(sj);
     	}
     	//search accoringly to the order of the list
     	if(hashedkey < num) {
     		if(left==NULL){
     			sj->sid = MAX;//TO DO this won't work because we want to search for MAX and not for g(MAX)! adjust searchjob=> fixed
+    			sj->round = 0;
     			Search(sj);
     			return;
     		}
