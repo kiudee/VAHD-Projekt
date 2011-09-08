@@ -1,15 +1,16 @@
 #ifndef NODE_H_
 #define NODE_H_
 
+#include <math.h>
 #include <string>
 #include <unordered_map>
+#include <iostream>
 #include "Subjects1-6.h"
-#include "math.h"
 #include "Objects.h"
 #include "Supervisor.h"
 #include "Hash.h"
 
-typedef std::unordered_map<int, std::string> HashMap;
+typedef std::unordered_map<int, DATATYPE> HashMap;
 
 SubjectType(Node)
 {
@@ -25,8 +26,6 @@ protected:
 
     void checkDead(NodeRelay *side);
     void checkValid();
-    double h(int kk);
-    double g(int kk);
     double calcRoutingBound();
     void checkStable(double id);
 
@@ -47,6 +46,7 @@ public:
     Action BuildList(IdObj *id);
     Action BuildWeakConnectedComponent(NumObj *numo);
     Action ReceiveLookUp(DateObj *dob);
+    Action FinishSearch(SearchJob *sj);
     Action Search(SearchJob *sj);
     Action TriggerDataTransfer(IdObj *ido);
 };

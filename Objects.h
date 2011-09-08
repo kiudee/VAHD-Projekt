@@ -3,6 +3,8 @@
 
 #include <iostream>
 
+#define DATATYPE std::string
+
 enum SearchJobType { INSERT, DELETE, LOOKUP, JOIN };
 
 ObjectType(NumObj)
@@ -105,9 +107,9 @@ ObjectType(DateObj)
 {
 public:
     int num;
-    Object date;//TODO make datatype consistent with HashMap
+    DATATYPE date;
 
-    DateObj(int k , Object d) {
+    DateObj(int k , DATATYPE d) {
         date = d;
         num = k;
     }
