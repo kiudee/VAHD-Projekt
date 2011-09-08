@@ -1,6 +1,4 @@
-#include "math.h"
 #include "Node.h"
-#include "Objects.h"
 
 #define MAX 1
 
@@ -193,27 +191,29 @@ Action Node::Insert(DateObj *dob)
  */
 Action Node::FinishSearch(SearchJob *sj)
 {
-    if(isReal && (right==NULL &&  num <= hashedkey || right->num > hashedkey && num <= hashedkey)) {
+    double hashedkey = sj->sid;
+    if(isReal && (right==NULL &&  (num <= hashedkey || (right->num > hashedkey && num <= hashedkey)))) {
         switch(sj->type) {
         case INSERT:
             data[sj->dob->num] = sj->dob->date;
             break;
         case DELETE:
-            if(data[sj->key] != NULL) {
-                data.erase(sj->sid);
-            }
+            data.erase(sj->key);
             break;
-        case LOOKUP:
-            Object obj = data[sj->key]; //might be null TODO make consistent with HashMap
+        case LOOKUP: {
+            DATATYPE obj = data[sj->key]; //might be null TODO make consistent with HashMap
             Relay *temprelay = new Relay(sj->ido->id);
             DateObj *dob = new DateObj(sj->key, obj);
             temprelay->call(Node::ReceiveLookUp, dob);
             delete temprelay;
             break;
+        }
         case JOIN:
             IdObj *ido = sj->ido;
             BuildList(ido);  // just connect to given reference; BuildList will add it to the right!
-            right->out->call(Node::TriggerDataTransfer, extractIdentity(right->out));
+            IdObj *tempido = new IdObj(right->num, extractIdentity(right->out));
+            right->out->call(Node::TriggerDataTransfer, tempido);
+            break;
         }
         delete sj;
         return;
@@ -259,7 +259,7 @@ Action Node::Search(SearchJob *sj)
     if(sj->round >= sj->bound) {
 
         //responsible node for date was found
-        if(right==NULL &&  num <= hashedkey || right->num > hashedkey && num <= hashedkey) {
+        if(right==NULL &&  (num <= hashedkey || (right->num > hashedkey && num <= hashedkey))) {
             //it is prohibited to do operations on virtual nodes (TODO except for Join?)
             FinishSearch(sj);
         }
@@ -531,7 +531,7 @@ Action Node::BuildList(IdObj *ido)
             right->out->call(Node::BuildList, tempido);
         }
         // prepare next timeout
-        NumObj counter = new NumObj(5);
+        NumObj *counter = new NumObj(5);
         call(Node::Wakeup, counter);
     } else {
         if (ido->num > num) {
