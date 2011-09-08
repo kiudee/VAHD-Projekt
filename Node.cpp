@@ -210,30 +210,27 @@ Action Node::FinishSearch(SearchJob *sj)
             temprelay->call(Node::ReceiveLookUp, dob);
             delete temprelay;
             break;
-    	case JOIN:
-    		IdObj *ido = sj->ido;
-    		BuildList(ido);  // just connect to given reference; BuildList will add it to the right!
-    		right->out->call(Node::TriggerDataTransfer, extractIdentity(right->out));
-    	}
-    	delete sj;
-    	return;
-    }
-    else{
-		//the actual node is the end of the list. send searchjob to the other end.
-		if(left==NULL){
-			sj->sid = MAX;
-			sj->round = 0;
-			Search(sj);
-			return;
-		}
-		else if(leftstable){
-    		left->out->call(Node::FinishSearch, sj);
-    		return;
-    	}
-    	else{
-    		call(Node::FinishSearch, sj);
-    		return;
-    	}
+        case JOIN:
+            IdObj *ido = sj->ido;
+            BuildList(ido);  // just connect to given reference; BuildList will add it to the right!
+            right->out->call(Node::TriggerDataTransfer, extractIdentity(right->out));
+        }
+        delete sj;
+        return;
+    } else {
+        //the actual node is the end of the list. send searchjob to the other end.
+        if(left==NULL) {
+            sj->sid = MAX;
+            sj->round = 0;
+            Search(sj);
+            return;
+        } else if(leftstable) {
+            left->out->call(Node::FinishSearch, sj);
+            return;
+        } else {
+            call(Node::FinishSearch, sj);
+            return;
+        }
     }
 }
 
@@ -261,26 +258,25 @@ Action Node::Search(SearchJob *sj)
     //last phase for routing
     if(sj->round >= sj->bound) {
 
-    	//responsible node for date was found
-    	if(right==NULL &&  num <= hashedkey || right->num > hashedkey && num <= hashedkey){
-    		//it is prohibited to do operations on virtual nodes (TODO except for Join?)
-    		FinishSearch(sj);
-    	}
-    	//search accoringly to the order of the list
-    	if(hashedkey < num) {
-    		if(left==NULL){
-    			sj->sid = MAX;//TO DO this won't work because we want to search for MAX and not for g(MAX)! adjust searchjob=> fixed
-    			sj->round = 0;
-    			Search(sj);
-    			return;
-    		}
-    		else if(leftstable){
-            	sj->round++;
-            	left->out->call(Node::Search, sj);
-            	return;
-            }else{
-            	call(Node::Search, sj);
-            	return;
+        //responsible node for date was found
+        if(right==NULL &&  num <= hashedkey || right->num > hashedkey && num <= hashedkey) {
+            //it is prohibited to do operations on virtual nodes (TODO except for Join?)
+            FinishSearch(sj);
+        }
+        //search accoringly to the order of the list
+        if(hashedkey < num) {
+            if(left==NULL) {
+                sj->sid = MAX;//TO DO this won't work because we want to search for MAX and not for g(MAX)! adjust searchjob=> fixed
+                sj->round = 0;
+                Search(sj);
+                return;
+            } else if(leftstable) {
+                sj->round++;
+                left->out->call(Node::Search, sj);
+                return;
+            } else {
+                call(Node::Search, sj);
+                return;
             }
         } else if(hashedkey > num) {
             if(rightstable) {

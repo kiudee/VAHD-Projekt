@@ -4,6 +4,7 @@
 #include <string>
 #include <unordered_map>
 #include "Subjects1-6.h"
+#include "math.h"
 #include "Objects.h"
 #include "Supervisor.h"
 #include "Hash.h"
