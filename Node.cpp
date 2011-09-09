@@ -205,9 +205,7 @@ Action Node::Search(SearchJob *sj)
     if (sj->round >= sj->bound) {
 
         //responsible node for date was found
-        if (right == NULL &&
-                (num <= hashedkey ||
-                 (right->num > hashedkey && num <= hashedkey))) {
+        if ((right == NULL || right->num) && num <= hashedkey) {
             //it is prohibited to do operations on virtual nodes (TODO except for Join?)
             FinishSearch(sj);
             return;
