@@ -159,7 +159,7 @@ Action Node::FinishSearch(SearchJob *sj)
             BuildList(ido);  // just connect to given reference; BuildList will add it to the right!
             // TODO: This assertion failes => BuildList did not add the node to
             // the right. Why?
-            assert (right != NULL);
+            assert(right != NULL);
             IdObj *tempido = new IdObj(right->num, extractIdentity(right->out));
             right->out->call(Node::TriggerDataTransfer, tempido);
             break;
