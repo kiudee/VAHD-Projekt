@@ -98,7 +98,7 @@ double Node::calcRoutingBound() {
 	if (right != NULL) {
 		return -2 * log(fabs(num - right->num));
 	} else {
-		return 0.0; //TODO what about this case?
+		return 0.0; //TODO what about this case? I think it is okay to return 0, because this way the last routing phase is introduced from the beginning. this would cause a routing time of O(n)
 	}
 }
 
@@ -180,8 +180,8 @@ Action Node::BuildDeBruijn() {
  * @author Simon
  * @param the SearchJob
  */Action Node::FinishSearch(SearchJob *sj) {
-	if (isReal && (right == NULL && num <= hashedkey || right->num > hashedkey
-			&& num <= hashedkey)) {
+	if ((isReal || sj->type == JOIN) && (right == NULL && num <= hashedkey
+			|| right->num > hashedkey && num <= hashedkey)) {
 		switch (sj->type) {
 		case INSERT:
 			data[sj->dob->num] = sj->dob->date;
