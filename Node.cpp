@@ -100,12 +100,13 @@ void Node::checkValid()
  * @author Simon
  * @return the bound
  */
-double Node::calcRoutingBound() {
-	if (right != NULL) {
-		return -2 * log(fabs(num - right->num));
-	} else {
-		return 0.0; //TODO what about this case? I think it is okay to return 0, because this way the last routing phase is introduced from the beginning. this would cause a routing time of O(n)
-	}
+double Node::calcRoutingBound()
+{
+    if (right != NULL) {
+        return -2 * log(fabs(num - right->num));
+    } else {
+        return 0.0; //TODO what about this case? I think it is okay to return 0, because this way the last routing phase is introduced from the beginning. this would cause a routing time of O(n)
+    }
 }
 
 Action Node::BuildDeBruijn()
@@ -136,8 +137,8 @@ Action Node::Insert(DateObj *dob)
 Action Node::FinishSearch(SearchJob *sj)
 {
     double hashedkey = sj->sid;
-if ((isReal || sj->type == JOIN) && (right == NULL && num <= hashedkey
-			|| right->num > hashedkey && num <= hashedkey)) {
+    if ((isReal || sj->type == JOIN) && (right == NULL && num <= hashedkey
+                                         || right->num > hashedkey && num <= hashedkey)) {
         switch (sj->type) {
         case INSERT:
             data[sj->dob->num] = sj->dob->date;
@@ -205,8 +206,8 @@ Action Node::Search(SearchJob *sj)
 
         //responsible node for date was found
         if (right == NULL &&
-            (num <= hashedkey ||
-             (right->num > hashedkey && num <= hashedkey))) {
+                (num <= hashedkey ||
+                 (right->num > hashedkey && num <= hashedkey))) {
             //it is prohibited to do operations on virtual nodes (TODO except for Join?)
             FinishSearch(sj);
             return;
@@ -251,7 +252,7 @@ Action Node::Search(SearchJob *sj)
     //find next ideal position along list
     if (hashedkey > num) {
         if (fabs((1 + left->num) / 2 - hashedkey) <
-            fabs((1 + right->num) / 2 - hashedkey)) {
+                fabs((1 + right->num) / 2 - hashedkey)) {
             if (leftstable) {
                 sj->round++;
                 left->out->call(Node::Search, sj);
