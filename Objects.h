@@ -3,6 +3,8 @@
 
 #include <iostream>
 
+#define DATATYPE std::string
+
 enum SearchJobType { INSERT, DELETE, LOOKUP, JOIN };
 
 ObjectType(NumObj)
@@ -11,16 +13,17 @@ public:
     int num;
 
     NumObj(int i) {
-        num=i;
+        num = i;
     }
 };
 
-ObjectType(DoubleObj){
+ObjectType(DoubleObj)
+{
 public:
     double num;
 
     DoubleObj(double i) {
-        num=i;
+        num = i;
     }
 };
 
@@ -30,9 +33,9 @@ public:
     double num;
     Identity *id;
 
-    IdObj(double value, Identity *d) {
-        num=value;
-        id=d;
+    IdObj(double value, Identity * d) {
+        num = value;
+        id = d;
     }
 };
 
@@ -53,9 +56,9 @@ ObjectType(IdPair)
 public:
     IdObj *ido1;
     IdObj *ido2;
-    IdPair(IdObj *i1, IdObj *i2) {
-        ido1=i1;
-        ido2=i2;
+    IdPair(IdObj * i1, IdObj * i2) {
+        ido1 = i1;
+        ido2 = i2;
     }
 };
 
@@ -65,13 +68,13 @@ public:
     double num;
     Relay *out;
 
-    NodeRelay(IdObj *ido) {
+    NodeRelay(IdObj * ido) {
         num = ido->num;
         out = new Relay(ido->id);
         delete ido;
     }
 
-    NodeRelay(double n, Identity *i) {
+    NodeRelay(double n, Identity * i) {
         num = n;
         out = new Relay(i);
         delete i;
@@ -83,110 +86,115 @@ public:
  *  indicates the routing direction.
  * @author Simon
  */
-ObjectType(Probe){
+ObjectType(Probe)
+{
 public:
-		int phase;
-		double num;
-		Identity *id;
+    int phase;
+    double num;
+    Identity *id;
 
-	    Probe(double n, Identity *d, int p) {
-	        num = n;
-	        phase = p;
-	        id = d;
-	    }
+    Probe(double n, Identity * d, int p) {
+        num = n;
+        phase = p;
+        id = d;
+    }
 };
 
 /**
  * Data to store at nodes
  */
-ObjectType(DateObj){
+ObjectType(DateObj)
+{
 public:
-	int num;
-	Object date;//TODO make datatype consistent with HashMap
+    int num;
+    DATATYPE date;
 
-	DateObj(int k , Object d){
-		date = d;
-		num = k;
-	}
+    DateObj(int k , DATATYPE d) {
+        date = d;
+        num = k;
+    }
 };
+
 /**
  * @deprecated
  * @see SearchJob, DateObj
  */
-ObjectType(KeyObj){
+ObjectType(KeyObj)
+{
 public:
-	int num;
-	Identity *id;
+    int num;
+    Identity *id;
 
-	KeyObj(int k, Identity *d){
-		num = k;
-		id = d;
-	}
+    KeyObj(int k, Identity * d) {
+        num = k;
+        id = d;
+    }
 };
 
 /**
  * Parameter for any search operation
  *@author Simon
  */
-ObjectType(SearchJob){
+ObjectType(SearchJob)
+{
 public:
-	double sid; //mandatory
-	DateObj *dob; //required for Insert
-	IdObj *ido; //required for Lookup, Join
-	int type; //indicates the job type (the operation)
-	double bound;
-	int round;
-	int key;
+    double sid; //mandatory
+    DateObj *dob; //required for Insert
+    IdObj *ido; //required for Lookup, Join
+    int type; //indicates the job type (the operation)
+    double bound;
+    int round;
+    int key;
 
-	//if overloading not possible: one constructor with all arguments! (unneeded arguments are NULL)
-	SearchJob(double s, int t, double b){
-		sid = s;
-		dob = NULL;
-		ido = NULL;
-		type = t;
-		round = 0;
-		bound = b;
-		key = 0;
-	}
+    //if overloading not possible: one constructor with all arguments! (unneeded arguments are NULL)
+    SearchJob(double s, int t, double b) {
+        sid = s;
+        dob = NULL;
+        ido = NULL;
+        type = t;
+        round = 0;
+        bound = b;
+        key = 0;
+    }
 
-	SearchJob(double s, int t, double b, DateObj *d){//insert
-		sid = s;
-		dob = d;
-		ido = NULL;
-		type = t;
-		round = 0;
-		bound = b;
-		key = 0;
-	}
+    SearchJob(double s, int t, double b, DateObj * d) { //insert
+        sid = s;
+        dob = d;
+        ido = NULL;
+        type = t;
+        round = 0;
+        bound = b;
+        key = 0;
+    }
 
-	SearchJob(double s, int t, double b, IdObj *i){//join
-		sid = s;
-		dob = NULL;
-		ido = i;
-		type = t;
-		round = 0;
-		bound = b;
-		key = 0;
-	}
-	SearchJob(double s, int t, double b, IdObj *i, int k){//lookup
-		sid = s;
-		dob = NULL;
-		ido = i;
-		type = t;
-		round = 0;
-		bound = b;
-		key = k;
-	}
+    SearchJob(double s, int t, double b, IdObj * i) { //join
+        sid = s;
+        dob = NULL;
+        ido = i;
+        type = t;
+        round = 0;
+        bound = b;
+        key = 0;
+    }
+    SearchJob(double s, int t, double b, IdObj * i, int k) { //lookup
+        sid = s;
+        dob = NULL;
+        ido = i;
+        type = t;
+        round = 0;
+        bound = b;
+        key = k;
+    }
 
-	SearchJob(double s, int t, double b, int k){//delete
-		sid = s;
-		dob = NULL;
-		ido = i;
-		type = t;
-		round = 0;
-		bound = b;
-		key = k;
-	}
+    SearchJob(double s, int t, double b, int k) { //delete
+        sid = s;
+        dob = NULL;
+        ido = NULL;
+        type = t;
+        round = 0;
+        bound = b;
+        key = k;
+    }
 
 };
 
@@ -194,17 +202,18 @@ public:
  * @deprecated
  * @see SearchJob
  */
-ObjectType(InsertObj){
+ObjectType(InsertObj)
+{
 public:
-	DateObj *dob;
-	int round;
-	double bound;
+    DateObj *dob;
+    int round;
+    double bound;
 
-	InsertObj(DateObj *d, double b){
-		dob = d;
-		round = 0;
-		bound = b;
-	}
+    InsertObj(DateObj * d, double b) {
+        dob = d;
+        round = 0;
+        bound = b;
+    }
 };
 
 
