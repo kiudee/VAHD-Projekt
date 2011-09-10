@@ -63,12 +63,13 @@ Action Node::Wakeup(NumObj *num)
 /**
  * Checks if the given NodeRelay is dead and deletes it.
  */
-void Node::checkDead(NodeRelay *side)
+void Node::checkDead(NodeRelay **side)
 {
-    if (side != NULL && outdeg(side->out) == 0) {
-        delete side->out;
-        delete side;
-        side = NULL;
+    if ((*side) != NULL && outdeg((*side)->out) == 0) {
+        NodeRelay *tmpptr = *side;
+        delete tmpptr->out;
+        delete *side;
+        *side = NULL;
     }
 }
 
@@ -405,7 +406,7 @@ void Node::checkStable(double id)
     }
 }
 
-void Node::BuildSide(IdObj *ido, NodeRelay *side, bool right)
+void Node::BuildSide(IdObj *ido, NodeRelay **side, bool right)
 {
     auto compare = [right](double x, double y) -> bool {
         if (right) {
@@ -415,23 +416,23 @@ void Node::BuildSide(IdObj *ido, NodeRelay *side, bool right)
         }
     };
 
-    if (side == NULL) {              // link not yet defined
+    if (*side == NULL) {              // link not yet defined
         std::cout << "Node " << num << ": creating link to " << ido->num << ".\n";
-        side = new NodeRelay(ido);
+        *side = new NodeRelay(ido);
     } else {
-        if (compare(ido->num, side->num)) {    // ido beyond link
-            std::cout << "Node " << num << ": forwarding " << ido->num << " to " << side->num << ".\n";
-            side->out->call(Node::BuildList, ido);
+        if (compare(ido->num, (*side)->num)) {    // ido beyond link
+            std::cout << "Node " << num << ": forwarding " << ido->num << " to " << (*side)->num << ".\n";
+            (*side)->out->call(Node::BuildList, ido);
         } else {
             // ido between node and link
-            if (idle(side->out)) {
+            if (idle((*side)->out)) {
                 std::cout << "Node " << num << ": new side "
-                            << ido->num << ", forwarding "
-                            << side->num << ".\n";
-                IdObj *tempido = new IdObj(side->num, extractIdentity(side->out));
-                delete side;
-                side = new NodeRelay(ido);
-                side->out->call(Node::BuildList, tempido);
+                          << ido->num << ", forwarding "
+                          << (*side)->num << ".\n";
+                IdObj *tempido = new IdObj((*side)->num, extractIdentity((*side)->out));
+                delete *side;
+                (*side) = new NodeRelay(ido);
+                (*side)->out->call(Node::BuildList, tempido);
             } else {
                 call(Node::BuildList, ido);
             }
@@ -449,8 +450,8 @@ Action Node::BuildList(IdObj *ido)
     IdObj *tempido;
     // Check if there are dead links from both sides:
     //   -> Delete if dead.
-    checkDead(left);
-    checkDead(right);
+    checkDead(&left);
+    checkDead(&right);
 
     // Check if both links are still valid:
     //   -> Call BuildDeBruijn if not.
@@ -472,9 +473,9 @@ Action Node::BuildList(IdObj *ido)
         call(Node::Wakeup, counter);
     } else {
         if (ido->num > num) {
-            BuildSide(ido, right, true);
+            BuildSide(ido, &right, true);
         } else {  // ido->num <= num
-            BuildSide(ido, left, false);
+            BuildSide(ido, &left, false);
         }
     }
 }

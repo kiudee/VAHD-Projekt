@@ -24,10 +24,11 @@ protected:
     bool rightstable;
     HashMap data;//was soll gespeichert werden?
 
-    void checkDead(NodeRelay * side);
+    void checkDead(NodeRelay **side);
     void checkValid();
     double calcRoutingBound();
     void checkStable(double id);
+    void BuildSide(IdObj * ido, NodeRelay **side, bool right);
 
 
 public:
@@ -43,7 +44,6 @@ public:
     Action Join(IdObj * id);
     Action Leave(IdObj * id);
     Action Probing(Probe * ido);
-    Action BuildSide(IdObj * ido, NodeRelay *side, bool right);
     Action BuildList(IdObj * id);
     Action BuildWeakConnectedComponent(NumObj * numo);
     Action ReceiveLookUp(DateObj * dob);
