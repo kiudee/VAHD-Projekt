@@ -28,16 +28,19 @@ Action Supervisor::SetLink(IdPair *idop)
     // If the last Node has registered we can link them with relays
     if (count == total) {
         for (int i = 0; i < total; i++) {
+            std::cout << StartID[i]->num << "\n";
+        }
+        for (int i = 0; i < total; i++) {
             // make sure that node i periodically wakes up
             numo = new NumObj(5);
             Nodes[i]->call(Node::Wakeup, numo);
 
             // initially connect node i to nodes 2i and 2i+1
             if (2 * i <= total) {
-                Nodes[i]->call(Node::Join, StartID[2 * i]);
+                Nodes[i]->call(Node::Join, StartID[2 * i + 1]);
             }
             if (2 * i + 1 <= total) {
-                Nodes[i]->call(Node::Join, StartID[2 * i + 1]);
+                Nodes[i]->call(Node::Join, StartID[2 * i + 2]);
             }
         }
 
