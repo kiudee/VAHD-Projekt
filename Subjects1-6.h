@@ -622,8 +622,9 @@ public:
         _Messages++;
         source = 0;
         sink = 0;
-        if (_Messages > MAXMESSAGES && WARNING)
+        if (_Messages > MAXMESSAGES && WARNING) {
             std::cout << "-- Warning! More than " << MAXMESSAGES << " messages.\n";
+        }
         VerbPtr = c;
         ObjPtr = p;
         next = NULL;
@@ -646,8 +647,9 @@ public:
     // enqueue message
     inline void enqueue(_Message *m) {
         if (m == NULL) {
-            if (WARNING)
+            if (WARNING) {
                 std::cout << "-- Warning! NULL message cannot be added to queue.\n";
+            }
         } else {
             if (last == NULL) { // contains no message
                 first = last = m;
@@ -663,12 +665,14 @@ public:
     inline _Message *dequeue() {
         _Message *m;
 
-        if (first == NULL) // contains no message
+        if (first == NULL) { // contains no message
             m = NULL;
-        else {            // contains at least one message
+        } else {          // contains at least one message
             m = first;
             first = first->next;
-            if (first == NULL) last = NULL; // no further message
+            if (first == NULL) {
+                last = NULL;    // no further message
+            }
             m->next = NULL;
         }
         return m;
@@ -724,20 +728,23 @@ public:
         int contained;
 
         if (r == NULL) {
-            if (WARNING)
+            if (WARNING) {
                 std::cout << "-- Warning! Cannot add NULL to list of relay points.\n";
+            }
         } else {
             contained = 0;      // r already in list?
             l = first;
             while (l != NULL) {
-                if (l->relay == r) contained = 1;
+                if (l->relay == r) {
+                    contained = 1;
+                }
                 l = l->next;
             }
             if (!contained) {   // no: add r to end of list
                 l = new _Link(r);
-                if (last == NULL) // list empty
+                if (last == NULL) { // list empty
                     first = last = l;
-                else {            // list not empty
+                } else {          // list not empty
                     last->next = l;
                     last = l;
                 }
@@ -756,14 +763,17 @@ public:
                 delete tl;                 // remove all r's in front of list
             }
             first = l;                   // l==NULL or l->relay!=r
-            if (l == NULL) last = l;     // l==NULL: done
-            else {                       // l->relay!=r: continue with l->next
+            if (l == NULL) {
+                last = l;    // l==NULL: done
+            } else {                     // l->relay!=r: continue with l->next
                 while (l->next != NULL) {
                     if (l->next->relay == r) {
                         tl = l->next;
                         l->next = l->next->next;
                         delete tl;
-                    } else l = l->next;
+                    } else {
+                        l = l->next;
+                    }
                 }
                 last = l;                  // l points to (new) last element
             }
@@ -819,8 +829,9 @@ public:
         allidle = 1;
         r = first;
         while (r != NULL && allidle) {
-            if (r->relay != NULL)
+            if (r->relay != NULL) {
                 allidle = r->relay->_oQueue->empty();
+            }
             r = r->next;
         }
         return allidle;
@@ -896,20 +907,23 @@ public:
         int contained;
 
         if (s == NULL) {
-            if (WARNING)
+            if (WARNING) {
                 std::cout << "-- Warning! Cannot add NULL to list of subjects.\n";
+            }
         } else {
             contained = 0;      // r already in list?
             l = first;
             while (l != NULL) {
-                if (l->subject == s) contained = 1;
+                if (l->subject == s) {
+                    contained = 1;
+                }
                 l = l->next;
             }
             if (!contained) {   // no: add r to end of list
                 l = new _sLink(s);
-                if (last == NULL) // list empty
+                if (last == NULL) { // list empty
                     first = last = l;
-                else {            // list not empty
+                } else {          // list not empty
                     last->next = l;
                     last = l;
                 }
@@ -928,14 +942,17 @@ public:
                 delete tl;                 // remove all s's in front of list
             }
             first = l;                   // l==NULL or l->subject!=s
-            if (l == NULL) last = l;     // l==NULL: done
-            else {                       // l->subject!=s: continue with l->next
+            if (l == NULL) {
+                last = l;    // l==NULL: done
+            } else {                     // l->subject!=s: continue with l->next
                 while (l->next != NULL) {
                     if (l->next->subject == s) {
                         tl = l->next;
                         l->next = l->next->next;
                         delete tl;
-                    } else l = l->next;
+                    } else {
+                        l = l->next;
+                    }
                 }
                 last = l;                  // l points to (new) last element
             }
@@ -1013,18 +1030,21 @@ Object::Object()
 {
     _debugID = _numObjects;
     _numObjects++;
-    if (WARNING && _numObjects > MAXOBJECTS)
+    if (WARNING && _numObjects > MAXOBJECTS) {
         std::cout << "-- Warning! More than " << MAXOBJECTS << " objects.\n";
+    }
     _owner = NULL;
     _source = NULL;
     _sink = NULL;
     if (_activeSubject == NULL) {
-        if (WARNING)
+        if (WARNING) {
             std::cout << "--Warning! Object created outside of subjects environment.\n";
+        }
     } else {
         _owner = _activeSubject;
-        if (DEBUG)
+        if (DEBUG) {
             std::cout << "-- Creating object " << _debugID << " by subject " << _activeSubject->_debugID << ".\n";
+        }
     }
 }
 
@@ -1097,24 +1117,29 @@ Identity::Identity(Relay *r)
     _sink = NULL;
     _base = NULL;
     if (_activeSubject == NULL) {
-        if (WARNING)
+        if (WARNING) {
             std::cout << "-- Warning! Identity not created within active subject.\n";
+        }
     } else {
         if (r == NULL) {
-            if (WARNING)
+            if (WARNING) {
                 std::cout << "-- Warning! Cannot create identity of NULL.\n";
+            }
         } else {
             if (r->_home != _activeSubject) {
-                if (WARNING)
+                if (WARNING) {
                     std::cout << "Warning! Subject " << _activeSubject->_debugID << " cannot create identity for relay " << r->ID << ".\n";
+                }
             } else {
-                if (DEBUG)
+                if (DEBUG) {
                     std::cout << "-- Creating public identity of " << r->ID << ".\n";
+                }
                 _source = r;               // set source and base
                 _base = r->_base;
                 idl = new _idLinks(this);  // add identity at beginning of list
-                if (r->_identities->next != NULL)
+                if (r->_identities->next != NULL) {
                     r->_identities->next->prev = idl;
+                }
                 idl->next = r->_identities->next;
                 idl->prev = r->_identities;
                 r->_identities->next = idl;
@@ -1133,36 +1158,43 @@ Identity::Identity(Relay *r1, Relay *r2)
     _sink = NULL;
     _base = NULL;
     if (_activeSubject == NULL) {
-        if (WARNING)
+        if (WARNING) {
             std::cout << "-- Warning! Identity not created within active subject.\n";
+        }
     } else {
         if (r1 == NULL || r2 == NULL) {
-            if (WARNING)
+            if (WARNING) {
                 std::cout << "-- Warning! Cannot create identity of or to NULL.\n";
+            }
         } else {
             if (r1->_home != _activeSubject) {
-                if (WARNING)
+                if (WARNING) {
                     std::cout << "Warning! Subject " << _activeSubject->_debugID << " cannot create identity of relay " << r1->ID << ".\n";
+                }
             } else {
                 if (r2->_home != _activeSubject) {
-                    if (WARNING)
+                    if (WARNING) {
                         std::cout << "Warning! Subject " << _activeSubject->_debugID << " cannot create identity for relay " << r2->ID << ".\n";
+                    }
                 } else {
-                    if (DEBUG)
+                    if (DEBUG) {
                         std::cout << "-- Creating private identity of relay " << r1->ID << " for relay " << r2->ID << ".\n";
+                    }
                     _source = r1;              // set source and base
                     _base = r1->_base;
                     idl = new _idLinks(this);  // add identity at beginning of list
-                    if (r1->_identities->next != NULL)
+                    if (r1->_identities->next != NULL) {
                         r1->_identities->next->prev = idl;
+                    }
                     idl->next = r1->_identities->next;
                     idl->prev = r1->_identities;
                     r1->_identities->next = idl;
-                    if (r2 != r2->_home->parent)
+                    if (r2 != r2->_home->parent) {
                         _sink = r2->_base;
-                    else {
-                        if (r2->_base != NULL)
+                    } else {
+                        if (r2->_base != NULL) {
                             _sink = r2->_base->_oLink;
+                        }
                     }
                 }
             }
@@ -1177,8 +1209,9 @@ Identity::Identity(const Identity &d)
     _source = NULL;
     _sink = NULL;
     _base = NULL;
-    if (WARNING)
+    if (WARNING) {
         std::cout << "-- Warning! Identity cannot be copied.\n";
+    }
 }
 
 
@@ -1190,15 +1223,19 @@ Identity::~Identity()
 
     if (_source != NULL) {
         idl = _source->_identities;  // remove identity from id list
-        while (idl->next != NULL && idl->next->id != this)
+        while (idl->next != NULL && idl->next->id != this) {
             idl = idl->next;
+        }
         if (idl->next != NULL) {
             delidl = idl->next;
-            if (idl->next->next != NULL)
+            if (idl->next->next != NULL) {
                 idl->next->next->prev = idl;
+            }
             idl->next = idl->next->next;
             delete delidl;
-        } else std::cout << "Error: Identity missing in list!\n";
+        } else {
+            std::cout << "Error: Identity missing in list!\n";
+        }
     }
 }
 
@@ -1214,8 +1251,9 @@ Cocoon::Cocoon(Subject *home, Subject *s)
     _sink = NULL;
     _cocoon = NULL;
     if (home != NULL && s != NULL) {
-        if (DEBUG)
+        if (DEBUG) {
             std::cout << "-- Creating cocoon of subject " << s->_debugID << ".\n";
+        }
         _source = home->_sink;
         _cocoon = s;
     }
@@ -1228,12 +1266,13 @@ Cocoon::Cocoon(Subject *home, Subject *s, Relay *r)
     _sink = NULL;
     _cocoon = NULL;
     if (home != NULL && s != NULL && r != NULL && r->_base != NULL) {
-        if (DEBUG)
+        if (DEBUG) {
             std::cout << "-- Creating cocoon of subject " << s->_debugID << " for " << r->_base->ID << ".\n";
+        }
         _source = home->_sink;    // create cocoon
-        if (r != r->_home->parent)          // r not relay to parent?
+        if (r != r->_home->parent) {        // r not relay to parent?
             _sink = r->_base;
-        else {
+        } else {
             _sink = r->_base->_oLink;
         }
         _cocoon = s;
@@ -1246,16 +1285,18 @@ Cocoon::Cocoon(const Cocoon &c)
     _source = NULL;
     _sink = NULL;
     _cocoon = NULL;
-    if (_activeSubject == NULL && WARNING)
+    if (_activeSubject == NULL && WARNING) {
         std::cout << "-- Warning! Cocoon not created within active subject.\n";
+    }
 }
 
 
 // destructor; if cocoon not used, then destructed
 Cocoon::~Cocoon()
 {
-    if (_cocoon != NULL)
+    if (_cocoon != NULL) {
         _cocoon->_destruct();
+    }
 }
 
 extern Cocoon *_Cocoon;   // temporary cocoon for transfer
@@ -1270,8 +1311,9 @@ Relay::Relay()
     _home = _activeSubject;
     _setup();
     if (_home != NULL) {
-        if (DEBUG)
+        if (DEBUG) {
             std::cout << "-- Creating relay point " << ID << " by subject " << _home->_debugID << ".\n";
+        }
         if (_home->_sink != NULL) {
             _oLink = _home->_sink;     // Relay has link to own subject
             _oLink->_iLinks->add(this);
@@ -1286,8 +1328,9 @@ Relay::Relay(const Relay &r)
     _home = _activeSubject;
     _setup();
     if (_home != NULL) {
-        if (DEBUG)
+        if (DEBUG) {
             std::cout << "-- Creating relay point " << ID << " by subject " << _home->_debugID << ".\n";
+        }
         if (_home->_sink != NULL) {
             _oLink = _home->_sink;     // Relay has link to own subject
             _oLink->_iLinks->add(this);
@@ -1306,12 +1349,14 @@ Relay::Relay(int type, Subject *s)
             if (_home->_parent != NULL && _home->_parent->_sink != NULL) {
                 _oLink = _home->_parent->_sink;
                 _oLink->_iLinks->add(this);
-                if (DEBUG)
+                if (DEBUG) {
                     std::cout << "-- Creating parent " << ID << " for subject " << _home->_debugID << ".\n";
+                }
             }
         } else {
-            if (DEBUG)
+            if (DEBUG) {
                 std::cout << "-- Creating sink " << ID << " for subject " << _home->_debugID << ".\n";
+            }
         }
     }
 }
@@ -1324,30 +1369,39 @@ Relay::Relay(Identity* &d)
     _setup();
     if (_home != NULL) {    // relay generated within subject?
         if (d == NULL) {
-            if (WARNING)
+            if (WARNING) {
                 std::cout << "-- Warning! Cannot establish connection from " << ID << " to NULL.\n";
+            }
         } else {
             if (d->_source == NULL) {
-                if (WARNING)
+                if (WARNING) {
                     std::cout << "-- Warning! Cannot establish connection from " << ID << " to NULL.\n";
+                }
             } else {
                 if (d->_base == NULL) {
-                    if (WARNING)
+                    if (WARNING) {
                         std::cout << "-- Warning! Private identity not correctly defined or already used.\n";
+                    }
                 } else {
                     if (d->_sink != NULL && d->_sink->_home != _home) {
-                        if (WARNING)
+                        if (WARNING) {
                             std::cout << "-- Warning! Identity of " << d->_source->ID << " not meant for " << ID << ".\n";
+                        }
                     } else {
                         _oLink = d->_source;        // connect to relay point
                         _oLink->_iLinks->add(this);
-                        if (d->_sink == NULL) _private = 0;
+                        if (d->_sink == NULL) {
+                            _private = 0;
+                        }
                         _base = d->_base;        // base = d-base
                         delete d;                // destroy identity
                         d = NULL;
-                        if (DEBUG)
+                        if (DEBUG) {
                             std::cout << "-- Creating relay point " << ID << " to " << _oLink->ID << " with base " << _base->ID << ".\n";
-                        if (!(_oLink->_awake)) _oLink = NULL;
+                        }
+                        if (!(_oLink->_awake)) {
+                            _oLink = NULL;
+                        }
                     }
                 }
             }
@@ -1361,8 +1415,9 @@ void Relay::_setup()
 {
     ID = _numRelays;
     _numRelays++;
-    if (_numRelays > MAXRELAYS && WARNING)
+    if (_numRelays > MAXRELAYS && WARNING) {
         std::cout << "-- Warning! More than " << MAXRELAYS << " relay points.\n";
+    }
 
     _awake = 1;
     _private = 1;
@@ -1373,8 +1428,9 @@ void Relay::_setup()
     _identities = new _idLinks(NULL);  // dummy element for _identities
 
     if (_home == NULL) {
-        if (WARNING && ID > 0)
+        if (WARNING && ID > 0) {
             std::cout << "-- Warning! Relay point not created within active subject.\n";
+        }
     } else {
         if (_home->_Relays != NULL) {
             _home->_Relays->add(this);
@@ -1388,16 +1444,19 @@ void Relay::_setup()
 int Relay::_handle(Subject *s, _Message *m)
 {
     if (s != _home) {
-        if (WARNING)
+        if (WARNING) {
             std::cout << "-- Warning! Subject " << s->_debugID << " cannot call " << ID << "->call().\n";
+        }
         delete m;
     } else {
         if (m != NULL) {  // message well-defined?
-            if (DEBUG)
+            if (DEBUG) {
                 std::cout << "-- Message " << m->debugID << " stored in relay " << ID << ".\n";
+            }
             m->source = ID;
-            if (m->ObjPtr != NULL)
-                m->ObjPtr->_owner = NULL;  // object in transit
+            if (m->ObjPtr != NULL) {
+                m->ObjPtr->_owner = NULL;    // object in transit
+            }
             _oQueue->enqueue(m);
         }
         return 1;
@@ -1418,14 +1477,16 @@ int Relay::_process()
                 m->sink = ID;      // set sink of message to current relay
                 _oLink->_oQueue->enqueue(m);
             }
-            if (DEBUG)
+            if (DEBUG) {
                 std::cout << "-- All messages in " << ID << " to " << _home->_sink->ID << ".\n";
+            }
         } else {
             m = _oQueue->dequeue();
             if (m != NULL) {   // queue has message?
                 _oLink->_oQueue->enqueue(m); // forward message along outgoing link
-                if (DEBUG)
+                if (DEBUG) {
                     std::cout << "-- Message " << m->debugID << "  => " << _oLink->ID << ".\n";
+                }
                 return 1;        // relay busy
             }
         }
@@ -1446,10 +1507,12 @@ Relay::~Relay()
 {
     _idLinks *idl;
 
-    if (DEBUG)
+    if (DEBUG) {
         std::cout << "-- Relay " << ID << " deleted.\n";
-    if (_oLink != NULL)
-        _oLink->_iLinks->remove(this); // cut outgoing link
+    }
+    if (_oLink != NULL) {
+        _oLink->_iLinks->remove(this);    // cut outgoing link
+    }
     delete _oQueue;                  // delete remaining messages
     if (_iLinks != NULL) {
         _iLinks->halt();               // cut all incoming links
@@ -1461,8 +1524,9 @@ Relay::~Relay()
     }
     while (_identities != NULL) {
         idl = _identities;
-        if (_identities->id != NULL)
+        if (_identities->id != NULL) {
             _identities->id->_source = NULL;
+        }
         _identities = _identities->next;
         delete idl;
     }
@@ -1484,11 +1548,13 @@ Subject::Subject()
     _sink = new Relay(SINK, (Subject *) this);
 
     if (_activeSubject == NULL && _debugID > 0) {
-        if (WARNING)
+        if (WARNING) {
             std::cout << "-- Warning! Subject created outside of the subjects environment.\n";
+        }
     } else {
-        if (DEBUG)
+        if (DEBUG) {
             std::cout << "-- Creating subject " << _debugID << ".\n";
+        }
         _activeSubject = NULL;  // new subject can only use 'call' in constructor
     }
 }
@@ -1505,11 +1571,13 @@ Subject::Subject(const Subject &s)
     _sink = new Relay(SINK, (Subject *) this);
 
     if (_activeSubject == NULL && _debugID > 0) {
-        if (WARNING)
+        if (WARNING) {
             std::cout << "-- Warning! Subject created outside of the subjects environment.\n";
+        }
     } else {
-        if (DEBUG)
+        if (DEBUG) {
             std::cout << "-- Creating subject " << _debugID << ".\n";
+        }
         _activeSubject = NULL;  // new subject can only use 'call' in constructor
     }
 }
@@ -1520,23 +1588,28 @@ Subject::Subject(Cocoon* &d)
 {
     _setup();
     if (_activeSubject == NULL) {
-        if (WARNING && _debugID > 0)
+        if (WARNING && _debugID > 0) {
             std::cout << "-- Warning! Subject created outside of the subjects environment.\n";
+        }
     } else {
-        if (DEBUG)
+        if (DEBUG) {
             std::cout << "-- Creating subject " << _debugID << ".\n";
+        }
         if (d == NULL || d->_cocoon == NULL) {
-            if (WARNING)
+            if (WARNING) {
                 std::cout << "-- Warning! Cocoon not well-defined.\n";
+            }
         } else {
             _parent->_Subjects->add(this);
             _parent->_activeSubjects->add(this);
             if (d->_sink != NULL && d->_sink->_home != _parent) {
-                if (WARNING)
+                if (WARNING) {
                     std::cout << "-- Warning! Cocoon from " << d->_cocoon->_debugID << " not meant for " << _parent->_debugID << ".\n";
+                }
             } else {
-                if (DEBUG)
+                if (DEBUG) {
                     std::cout << "-- Spawning cocoon " << d->_cocoon->_debugID << ".\n";
+                }
                 _child = d->_cocoon;
                 d->_cocoon = NULL;
                 delete d;                // destroy cocoon
@@ -1554,19 +1627,23 @@ Subject::Subject(Subject *s)
 {
     _setup();
     if (_activeSubject == NULL) {
-        if (WARNING && _debugID > 0)
+        if (WARNING && _debugID > 0) {
             std::cout << "-- Warning! Subject created outside of the subjects environment.\n";
+        }
     } else {
-        if (DEBUG)
+        if (DEBUG) {
             std::cout << "-- Creating relay subject " << _debugID << ".\n";
+        }
         if (s == NULL) {
-            if (WARNING)
+            if (WARNING) {
                 std::cout << "-- Warning! New subject not well-defined.\n";
+            }
         } else {
             _parent->_Subjects->add(this);
             _parent->_activeSubjects->add(this);
-            if (DEBUG)
+            if (DEBUG) {
                 std::cout << "-- Activating subject " << s->_debugID << ".\n";
+            }
             _child = s;
             _child->_parent = _parent;
             _child->parent = new Relay(ROOT, _child);
@@ -1580,8 +1657,9 @@ void Subject::_setup()
 {
     _debugID = _numSubjects;
     _numSubjects++;
-    if (_numSubjects > MAXSUBJECTS && WARNING)
+    if (_numSubjects > MAXSUBJECTS && WARNING) {
         std::cout << "-- Warning! More than " << MAXSUBJECTS << " subjects.\n";
+    }
     _parent = _activeSubject;
     _child = NULL;
 
@@ -1604,18 +1682,23 @@ Cocoon *Subject::_cocoon(Subject *home, Subject *s)
 
     c = NULL;
     if (home == NULL) {
-        if (WARNING)
+        if (WARNING) {
             std::cout << "-- Warning! Cocoon created outside of Subjects environment.\n";
-        if (s != NULL) s->_destruct();
+        }
+        if (s != NULL) {
+            s->_destruct();
+        }
     } else {
         if (s == NULL) {
-            if (WARNING)
+            if (WARNING) {
                 std::cout << "-- Warning! Cocoon does not contain subject.\n";
+            }
         } else {
             // if s is new then _activeSubject == NULL
             if (_activeSubject != NULL) {
-                if (WARNING)
+                if (WARNING) {
                     std::cout << "-- Warning! Cocoon not created by newcocoon().\n";
+                }
                 s->_destruct();
             } else {
                 _activeSubject = home;
@@ -1634,25 +1717,33 @@ Cocoon *Subject::_cocoon(Subject *home, Subject *s, Relay *r)
 
     c = NULL;
     if (home == NULL) {
-        if (WARNING)
+        if (WARNING) {
             std::cout << "-- Warning! Cocoon not created within active subject.\n";
-        if (s != NULL) s->_destruct();
+        }
+        if (s != NULL) {
+            s->_destruct();
+        }
     } else {
         if (s == NULL) {
-            if (WARNING)
+            if (WARNING) {
                 std::cout << "-- Warning! Cocoon does not contain subject.\n";
+            }
         } else {
             // if s is new then _activeSubject == NULL
             if (_activeSubject != NULL) {
-                if (WARNING)
+                if (WARNING) {
                     std::cout << "-- Warning! Existing subject " << s->_debugID << " cannot be a cocoon.\n";
+                }
                 s->_destruct();
             } else {
                 _activeSubject = home;
                 if (r == NULL || r->_base == NULL) {
-                    if (WARNING)
+                    if (WARNING) {
                         std::cout << "-- Warning! Destination of cocoon not well-defined.\n";
-                } else c = new Cocoon(home, s, r);
+                    }
+                } else {
+                    c = new Cocoon(home, s, r);
+                }
             }
         }
     }
@@ -1674,8 +1765,9 @@ Subject *Subject::_create(Subject *s, Subject *t)
 
     rs = NULL;
     if (s != this) {
-        if (WARNING)
+        if (WARNING) {
             std::cout << "-- Warning! " << s->_debugID << " cannot call 'new' for " << _debugID << ".\n";
+        }
         t->_destruct();
     } else {
         _activeSubject = s;  // recover _activeSubject (NULL after creation of t)
@@ -1689,20 +1781,24 @@ Subject *Subject::_create(Subject *s, Subject *t)
 int Subject::_kill(Subject *s, Relay *r)
 {
     if (_activeSubject == NULL || (_parent == NULL && _debugID > 0)) {
-        if (WARNING)
+        if (WARNING) {
             std::cout << "-- Warning! " << _debugID << "called 'delete' outside of the subjects environment.\n";
+        }
     } else {
         if (r == NULL) {
-            if (WARNING)
+            if (WARNING) {
                 std::cout << "-- Warning! " << _debugID << " cannot destruct NULL.\n";
+            }
         } else {
             if (s != this) {
-                if (WARNING)
+                if (WARNING) {
                     std::cout << "-- Warning! " << s->_debugID << " cannot call 'delete' for subject " << _debugID << ".\n";
+                }
             } else {
                 if (s != r->_home) {
-                    if (WARNING)
+                    if (WARNING) {
                         std::cout << "-- Warning! " << _debugID << " cannot call 'delete' for relay " << r->ID << ".\n";
+                    }
                 } else {
                     r->_destruct();  // delete relay r
                     return 1;
@@ -1722,30 +1818,38 @@ Identity *Subject::_extract(Subject *s, Relay* &r)
 
     id = NULL;
     if (_activeSubject == NULL || (_parent == NULL && _debugID > 0)) {
-        if (WARNING)
+        if (WARNING) {
             std::cout << "-- Warning! " << _debugID << "called 'delete' outside of the subjects environment.\n";
+        }
     } else {
         if (r == NULL) {
-            if (WARNING)
+            if (WARNING) {
                 std::cout << "-- Warning! " << _debugID << " cannot destruct NULL.\n";
+            }
         } else {
             if (s != this) {
-                if (WARNING)
+                if (WARNING) {
                     std::cout << "-- Warning! " << s->_debugID << " cannot call 'delete' for subject " << _debugID << ".\n";
+                }
             } else {
                 if (s != r->_home) {
-                    if (WARNING)
+                    if (WARNING) {
                         std::cout << "-- Warning! " << _debugID << " cannot call 'delete' for relay " << r->ID << ".\n";
+                    }
                 } else {
                     id = new Identity;
                     id->_source = r->_oLink;
-                    if (r->_private) id->_sink = _sink;
-                    else id->_sink = NULL;
+                    if (r->_private) {
+                        id->_sink = _sink;
+                    } else {
+                        id->_sink = NULL;
+                    }
                     id->_base = r->_base;
                     if (id->_source != NULL) {
                         idl = new _idLinks(id);  // add identity at beginning of list
-                        if (id->_source->_identities->next != NULL)
+                        if (id->_source->_identities->next != NULL) {
                             id->_source->_identities->next->prev = idl;
+                        }
                         idl->next = id->_source->_identities->next;
                         idl->prev = id->_source->_identities;
                         id->_source->_identities->next = idl;
@@ -1764,20 +1868,24 @@ Identity *Subject::_extract(Subject *s, Relay* &r)
 int Subject::_kill(Subject *s, Subject *t)
 {
     if (_activeSubject == NULL || (_parent == NULL && _debugID > 0)) {
-        if (WARNING)
+        if (WARNING) {
             std::cout << "-- Warning! " << _debugID << "called 'delete' outside of the subjects environment.\n";
+        }
     } else {
         if (t == NULL) {
-            if (WARNING)
+            if (WARNING) {
                 std::cout << "-- Warning! " << _debugID << " cannot destruct NULL.\n";
+            }
         } else {
             if (s != this) {
-                if (WARNING)
+                if (WARNING) {
                     std::cout << "-- Warning! " << s->_debugID << " cannot call 'delete' for subject " << _debugID << ".\n";
+                }
             } else {
                 if (s != t->_parent) {
-                    if (WARNING)
+                    if (WARNING) {
                         std::cout << "-- Warning! " << _debugID << " cannot call 'delete' for subject " << t->_debugID << ".\n";
+                    }
                 } else {
                     t->_destruct();  // delete subject t
                     return 1;
@@ -1795,8 +1903,9 @@ Subject::~Subject()
     _rLinks *rl;
     _sLinks *sl;
 
-    if (DEBUG)
+    if (DEBUG) {
         std::cout << "-- Subject " << _debugID << " deleted.\n";
+    }
     if (_child != NULL) { // relay subject?
         delete _child;
         if (_parent != NULL && _parent->_Subjects != NULL) {
@@ -1825,22 +1934,26 @@ int Subject::_handle(Subject *s, _Message *m)
 {
     // only here, _activeSubject==NULL is allowed
     if (m == NULL) {
-        if (WARNING)
+        if (WARNING) {
             std::cout << "-- Warning! " << _debugID << " cannot handle NULL.\n";
+        }
     } else {
         if (s != this) {
-            if (WARNING)
+            if (WARNING) {
                 std::cout << "-- Warning! " << s->_debugID << " cannot call 'call' for subject " << _debugID << ".\n";
+            }
             delete m;
         } else {
             if (_sink != NULL) {
-                if (DEBUG)
+                if (DEBUG) {
                     std::cout << "-- Message " << m->debugID << " stored in subject " << _debugID << ".\n";
+                }
                 _sink->_oQueue->enqueue(m);
                 return 1;
             } else {
-                if (WARNING)
+                if (WARNING) {
                     std::cout << "-- Warning! Sink of subject " << _debugID << " not well-defined.\n";
+                }
                 delete m;
             }
         }
@@ -1853,26 +1966,31 @@ int Subject::_handle(Subject *s, _Message *m)
 int Subject::_wake(Subject *s, Relay *r)
 {
     if (_activeSubject == NULL || (_parent == NULL && _debugID > 0)) {
-        if (WARNING)
+        if (WARNING) {
             std::cout << "-- Warning! " << _debugID << "called 'wakeup' outside of the subjects environment.\n";
+        }
     } else {
         if (r == NULL) {
-            if (WARNING)
+            if (WARNING) {
                 std::cout << "-- Warning! " << _debugID << " cannot wake up NULL.\n";
+            }
         } else {
             if (s != this) {
-                if (WARNING)
+                if (WARNING) {
                     std::cout << "-- Warning! " << s->_debugID << " cannot call 'wakeup' for subject " << _debugID << ".\n";
+                }
             } else {
                 if (s != r->_home) {
-                    if (WARNING)
+                    if (WARNING) {
                         std::cout << "-- Warning! " << _debugID << " cannot call 'wakeup' for relay " << r->ID << ".\n";
+                    }
                 } else {
                     r->_awake = 1;
                     _activeRelays->add(r);  // wake up relay point r
                     r->_iLinks->wake(r);    // wake up connections to r
-                    if (DEBUG)
+                    if (DEBUG) {
                         std::cout << "-- Subject " << _debugID << " wakes up relay " << r->ID << ".\n";
+                    }
                     return 1;
                 }
             }
@@ -1886,20 +2004,24 @@ int Subject::_wake(Subject *s, Relay *r)
 int Subject::_wake(Subject *s, Subject *t)
 {
     if (_activeSubject == NULL || (_parent == NULL && _debugID > 0)) {
-        if (WARNING)
+        if (WARNING) {
             std::cout << "-- Warning! " << _debugID << "called 'wakeup' outside of the subjects environment.\n";
+        }
     } else {
         if (t == NULL) {
-            if (WARNING)
+            if (WARNING) {
                 std::cout << "-- Warning! " << _debugID << " cannot wake up NULL.\n";
+            }
         } else {
             if (s != this) {
-                if (WARNING)
+                if (WARNING) {
                     std::cout << "-- Warning! " << s->_debugID << " cannot call 'wakeup' for subject " << _debugID << ".\n";
+                }
             } else {
                 if (s != t->_parent) {
-                    if (WARNING)
+                    if (WARNING) {
                         std::cout << "-- Warning! " << _debugID << " cannot call 'wakeup' for subject " << t->_debugID << ".\n";
+                    }
                 } else {
                     _activeSubjects->add(t);  // wake up subject t
                     return 1;
@@ -1915,26 +2037,31 @@ int Subject::_wake(Subject *s, Subject *t)
 int Subject::_halt(Subject *s, Relay *r)
 {
     if (_activeSubject == NULL || (_parent == NULL && _debugID > 0)) {
-        if (WARNING)
+        if (WARNING) {
             std::cout << "-- Warning! " << _debugID << "called 'freeze' outside of the subjects environment.\n";
+        }
     } else {
         if (r == NULL) {
-            if (WARNING)
+            if (WARNING) {
                 std::cout << "-- Warning! " << _debugID << " cannot freeze NULL.\n";
+            }
         } else {
             if (s != this) {
-                if (WARNING)
+                if (WARNING) {
                     std::cout << "-- Warning! " << s->_debugID << " cannot call 'freeze' for subject " << _debugID << ".\n";
+                }
             } else {
                 if (s != r->_home) {
-                    if (WARNING)
+                    if (WARNING) {
                         std::cout << "-- Warning! " << _debugID << " cannot call 'freeze' for relay " << r->ID << ".\n";
+                    }
                 } else {
                     r->_awake = 0;
                     _activeRelays->remove(r);  // freeze relay point r
                     r->_iLinks->halt();        // freeze connections to r
-                    if (DEBUG)
+                    if (DEBUG) {
                         std::cout << "-- Subject " << _debugID << " freezes relay " << r->ID << ".\n";
+                    }
                     return 1;
                 }
             }
@@ -1948,20 +2075,24 @@ int Subject::_halt(Subject *s, Relay *r)
 int Subject::_halt(Subject *s, Subject *t)
 {
     if (_activeSubject == NULL || (_parent == NULL && _debugID > 0)) {
-        if (WARNING)
+        if (WARNING) {
             std::cout << "-- Warning! " << _debugID << "called 'freeze' outside of the subjects environment.\n";
+        }
     } else {
         if (t == NULL) {
-            if (WARNING)
+            if (WARNING) {
                 std::cout << "-- Warning! " << _debugID << " cannot freeze NULL.\n";
+            }
         } else {
             if (s != this) {
-                if (WARNING)
+                if (WARNING) {
                     std::cout << "-- Warning! " << s->_debugID << " cannot call 'freeze' for subject " << _debugID << ".\n";
+                }
             } else {
                 if (s != t->_parent) {
-                    if (WARNING)
+                    if (WARNING) {
                         std::cout << "-- Warning! " << _debugID << " cannot call 'freeze' for subject " << t->_debugID << ".\n";
+                    }
                 } else {
                     _activeSubjects->remove(t);  // freezes subject t
                     return 1;
@@ -1989,17 +2120,20 @@ int Subject::_process()
             busy = busy | _activeRelays->process(); // then active relays
             m = _sink->_oQueue->dequeue();          // then subject itself
             if (m != NULL) {
-                if (DEBUG)
+                if (DEBUG) {
                     std::cout << "-- Executing message " << m->debugID << " in subject " << _debugID << ".\n";
+                }
                 source = m->source + _debugID;        // create local ID of source
                 sink = m->sink;                       // set sink to sink of message
-                if (m->ObjPtr != NULL)
-                    m->ObjPtr->_owner = this;           // set new owner of object
-                if (m->ObjPtr == NULL || m->ObjPtr->_sink == NULL || m->ObjPtr->_sink->_home == this)
-                    (this->*(m->VerbPtr))(m->ObjPtr);     // execute message
-                else {
-                    if (WARNING)
+                if (m->ObjPtr != NULL) {
+                    m->ObjPtr->_owner = this;    // set new owner of object
+                }
+                if (m->ObjPtr == NULL || m->ObjPtr->_sink == NULL || m->ObjPtr->_sink->_home == this) {
+                    (this->*(m->VerbPtr))(m->ObjPtr);    // execute message
+                } else {
+                    if (WARNING) {
                         std::cout << "-- Warning! Message " << m->debugID << " not meant for subject " << _debugID << ".\n";
+                    }
                 }
                 delete m;
                 busy = 1;
@@ -2014,13 +2148,17 @@ int Subject::_process()
 int Subject::idle()
 {
     if (_activeSubject == NULL) {
-        if (WARNING)
+        if (WARNING) {
             std::cout << "-- Warning! Method 'idle' called outside of the subjects environment.\n";
+        }
     } else {
         if (_activeSubject != this) {
-            if (WARNING)
+            if (WARNING) {
                 std::cout << "-- Warning! Subject " << _activeSubject->_debugID << " cannot call " << _debugID << "->idle().\n";
-        } else return _Relays->idle();
+            }
+        } else {
+            return _Relays->idle();
+        }
         // return _sink->_oQueue->empty();
     }
     return 0;
@@ -2031,14 +2169,18 @@ int Subject::idle()
 int Subject::idle(Relay *r)
 {
     if (_activeSubject == NULL) {
-        if (WARNING)
+        if (WARNING) {
             std::cout << "-- Warning! Method 'idle' called outside of the subjects environment.\n";
+        }
     } else {
         if (r != NULL) {
             if (_activeSubject != r->_home) {
-                if (WARNING)
+                if (WARNING) {
                     std::cout << "-- Warning! Subject " << _activeSubject->_debugID << " cannot call " << _debugID << "->idle().\n";
-            } else return r->_oQueue->empty();
+                }
+            } else {
+                return r->_oQueue->empty();
+            }
         }
     }
     return 0;
@@ -2049,14 +2191,18 @@ int Subject::idle(Relay *r)
 int Subject::indeg(Relay *r)
 {
     if (_activeSubject == NULL) {
-        if (WARNING)
+        if (WARNING) {
             std::cout << "-- Warning! Method 'idle' called outside of the subjects environment.\n";
+        }
     } else {
         if (r != NULL) {
             if (_activeSubject != r->_home) {
-                if (WARNING)
+                if (WARNING) {
                     std::cout << "-- Warning! Subject " << _activeSubject->_debugID << " cannot call " << _debugID << "->idle().\n";
-            } else return r->_iLinks->count();
+                }
+            } else {
+                return r->_iLinks->count();
+            }
         }
     }
     return 0;
@@ -2067,16 +2213,21 @@ int Subject::indeg(Relay *r)
 int Subject::outdeg(Relay *r)
 {
     if (_activeSubject == NULL) {
-        if (WARNING)
+        if (WARNING) {
             std::cout << "-- Warning! Method 'idle' called outside of the subjects environment.\n";
+        }
     } else {
         if (r != NULL) {
             if (_activeSubject != r->_home) {
-                if (WARNING)
+                if (WARNING) {
                     std::cout << "-- Warning! Subject " << _activeSubject->_debugID << " cannot call " << _debugID << "->idle().\n";
+                }
             } else {
-                if (r->_oLink == NULL) return 0;
-                else return 1;
+                if (r->_oLink == NULL) {
+                    return 0;
+                } else {
+                    return 1;
+                }
             }
         }
     }
@@ -2105,7 +2256,9 @@ inline void _runSubjects(Subject *s, unsigned long T)
     unsigned long t;
     int busy;
 
-    if (T == 0) T = 0xFFFFFFFF;
+    if (T == 0) {
+        T = 0xFFFFFFFF;
+    }
     t = 1;
     busy = 1;
     while (t <= T && busy) {

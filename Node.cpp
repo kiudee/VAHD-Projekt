@@ -1,4 +1,5 @@
 #include "Node.h"
+#include <assert.h>
 
 #define MAX 1
 
@@ -137,10 +138,7 @@ Action Node::Insert(DateObj *dob)
 Action Node::FinishSearch(SearchJob *sj)
 {
     double hashedkey = sj->sid;
-
-
-
-    if((isReal || sj->type == JOIN) && ((right == NULL && num <= hashedkey) || (right->num > hashedkey && num <= hashedkey))){
+    if ((isReal || sj->type == JOIN) && (right == NULL || right->num > hashedkey) && num <= hashedkey) {
         switch (sj->type) {
         case INSERT:
             data[sj->dob->num] = sj->dob->date;
@@ -159,6 +157,9 @@ Action Node::FinishSearch(SearchJob *sj)
         case JOIN:
             IdObj *ido = sj->ido;
             BuildList(ido);  // just connect to given reference; BuildList will add it to the right!
+            // TODO: This assertion failes => BuildList did not add the node to
+            // the right. Why?
+            assert(right != NULL);
             IdObj *tempido = new IdObj(right->num, extractIdentity(right->out));
             right->out->call(Node::TriggerDataTransfer, tempido);
             break;
@@ -207,9 +208,7 @@ Action Node::Search(SearchJob *sj)
     if (sj->round >= sj->bound) {
 
         //responsible node for date was found
-        if (right == NULL &&
-                (num <= hashedkey ||
-                 (right->num > hashedkey && num <= hashedkey))) {
+        if ((right == NULL || right->num) && num <= hashedkey) {
             //it is prohibited to do operations on virtual nodes (TODO except for Join?)
             FinishSearch(sj);
             return;
