@@ -339,7 +339,7 @@ class _idLinks;   // list of identities
 
 // idle checks whether a subject still has messages
 
-// #define idle(subject) \
+// #define idle(subject)
 //    _empty((Subject *) this, subject)
 
 // call creates a new request to call verb(object)

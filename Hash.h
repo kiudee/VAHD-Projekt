@@ -3,7 +3,7 @@
 
 #include <cstdint>
 
-static const uint32_t s = 2654435769;
+static const uint32_t s = 2654435769u;
 
 double h(int kk);
 double g(int kk);

@@ -137,8 +137,10 @@ Action Node::Insert(DateObj *dob)
 Action Node::FinishSearch(SearchJob *sj)
 {
     double hashedkey = sj->sid;
-    if ((isReal || sj->type == JOIN) && (right == NULL && num <= hashedkey
-                                         || right->num > hashedkey && num <= hashedkey)) {
+
+
+
+    if((isReal || sj->type == JOIN) && ((right == NULL && num <= hashedkey) || (right->num > hashedkey && num <= hashedkey))){
         switch (sj->type) {
         case INSERT:
             data[sj->dob->num] = sj->dob->date;
