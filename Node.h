@@ -20,8 +20,8 @@ protected:
     Relay *in;
     double num;
     bool isReal;
-    int leftstable;
-    int rightstable;
+    bool leftstable;
+    bool rightstable;
     HashMap data;//was soll gespeichert werden?
 
     void checkDead(NodeRelay * side);
@@ -43,6 +43,7 @@ public:
     Action Join(IdObj * id);
     Action Leave(IdObj * id);
     Action Probing(Probe * ido);
+    Action BuildSide(IdObj * ido, NodeRelay *side, bool right);
     Action BuildList(IdObj * id);
     Action BuildWeakConnectedComponent(NumObj * numo);
     Action ReceiveLookUp(DateObj * dob);

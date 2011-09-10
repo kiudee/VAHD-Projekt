@@ -398,13 +398,46 @@ Action Node::Leave(IdObj *ido)
 void Node::checkStable(double id)
 {
     //TODO quorum needed? or is it checked by subjects environment?
-    if (id < num) {
+    if (id < num && left != NULL) {
         leftstable = left->num == id;
-    }
-
-    else if (id > num) {
+    } else if (id > num && right != NULL) {
         rightstable = right->num == id;
     }
+}
+
+void Node::BuildSide(IdObj *ido, NodeRelay *side, bool right)
+{
+    auto compare = [right](double x, double y) -> bool {
+        if (right) {
+            return x > y;
+        } else {
+            return x < y;
+        }
+    };
+
+    if (side == NULL) {              // link not yet defined
+        std::cout << "Node " << num << ": creating link to " << ido->num << ".\n";
+        side = new NodeRelay(ido);
+    } else {
+        if (compare(ido->num, side->num)) {    // ido beyond link
+            std::cout << "Node " << num << ": forwarding " << ido->num << " to " << side->num << ".\n";
+            side->out->call(Node::BuildList, ido);
+        } else {
+            // ido between node and link
+            if (idle(side->out)) {
+                std::cout << "Node " << num << ": new side "
+                            << ido->num << ", forwarding "
+                            << side->num << ".\n";
+                IdObj *tempido = new IdObj(side->num, extractIdentity(side->out));
+                delete side;
+                side = new NodeRelay(ido);
+                side->out->call(Node::BuildList, tempido);
+            } else {
+                call(Node::BuildList, ido);
+            }
+        }
+    }
+
 }
 
 /**
@@ -439,65 +472,9 @@ Action Node::BuildList(IdObj *ido)
         call(Node::Wakeup, counter);
     } else {
         if (ido->num > num) {
-            if (right == NULL) {              // right link not yet defined
-                std::cout << "Node " << num << ": creating link to " << ido->num << ".\n";
-                right = new NodeRelay(ido);
-            } else {
-                if (ido->num > right->num) {    // ido beyond right link
-                    std::cout << "Node " << num << ": forwarding " << ido->num << " to " << right->num << ".\n";
-                    right->out->call(Node::BuildList, ido);
-                } else {
-                    if (right->num > ido->num) {  // ido between node and right link
-                        if (idle(right->out)) {
-                            std::cout << "Node " << num << ": new right "
-                                      << ido->num << ", forwarding "
-                                      << right->num << ".\n";
-                            tempido = new IdObj(right->num, extractIdentity(right->out));
-                            delete right;
-                            right = new NodeRelay(ido);
-                            right->out->call(Node::BuildList, tempido);
-                        } else {
-                            call(Node::BuildList, ido);
-                        }
-                    } else {  // ido->num = right->num
-                        delete ido->id;
-                        delete ido;
-                    }
-                }
-            }
-        } else {  // ido->num < num
-            if (ido->num < num) {
-                if (left == NULL) {  // left link not yet defined
-                    std::cout << "Node " << num << ": creating link to "
-                              << ido->num << ".\n";
-                    left = new NodeRelay(ido);
-                } else {
-                    if (ido->num < left->num) {  // ido below left link
-                        std::cout << "Node " << num << ": forwarding "
-                                  << ido->num << " to " << left->num << ".\n";
-                        left->out->call(Node::BuildList, ido);
-                    } else {
-                        if (left->num < ido->num) {  // ido between node and left link
-                            if (idle(left->out)) {
-                                std::cout << "Node " << num << ": new left " << ido->num << ", forwarding " << left->num << ".\n";
-                                tempido = new IdObj(left->num,
-                                                    extractIdentity(left->out));
-                                delete left;
-                                left = new NodeRelay(ido);
-                                left->out->call(Node::BuildList, tempido);
-                            } else {
-                                call(Node::BuildList, ido);
-                            }
-                        } else {  // ido->num = left->num
-                            delete ido->id;
-                            delete ido;
-                        }
-                    }
-                }
-            } else {
-                delete ido->id;  // ido->num = num
-                delete ido;
-            }
+            BuildSide(ido, right, true);
+        } else {  // ido->num <= num
+            BuildSide(ido, left, false);
         }
     }
 }
