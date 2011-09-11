@@ -10,7 +10,8 @@ public:
     }
 };
 
-ObjectType(DoubleObj){
+ObjectType(DoubleObj)
+{
 public:
     double num;
 
@@ -60,54 +61,58 @@ public:
  *  indicates the routing direction.
  * @author Simon
  */
-ObjectType(Probe){
+ObjectType(Probe)
+{
 public:
-		int phase;
-		double value;
-		Identity *id;
+    int phase;
+    double value;
+    Identity *id;
 
-	    Probe(double v, Identity *d, int p) {
-	        value = v;
-	        phase = p;
-	        id = d;
-	    }
+    Probe(double v, Identity *d, int p) {
+        value = v;
+        phase = p;
+        id = d;
+    }
 };
 /**
  * Data to store at nodes
  */
-ObjectType(DateObj){
+ObjectType(DateObj)
+{
 public:
-	int num;
-	Object date;
+    int num;
+    Object date;
 
-	DateObj(int k , Object d){
-		date = d;
-		num = k;
-	}
+    DateObj(int k , Object d) {
+        date = d;
+        num = k;
+    }
 };
 
-ObjectType(KeyObj){
+ObjectType(KeyObj)
+{
 public:
-	int num;
-	Identity *id;
+    int num;
+    Identity *id;
 
-	KeyObj(int k, Identity *d){
-		num = k;
-		id = d;
-	}
+    KeyObj(int k, Identity *d) {
+        num = k;
+        id = d;
+    }
 };
 
-ObjectType(InsertObj){
+ObjectType(InsertObj)
+{
 public:
-	DateObj *dob;
-	int round;
-	double bound;
+    DateObj *dob;
+    int round;
+    double bound;
 
-	InsertObj(DateObj *d, double b){
-		dob = d;
-		round = 0;
-		bound = b;
-	}
+    InsertObj(DateObj *d, double b) {
+        dob = d;
+        round = 0;
+        bound = b;
+    }
 };
 
 

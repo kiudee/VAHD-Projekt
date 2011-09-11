@@ -19,7 +19,8 @@ double mult_hash(int kk)
     return t/static_cast<double>(2 << 14);
 }
 
-void testfun(Relay *tr) {
+void testfun(Relay *tr)
+{
     tr = NULL;
 }
 
