@@ -139,7 +139,7 @@ Action Node::Insert(DateObj *dob)
 Action Node::FinishSearch(SearchJob *sj)
 {
     double hashedkey = sj->sid;
-    if (sj->type== JOIN  // SearchJob is a Join
+    if (sj->type == JOIN // SearchJob is a Join
             || (isReal && right == NULL && num <= hashedkey)  // There is no right node and this node is responsible
             || (isReal && num <= hashedkey && right->num > hashedkey)) {  // There is a right node but not responsible
         switch (sj->type) {
@@ -160,7 +160,7 @@ Action Node::FinishSearch(SearchJob *sj)
         case JOIN:
             IdObj *ido = sj->ido;
             BuildList(ido);  // just connect to given reference; BuildList will add it to the right!
-            if (right != NULL){
+            if (right != NULL) {
                 IdObj *tempido = new IdObj(right->num, new Identity(right->out));
                 TriggerDataTransfer(tempido);
             }
@@ -217,7 +217,7 @@ Action Node::Search(SearchJob *sj)
         //search accoringly to the order of the list
         if (hashedkey < num) {
             if (left == NULL) {
-                if (sj->type == JOIN){
+                if (sj->type == JOIN) {
                     BuildList(sj->ido);
                     delete sj;
                 } else {
