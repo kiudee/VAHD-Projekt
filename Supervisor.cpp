@@ -36,10 +36,10 @@ Action Supervisor::SetLink(IdPair *idop)
             Nodes[i]->call(Node::Wakeup, numo);
 
             // initially connect node i to nodes 2i and 2i+1
-            if (2 * i <= total) {
+            if (2 * i + 1 <= total) {
                 Nodes[i]->call(Node::Join, StartID[2 * i + 1]);
             }
-            if (2 * i + 1 <= total) {
+            if (2 * i + 2 <= total) {
                 Nodes[i]->call(Node::Join, StartID[2 * i + 2]);
             }
         }

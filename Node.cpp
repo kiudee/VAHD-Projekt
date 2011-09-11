@@ -25,11 +25,9 @@ Action Node::Init(InitObj *init)
 
         // create virtual nodes:
         InitObj *n0 = new InitObj(num / 2, false);
-        std::cout << "Create Virtual: " << n0->num << " Real: " << num << "\n";
         new(Node, n0);
 
         InitObj *n1 = new InitObj((1 + num) / 2, false);
-        std::cout << "Create Virtual: " << n1->num << " Real: " << num << "\n";
         new(Node, n1);
     } else {
         IdObj *tempid = new IdObj(num, new Identity(in));
@@ -141,7 +139,9 @@ Action Node::Insert(DateObj *dob)
 Action Node::FinishSearch(SearchJob *sj)
 {
     double hashedkey = sj->sid;
-    if ((isReal || sj->type == JOIN) && (right == NULL || right->num > hashedkey) && num <= hashedkey) {
+    if (sj->type== JOIN  // SearchJob is a Join
+            || (isReal && right == NULL && num <= hashedkey)  // There is no right node and this node is responsible
+            || (isReal && num <= hashedkey && right->num > hashedkey)) {  // There is a right node but not responsible
         switch (sj->type) {
         case INSERT:
             data[sj->dob->num] = sj->dob->date;
@@ -160,11 +160,10 @@ Action Node::FinishSearch(SearchJob *sj)
         case JOIN:
             IdObj *ido = sj->ido;
             BuildList(ido);  // just connect to given reference; BuildList will add it to the right!
-            // TODO: This assertion failes => BuildList did not add the node to
-            // the right. Why?
-            assert(right != NULL);
-            IdObj *tempido = new IdObj(right->num, extractIdentity(right->out));
-            right->out->call(Node::TriggerDataTransfer, tempido);
+            if (right != NULL){
+                IdObj *tempido = new IdObj(right->num, new Identity(right->out));
+                TriggerDataTransfer(tempido);
+            }
             break;
         }
         delete sj;
@@ -196,7 +195,6 @@ Action Node::Search(SearchJob *sj)
 
     //TO DO how to determine the responsibility area for the last node? ring needed? solution: send job to MAX!
     //TO DO doing searchjob allowed only at real nodes!
-
     /*	if(!isStable()){//TO DO it is not necessary, that both links are stable!
     		//TO DO what if routing gets stuck? it cannot get stuck, because we are only routing in stable state
     		call(Node::Search, sj);
@@ -211,7 +209,7 @@ Action Node::Search(SearchJob *sj)
     if (sj->round >= sj->bound) {
 
         //responsible node for date was found
-        if ((right == NULL || right->num) && num <= hashedkey) {
+        if ((right == NULL || right->num > hashedkey) && num <= hashedkey) {
             //it is prohibited to do operations on virtual nodes (TODO except for Join?)
             FinishSearch(sj);
             return;
@@ -219,9 +217,14 @@ Action Node::Search(SearchJob *sj)
         //search accoringly to the order of the list
         if (hashedkey < num) {
             if (left == NULL) {
-                sj->sid = MAX;//TO DO this won't work because we want to search for MAX and not for g(MAX)! adjust searchjob=> fixed
-                sj->round = 0;
-                Search(sj);
+                if (sj->type == JOIN){
+                    BuildList(sj->ido);
+                    delete sj;
+                } else {
+                    sj->sid = MAX;//TO DO this won't work because we want to search for MAX and not for g(MAX)! adjust searchjob=> fixed
+                    sj->round = 0;
+                    Search(sj);
+                }
                 return;
             } else if (leftstable) {
                 sj->round++;
@@ -440,7 +443,6 @@ void Node::BuildSide(IdObj *ido, NodeRelay **side, bool right)
             }
         }
     }
-
 }
 
 /**
@@ -474,9 +476,9 @@ Action Node::BuildList(IdObj *ido)
         NumObj *counter = new NumObj(5);
         call(Node::Wakeup, counter);
     } else {
-        if (ido->num >= num) {
+        if (ido->num > num) {
             BuildSide(ido, &right, true);
-        } else {  // ido->num < num
+        } else {  // ido->num <= num
             BuildSide(ido, &left, false);
         }
     }
