@@ -1,6 +1,8 @@
 #ifndef SUPERVISOR_H_
 #define SUPERVISOR_H_
 
+#include "Hash.h"
+
 SubjectType(Supervisor)
 {
 protected:
