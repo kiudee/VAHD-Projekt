@@ -25,9 +25,11 @@ Action Node::Init(InitObj *init)
 
         // create virtual nodes:
         InitObj *n0 = new InitObj(num / 2, false);
+        std::cout << "Create Virtual: " << n0->num << " Real: " << num << "\n";
         new(Node, n0);
 
         InitObj *n1 = new InitObj((1 + num) / 2, false);
+        std::cout << "Create Virtual: " << n1->num << " Real: " << num << "\n";
         new(Node, n1);
     } else {
         IdObj *tempid = new IdObj(num, new Identity(in));
@@ -334,7 +336,7 @@ Action Node::Join(IdObj *ido)
      * joins at the right place!
      */
     //TODO spawn virtual nodes
-    SearchJob *sj = new SearchJob(g(ido->num), JOIN, Node::calcRoutingBound(),
+    SearchJob *sj = new SearchJob(ido->num, JOIN, Node::calcRoutingBound(),
                                   ido);
     Search(sj);
 }
@@ -472,9 +474,9 @@ Action Node::BuildList(IdObj *ido)
         NumObj *counter = new NumObj(5);
         call(Node::Wakeup, counter);
     } else {
-        if (ido->num > num) {
+        if (ido->num >= num) {
             BuildSide(ido, &right, true);
-        } else {  // ido->num <= num
+        } else {  // ido->num < num
             BuildSide(ido, &left, false);
         }
     }
