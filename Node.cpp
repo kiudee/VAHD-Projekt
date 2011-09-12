@@ -19,8 +19,8 @@ Action Node::Init(InitObj *init)
 
     if (isReal) {
         // connect to supervisor:
-        IdPair *idp = new IdPair(new IdObj(num, new Identity(in)), new IdObj(
-                                     num, new Identity(in)));
+        IdPair *idp = new IdPair(new IdObj(num, new Identity(in)),
+                                 new IdObj(num, new Identity(in)));
         parent->call(Supervisor::SetLink, idp);
 
         // create virtual nodes:
@@ -50,13 +50,13 @@ Action Node::ConnectChild(IdObj *ido)
 /**
  * Activates BuildDeBruijn periodically.
  */
-Action Node::Wakeup(NumObj *numo)
+Action Node::Wakeup(NumObj *num)
 {
-    if (numo->num == 0) {
+    if (num->num == 0) {
         BuildDeBruijn();
     } else {
-        numo->num--;
-        call(Node::Wakeup, numo);
+        num->num--;
+        call(Node::Wakeup, num);
     }
 }
 
@@ -479,7 +479,6 @@ Action Node::BuildList(IdObj *ido)
     // Check if both links are still valid:
     //   -> Call BuildDeBruijn if not.
     checkValid();
-    checkStable(ido->num);
 
     if (ido == NULL) {
         // timeout: ask neighbors to create return links
@@ -495,6 +494,7 @@ Action Node::BuildList(IdObj *ido)
         NumObj *counter = new NumObj(5);
         call(Node::Wakeup, counter);
     } else {
+        checkStable(ido->num);
         if (ido->num > num) {
             BuildSide(ido, &right, true);
         } else { // ido->num <= num
