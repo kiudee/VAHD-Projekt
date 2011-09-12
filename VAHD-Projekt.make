@@ -22,7 +22,7 @@ endif
 ifeq ($(config),debug)
   OBJDIR     = obj/Debug
   TARGETDIR  = .
-  TARGET     = $(TARGETDIR)/VAHD-Projekt
+  TARGET     = $(TARGETDIR)/VAHD-Projekt.exe
   DEFINES   += 
   INCLUDES  += 
   CPPFLAGS  += -MMD -MP $(DEFINES) $(INCLUDES)
@@ -44,7 +44,7 @@ endif
 ifeq ($(config),release)
   OBJDIR     = obj/Release
   TARGETDIR  = .
-  TARGET     = $(TARGETDIR)/VAHD-Projekt
+  TARGET     = $(TARGETDIR)/VAHD-Projekt.exe
   DEFINES   += 
   INCLUDES  += 
   CPPFLAGS  += -MMD -MP $(DEFINES) $(INCLUDES)
