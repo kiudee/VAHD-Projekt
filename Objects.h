@@ -68,7 +68,7 @@ public:
     double num;
     Relay *out;
 
-    NodeRelay(IdObj *ido) {
+    NodeRelay(IdObj * ido) {
         num = ido->num;
         out = new Relay(ido->id);
         delete ido;
@@ -93,7 +93,7 @@ public:
     double num;
     Identity *id;
 
-    Probe(double v, Identity *d, int p) {
+    Probe(double v, Identity * d, int p) {
         num = v;
         phase = p;
         id = d;
@@ -125,7 +125,7 @@ public:
     int num;
     Identity *id;
 
-    KeyObj(int k, Identity *d) {
+    KeyObj(int k, Identity * d) {
         num = k;
         id = d;
     }

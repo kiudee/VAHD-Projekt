@@ -106,6 +106,8 @@ double Node::calcRoutingBound()
 {
     if (right != NULL) {
         return -2 * log(fabs(num - right->num));
+    } else if (left != NULL) {
+        return -2 * log(fabs(num - left->num));//in expectancy: |s-pred(s)|=|s-succ(s)|; s is the node where we started a search
     } else {
         return 0.0; //TODO what about this case? I think it is okay to return 0, because this way the last routing phase is introduced from the beginning. this would cause a routing time of O(n)
     }
@@ -141,7 +143,8 @@ Action Node::FinishSearch(SearchJob *sj)
     double hashedkey = sj->sid;
     if (sj->type == JOIN // SearchJob is a Join
             || (isReal && right == NULL && num <= hashedkey) // There is no right node and this node is responsible
-            || (isReal && num <= hashedkey && right->num > hashedkey)) { // There is a right node but not responsible
+            || (isReal && num <= hashedkey && right->num > hashedkey)// There is a right node but not responsible
+            || (isReal && sj->sid == MAX && right == NULL)) { //The searchjob was delegated to the last node and now we reached the last node
         switch (sj->type) {
         case INSERT:
             data[sj->dob->num] = sj->dob->date;
@@ -159,21 +162,24 @@ Action Node::FinishSearch(SearchJob *sj)
         }
         case JOIN: {
             IdObj *ido = sj->ido;
-            BuildList(ido); // just connect to given reference; BuildList will add it to the right!
+            BuildList(ido); // just connect to given reference;
 
             if (ido->num > num && right != NULL) {
                 IdObj *tempido =
                     new IdObj(right->num, new Identity(right->out));
                 TriggerDataTransfer(tempido);
-            } else if (ido->num <= num && left != NULL) {
+            } else if (ido->num <= num && left != NULL) {//this case matches iff we are joining the new node in front of the first node
                 IdObj *tempido = new IdObj(left->num, new Identity(left->out));
-                SearchJob *sj = new SearchJob(MAX, DATATRANSFER,
-                                              Node::calcRoutingBound(), tempido);
+                SearchJob *newsj = new SearchJob(MAX, DATATRANSFER,
+                                                 Node::calcRoutingBound(), tempido);
+                Search(newsj);
             }
+
             break;
         }
         case DATATRANSFER: {
-            // TODO: Implement data transfer
+            IdObj *tempido = sj->ido;
+            TriggerDataTransfer(tempido);
             break;
         }
         }
@@ -182,7 +188,7 @@ Action Node::FinishSearch(SearchJob *sj)
     } else {
         //the actual node is the end of the list. send searchjob to the other end.
         if (left == NULL) {
-            sj->sid = MAX;
+            sj->sid = MAX;//TO DO this won't work because we want to search for MAX and not for g(MAX)! adjust searchjob=> fixed
             sj->round = 0;
             Search(sj);
             return;
@@ -216,10 +222,11 @@ Action Node::Search(SearchJob *sj)
     double hashedkey = sj->sid;
 
     //responsible node for date was found
-    if (((right == NULL || right->num > hashedkey) && num <= hashedkey)
-            || (sj->type == JOIN && left == NULL)) {
+    if ((isReal && right == NULL && num <= hashedkey) // There is no right node and this node is responsible
+            || (isReal && num <= hashedkey && right->num > hashedkey)// There is a right node but not responsible
+            || (isReal && sj->sid == MAX && right == NULL) //The searchjob was delegated to the last node and now we reached the last node
+            || (sj->type == JOIN && left == NULL && hashedkey < num)) {
         //it is prohibited to do operations on virtual nodes (TO DO except for Join? => yes!)
-        //TODO routing bound may be irrelevant for JOIN!
         FinishSearch(sj);
         return;
     }
@@ -229,11 +236,7 @@ Action Node::Search(SearchJob *sj)
         //search accoringly to the order of the list
         if (hashedkey < num) {
             if (left == NULL) {
-
-                sj->sid = MAX;//TO DO this won't work because we want to search for MAX and not for g(MAX)! adjust searchjob=> fixed
-                sj->round = 0;
-                Search(sj);
-
+                FinishSearch(sj);//FinishSearch will start a new search and set sid=MAX
                 return;
             } else if (leftstable) {
                 sj->round++;
@@ -244,7 +247,7 @@ Action Node::Search(SearchJob *sj)
                 return;
             }
         } else if (hashedkey >= num) {//find the right end of a sequence of nodes with the same id
-            if (right != NULL && rightstable) {
+            if (rightstable) {//at this point right must be !=NULL, otherwise we would not reach this point
                 sj->round++;
                 right->out->call(Node::Search, sj);
                 return;
@@ -270,52 +273,51 @@ Action Node::Search(SearchJob *sj)
             return;
         }
     }
-    //TODO take end points into account:
+    //TO DO take end points into account: end points handled by FinishSearch
     //find next ideal position along list
-    if (hashedkey > num) {
+    if (hashedkey >= num) {
         if (left != NULL && right != NULL) {
             if (leftstable
-                    && fabs((1 + left->num) / 2 - hashedkey) < fabs((1 + right->num) / 2 - hashedkey)) {
+                    && fabs((1 + left->num) / 2 - hashedkey) < fabs((1+right->num / 2) - hashedkey)) {
+                //left.1 is nearer to hashedkey than right.1 => go to left
                 sj->round++;
                 left->out->call(Node::Search, sj);
                 return;
             } else if (rightstable
                        && fabs((1 + left->num) / 2 - hashedkey) >= fabs((1 + right->num) / 2 - hashedkey)) {
-                //TODO check this
+                //(>) right.1 is nearer to hashedkey than left.1 => go to right
+                //(=) when we are in the middle of a sequence of nodes with the same id, go to the right
                 sj->round++;
                 right->out->call(Node::Search, sj);
                 return;
             }
-        }
-        call(Node::Search, sj);
-        return;
-    } else if (hashedkey < num) {
-        if (leftstable && fabs(left->num / 2 - hashedkey) <= fabs(right->num / 2
-                - hashedkey)) { //TODO check this
-            sj->round++;
-            left->out->call(Node::Search, sj);
-            return;
-        } else if (rightstable && fabs(left->num / 2 - hashedkey) > fabs(
-                       right->num / 2 - hashedkey)) {
-            sj->round++;
-            right->out->call(Node::Search, sj);
-            return;
-        } else {
             call(Node::Search, sj);
             return;
         }
-
-    } else {
-        //hashedkey == num but it may not be a real node
-        //we could be anywhere in a sequence of nodes with the same id. so we have to find the right end before we can call finishsearch
-        if (rightstable && right->num == hashedkey) {
-            right->out->call(Node::Search, sj);
-            return;
-        } else {
+    } else { /*if (hashedkey < num)*/
+        if (left != NULL && right != NULL) {
+            if (leftstable && fabs(left->num / 2 - hashedkey) <= fabs(right->num / 2
+                    - hashedkey)) {
+                //(<) left.0 is nearer to hashedkey than right.0 => go to left
+                //(=) when we are in the middle of a sequence of nodes with the same id, go to the left
+                sj->round++;
+                left->out->call(Node::Search, sj);
+                return;
+            } else if (rightstable && fabs(left->num / 2 - hashedkey) > fabs(
+                           right->num / 2 - hashedkey)) {
+                sj->round++;
+                right->out->call(Node::Search, sj);
+                return;
+            }
             call(Node::Search, sj);
             return;
         }
     }
+    //left OR right are NULL, so finish Search
+    //if right==NULL, than we might be at the end of the list
+    //if left==NULL, than we don't care because hashedkey > num.
+    FinishSearch(sj);
+    return;
 }
 /**
  * Deletes a date from a node
@@ -355,13 +357,13 @@ Action Node::ReceiveLookUp(DateObj *dob)
 
 Action Node::Join(IdObj *ido)
 {
-    /* TODO move data from predecessor to the new node. but how
+    /* TO DO move data from predecessor to the new node. but how
      * and when do we trigger the data transfer at the predecessor???
      * the predecessor does not know the new node and vice versa.
      * solution: we are routing only in stable state and the node
      * joins at the right place!
      */
-    //TODO spawn virtual nodes
+    //TO DO spawn virtual nodes
     SearchJob *sj =
         new SearchJob(ido->num, JOIN, Node::calcRoutingBound(), ido);
     Search(sj);
@@ -374,20 +376,23 @@ Action Node::Join(IdObj *ido)
  */
 Action Node::TriggerDataTransfer(IdObj *ido)
 {
-    //if(num < ido->num && right->num = ido->num){//should be always true, when request appears!
 
     if (isReal) {
         Relay *temprelay = new Relay(ido->id);
         for (HashMap::iterator it = data.begin(); it != data.end(); ++it) {
             if (g(it->first) > ido->num) {
                 DateObj *dob = new DateObj(it->first, it->second);
-                temprelay->call(Node::Insert, dob);
+                temprelay->call(Node::Insert, dob);//routing unnecessary (ido is the target)
             }
         }
         delete temprelay;
         delete ido;
     } else {
-        if (leftstable) {
+        if (left == NULL) {
+            SearchJob *newsj = new SearchJob(MAX, DATATRANSFER,
+                                             Node::calcRoutingBound(), ido);
+            Search(newsj);
+        } else if (leftstable) {
             left->out->call(Node::TriggerDataTransfer, ido);
         } else {
             call(Node::TriggerDataTransfer, ido);
