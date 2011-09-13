@@ -12,3 +12,12 @@ Bei der Installation von msysgit das Installieren der Shell-Extension deaktivier
 3. Meldet euch bei mir, dass ich euch zum Projekt hinzufüge
 
 4. Fertig!
+
+## Kompilieren
+Das Kompilieren benötigt den GCC in einer möglichst neuen Version (getestet mit 4.6.1).
+Unter Windows sollte eine neue Version von MingW oder Cygwin funktionieren.
+
+Das Kommando um mittels des Makefiles zu kompilieren lautet:
+```make config=release``` oder ```make config=debug```
+
+In Eclipse CDT gibt es die Möglichkeit ein "Makefile Projekt" zu erstellen. Damit wird das Makefile eingebunden und statt der internen Konfiguration zum Kompilieren verwendet.
