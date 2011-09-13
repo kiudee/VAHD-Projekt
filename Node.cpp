@@ -153,13 +153,13 @@ Action Node::FinishSearch(SearchJob *sj)
             data.erase(sj->key);
             break;
         case LOOKUP: {
-            DATATYPE obj = data[sj->key]; //might be null TODO make consistent with HashMap
-            Relay *temprelay = new Relay(sj->ido->id);
-            DateObj *dob = new DateObj(sj->key, obj);
-            temprelay->call(Node::ReceiveLookUp, dob);
-            delete temprelay;
-            break;
-        }
+                DATATYPE obj = data[sj->key]; //might be null TODO make consistent with HashMap
+                Relay *temprelay = new Relay(sj->ido->id);
+                DateObj *dob = new DateObj(sj->key, obj);
+                temprelay->call(Node::ReceiveLookUp, dob);
+                delete temprelay;
+                break;
+            }
         case JOIN: {
             IdObj *ido = sj->ido;
             BuildList(ido); // just connect to given reference;
@@ -351,7 +351,7 @@ Action Node::LookUp(NumObj *key)
 Action Node::ReceiveLookUp(DateObj *dob)
 {
     std::cout << "Node " << num << ": receives data for key" << dob->num << ":"
-              << dob->date;
+    << dob->date;
     delete dob;
 }
 
@@ -442,27 +442,29 @@ void Node::checkStable(double id)
 void Node::BuildSide(IdObj *ido, NodeRelay **side, bool right)
 {
     auto compare = [right](double x, double y) -> bool {
-        if (right) {
-            return x > y;
-        } else {
-            return x < y;
-        }
-    };
+                       if (right)
+                   {
+                       return x > y;
+                   } else
+                   {
+                       return x < y;
+                   }
+               };
 
-    if (*side == NULL) { // link not yet defined
+if (*side == NULL) { // link not yet defined
         std::cout << "Node " << num << ": creating link to " << ido->num
-                  << ".\n";
+        << ".\n";
         *side = new NodeRelay(ido);
     } else {
         if (compare(ido->num, (*side)->num)) { // ido beyond link
             std::cout << "Node " << num << ": forwarding " << ido->num
-                      << " to " << (*side)->num << ".\n";
+            << " to " << (*side)->num << ".\n";
             (*side)->out->call(Node::BuildList, ido);
         } else {
             // ido between node and link
             if (idle((*side)->out)) {
                 std::cout << "Node " << num << ": new side " << ido->num
-                          << ", forwarding " << (*side)->num << ".\n";
+                << ", forwarding " << (*side)->num << ".\n";
                 IdObj *tempido = new IdObj((*side)->num,
                                            extractIdentity((*side)->out));
                 delete *side;
@@ -546,6 +548,7 @@ Action Node::Probing(Probe *ido)
                 right->out->call(Node::Probing, tempprobe);
             }
         } else {
+
             //probe reaches v.0 or v.1. finish probing.
             if (num == ido->num / 2 || num == (1 + ido->num) / 2) {
                 delete ido;
@@ -561,16 +564,19 @@ Action Node::Probing(Probe *ido)
                 //delete ido;
                 ido->phase = 1;
                 node0->call(Node::Probing, ido);
+                return;
             }
+
             /*probe came from the right, so we're searching for 1+ido->value/2
              because we're on a real node, change the direction flag and
              send probe to node1*/
             if (ido->num < num) {
-
                 //tempido = new Probe(ido->num, extractIdentity(ido->out), 1);
                 //delete ido;
+                // Unpack probe
                 ido->phase = 1;
                 node1->call(Node::Probing, ido);
+                return;
             }
 
         }
