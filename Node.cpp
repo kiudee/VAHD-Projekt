@@ -541,6 +541,7 @@ Action Node::Probing(Probe *ido)
                 right->out->call(Node::Probing, tempprobe);
             }
         } else {
+
             //probe reaches v.0 or v.1. finish probing.
             if (num == ido->num / 2 || num == (1 + ido->num) / 2) {
                 delete ido;
@@ -554,18 +555,25 @@ Action Node::Probing(Probe *ido)
                 //(3) we are on the real node w, so we switch the phase flag indicating, that we are on the left side of v.0.
                 //tempido = new Probe(ido->num, extractIdentity(ido->out), 1);
                 //delete ido;
-                ido->phase = 1;
-                node0->call(Node::Probing, ido);
+            	ido->phase = 1;
+
+            	// repack ido object
+            	tempprobe = new Probe(ido->num, ido->id,ido->phase);
+                node0->call(Node::Probing, tempprobe);
             }
+
             /*probe came from the right, so we're searching for 1+ido->value/2
              because we're on a real node, change the direction flag and
              send probe to node1*/
             if (ido->num < num) {
-
                 //tempido = new Probe(ido->num, extractIdentity(ido->out), 1);
                 //delete ido;
-                ido->phase = 1;
-                node1->call(Node::Probing, ido);
+            	// Unpack probe
+            	ido->phase = 1;
+
+            	// repack ido object
+            	tempprobe = new Probe(ido->num, ido->id,ido->phase);
+                node1->call(Node::Probing, tempprobe);
             }
 
         }
