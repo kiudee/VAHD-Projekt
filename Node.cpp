@@ -202,38 +202,11 @@ Action Node::FinishSearch(SearchJob *sj)
     }
 }
 
-/**
- * Routes to the next best node and does a dictionary operation
- * @author Simon
- * @param the SearchJob
- */
-Action Node::Search(SearchJob *sj)
+void doLastRoutingPhase(SearchJob *sj)
 {
-
-    //TO DO how to determine the responsibility area for the last node? ring needed? solution: send job to MAX!
-    //TO DO doing searchjob allowed only at real nodes!
-    /*	if(!isStable()){//TO DO it is not necessary, that both links are stable!
-     //TO DO what if routing gets stuck? it cannot get stuck, because we are only routing in stable state
-     call(Node::Search, sj);
-     return;
-     }*/
-
-    //sj->round++;
     double hashedkey = sj->sid;
-
-    //responsible node for date was found
-    if ((isReal && right == NULL && num <= hashedkey) // There is no right node and this node is responsible
-            || (isReal && num <= hashedkey && right->num > hashedkey)// There is a right node but not responsible
-            || (isReal && sj->sid == MAX && right == NULL) //The searchjob was delegated to the last node and now we reached the last node
-            || (sj->type == JOIN && left == NULL && hashedkey < num)) {
-        //it is prohibited to do operations on virtual nodes (TO DO except for Join? => yes!)
-        FinishSearch(sj);
-        return;
-    }
-
-    //last phase for routing
+    //search accoringly to the order of the list
     if (sj->round >= sj->bound) {
-        //search accoringly to the order of the list
         if (hashedkey < num) {
             if (left == NULL) {
                 FinishSearch(sj);//FinishSearch will start a new search and set sid=MAX
@@ -257,53 +230,85 @@ Action Node::Search(SearchJob *sj)
             }
         }
     }
+}
 
-    //do next debruijn hop
-    if (isReal) {
-        if (hashedkey < num) {
-            sj->round++;
-            node0->call(Node::Search, sj);
-            return;
-        } else if (hashedkey > num) {
-            sj->round++;
-            node1->call(Node::Search, sj);
-            return;
-        } else {
-            FinishSearch(sj);
-            return;
-        }
-    }
-    //TO DO take end points into account: end points handled by FinishSearch
-    //find next ideal position along list
-    if (left != NULL && right != NULL) {
-        bool nearerToLeft;
-        if (hashedkey >= num) {
-            nearerToLeft = fabs((1 + left->num) / 2 - hashedkey) < fabs((1 + right->num / 2) - hashedkey); 
-        } else {
-            nearerToLeft = fabs(left->num / 2 - hashedkey) <= fabs(right->num / 2 - hashedkey);
-        }
-
-        if (leftstable && nearerToLeft) {
-            //left.1 is nearer to hashedkey than right.1 => go to left
-            sj->round++;
-            left->out->call(Node::Search, sj);
-            return;
-        } else if (rightstable && !nearerToLeft) {
-            //(>) right.1 is nearer to hashedkey than left.1 => go to right
-            //(=) when we are in the middle of a sequence of nodes with the same id, go to the right
-            sj->round++;
-            right->out->call(Node::Search, sj);
-            return;
-        }
-        call(Node::Search, sj);
+void doDebruijnHop(SearchJob *sj)
+{
+    if (!isReal) {
         return;
     }
+
+    if (hashedkey < num) {
+        sj->round++;
+        node0->call(Node::Search, sj);
+    } else if (hashedkey > num) {
+        sj->round++;
+        node1->call(Node::Search, sj);
+    } else { // hashedkey == num
+        FinishSearch(sj);
+    }
+    return;
+}
+
+void findNextIdealPosition(SearchJob *sj)
+{
+    if (left == NULL || right == NULL) {
+        return;
+    }
+
+    //TODO take end points into account: end points handled by FinishSearch
+    bool nearerToLeft;
+    if (hashedkey >= num) {
+        nearerToLeft = fabs((1 + left->num) / 2 - hashedkey) < fabs((1 + right->num / 2) - hashedkey); 
+    } else {
+        nearerToLeft = fabs(left->num / 2 - hashedkey) <= fabs(right->num / 2 - hashedkey);
+    }
+
+    if (leftstable && nearerToLeft) {
+        //left.1 is nearer to hashedkey than right.1 => go to left
+        sj->round++;
+        left->out->call(Node::Search, sj);
+    } else if (rightstable && !nearerToLeft) {
+        //(>) right.1 is nearer to hashedkey than left.1 => go to right
+        //(=) when we are in the middle of a sequence of nodes with the same id, go to the right
+        sj->round++;
+        right->out->call(Node::Search, sj);
+    } else {
+        call(Node::Search, sj);
+    }
+    return;
+}
+
+/**
+ * Routes to the next best node and does a dictionary operation
+ * @author Simon
+ * @param the SearchJob
+ */
+Action Node::Search(SearchJob *sj)
+{
+    double hashedkey = sj->sid;
+
+    //responsible node for date was found
+    if ((isReal && right == NULL && num <= hashedkey) // There is no right node and this node is responsible
+            || (isReal && num <= hashedkey && right->num > hashedkey)// There is a right node but not responsible
+            || (isReal && sj->sid == MAX && right == NULL) //The searchjob was delegated to the last node and now we reached the last node
+            || (sj->type == JOIN && left == NULL && hashedkey < num)) {
+        //it is prohibited to do operations on virtual nodes (TO DO except for Join? => yes!)
+        FinishSearch(sj);
+        return;
+    }
+
+    doLastRoutingPhase(sj);
+    doDebruijnHop(sj);
+    findNextIdealPosition(sj);
+
     //left OR right are NULL, so finish Search
     //if right==NULL, than we might be at the end of the list
     //if left==NULL, than we don't care because hashedkey > num.
     FinishSearch(sj);
     return;
 }
+
 /**
  * Deletes a date from a node
  * @author Simon
