@@ -1,6 +1,4 @@
 #include "Supervisor.h"
-#include <fstream>
-#include <sstream>
 
 Action Supervisor::Init(NumObj *num)
 {
