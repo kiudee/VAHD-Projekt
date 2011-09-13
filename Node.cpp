@@ -275,43 +275,28 @@ Action Node::Search(SearchJob *sj)
     }
     //TO DO take end points into account: end points handled by FinishSearch
     //find next ideal position along list
-    if (hashedkey >= num) {
-        if (left != NULL && right != NULL) {
-            if (leftstable
-                    && fabs((1 + left->num) / 2 - hashedkey) < fabs((1 + right->num / 2) - hashedkey)) {
-                //left.1 is nearer to hashedkey than right.1 => go to left
-                sj->round++;
-                left->out->call(Node::Search, sj);
-                return;
-            } else if (rightstable
-                       && fabs((1 + left->num) / 2 - hashedkey) >= fabs((1 + right->num) / 2 - hashedkey)) {
-                //(>) right.1 is nearer to hashedkey than left.1 => go to right
-                //(=) when we are in the middle of a sequence of nodes with the same id, go to the right
-                sj->round++;
-                right->out->call(Node::Search, sj);
-                return;
-            }
-            call(Node::Search, sj);
+    if (left != NULL && right != NULL) {
+        bool nearerToLeft;
+        if (hashedkey >= num) {
+            nearerToLeft = fabs((1 + left->num) / 2 - hashedkey) < fabs((1 + right->num / 2) - hashedkey); 
+        } else {
+            nearerToLeft = fabs(left->num / 2 - hashedkey) <= fabs(right->num / 2 - hashedkey);
+        }
+
+        if (leftstable && nearerToLeft) {
+            //left.1 is nearer to hashedkey than right.1 => go to left
+            sj->round++;
+            left->out->call(Node::Search, sj);
+            return;
+        } else if (rightstable && !nearerToLeft) {
+            //(>) right.1 is nearer to hashedkey than left.1 => go to right
+            //(=) when we are in the middle of a sequence of nodes with the same id, go to the right
+            sj->round++;
+            right->out->call(Node::Search, sj);
             return;
         }
-    } else { /*if (hashedkey < num)*/
-        if (left != NULL && right != NULL) {
-            if (leftstable && fabs(left->num / 2 - hashedkey) <= fabs(right->num / 2
-                    - hashedkey)) {
-                //(<) left.0 is nearer to hashedkey than right.0 => go to left
-                //(=) when we are in the middle of a sequence of nodes with the same id, go to the left
-                sj->round++;
-                left->out->call(Node::Search, sj);
-                return;
-            } else if (rightstable && fabs(left->num / 2 - hashedkey) > fabs(
-                           right->num / 2 - hashedkey)) {
-                sj->round++;
-                right->out->call(Node::Search, sj);
-                return;
-            }
-            call(Node::Search, sj);
-            return;
-        }
+        call(Node::Search, sj);
+        return;
     }
     //left OR right are NULL, so finish Search
     //if right==NULL, than we might be at the end of the list
