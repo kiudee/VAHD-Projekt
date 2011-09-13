@@ -150,32 +150,32 @@ Action Node::FinishSearch(SearchJob *sj)
             data.erase(sj->key);
             break;
         case LOOKUP: {
-            DATATYPE obj = data[sj->key]; //might be null TODO make consistent with HashMap
-            Relay *temprelay = new Relay(sj->ido->id);
-            DateObj *dob = new DateObj(sj->key, obj);
-            temprelay->call(Node::ReceiveLookUp, dob);
-            delete temprelay;
-            break;
-        }
-        case JOIN: {
-            IdObj *ido = sj->ido;
-            BuildList(ido); // just connect to given reference; BuildList will add it to the right!
-
-            if (ido->num > num && right != NULL) {
-                IdObj *tempido =
-                    new IdObj(right->num, new Identity(right->out));
-                TriggerDataTransfer(tempido);
-            } else if (ido->num <= num && left != NULL) {
-                IdObj *tempido = new IdObj(left->num, new Identity(left->out));
-                SearchJob *sj = new SearchJob(MAX, DATATRANSFER,
-                                              Node::calcRoutingBound(), tempido);
+                DATATYPE obj = data[sj->key]; //might be null TODO make consistent with HashMap
+                Relay *temprelay = new Relay(sj->ido->id);
+                DateObj *dob = new DateObj(sj->key, obj);
+                temprelay->call(Node::ReceiveLookUp, dob);
+                delete temprelay;
+                break;
             }
-            break;
-        }
+        case JOIN: {
+                IdObj *ido = sj->ido;
+                BuildList(ido); // just connect to given reference; BuildList will add it to the right!
+
+                if (ido->num > num && right != NULL) {
+                    IdObj *tempido =
+                        new IdObj(right->num, new Identity(right->out));
+                    TriggerDataTransfer(tempido);
+                } else if (ido->num <= num && left != NULL) {
+                    IdObj *tempido = new IdObj(left->num, new Identity(left->out));
+                    SearchJob *sj = new SearchJob(MAX, DATATRANSFER,
+                                                  Node::calcRoutingBound(), tempido);
+                }
+                break;
+            }
         case DATATRANSFER: {
-            // TODO: Implement data transfer
-            break;
-        }
+                // TODO: Implement data transfer
+                break;
+            }
         }
         delete sj;
         return;
@@ -349,7 +349,7 @@ Action Node::LookUp(NumObj *key)
 Action Node::ReceiveLookUp(DateObj *dob)
 {
     std::cout << "Node " << num << ": receives data for key" << dob->num << ":"
-              << dob->date;
+    << dob->date;
     delete dob;
 }
 
@@ -437,27 +437,29 @@ void Node::checkStable(double id)
 void Node::BuildSide(IdObj *ido, NodeRelay **side, bool right)
 {
     auto compare = [right](double x, double y) -> bool {
-        if (right) {
-            return x > y;
-        } else {
-            return x < y;
-        }
-    };
+                       if (right)
+                   {
+                       return x > y;
+                   } else
+                   {
+                       return x < y;
+                   }
+               };
 
-    if (*side == NULL) { // link not yet defined
+if (*side == NULL) { // link not yet defined
         std::cout << "Node " << num << ": creating link to " << ido->num
-                  << ".\n";
+        << ".\n";
         *side = new NodeRelay(ido);
     } else {
         if (compare(ido->num, (*side)->num)) { // ido beyond link
             std::cout << "Node " << num << ": forwarding " << ido->num
-                      << " to " << (*side)->num << ".\n";
+            << " to " << (*side)->num << ".\n";
             (*side)->out->call(Node::BuildList, ido);
         } else {
             // ido between node and link
             if (idle((*side)->out)) {
                 std::cout << "Node " << num << ": new side " << ido->num
-                          << ", forwarding " << (*side)->num << ".\n";
+                << ", forwarding " << (*side)->num << ".\n";
                 IdObj *tempido = new IdObj((*side)->num,
                                            extractIdentity((*side)->out));
                 delete *side;
@@ -555,11 +557,9 @@ Action Node::Probing(Probe *ido)
                 //(3) we are on the real node w, so we switch the phase flag indicating, that we are on the left side of v.0.
                 //tempido = new Probe(ido->num, extractIdentity(ido->out), 1);
                 //delete ido;
-            	ido->phase = 1;
-
-            	// repack ido object
-            	tempprobe = new Probe(ido->num, ido->id,ido->phase);
-                node0->call(Node::Probing, tempprobe);
+                ido->phase = 1;
+                node0->call(Node::Probing, ido);
+                return;
             }
 
             /*probe came from the right, so we're searching for 1+ido->value/2
@@ -568,12 +568,10 @@ Action Node::Probing(Probe *ido)
             if (ido->num < num) {
                 //tempido = new Probe(ido->num, extractIdentity(ido->out), 1);
                 //delete ido;
-            	// Unpack probe
-            	ido->phase = 1;
-
-            	// repack ido object
-            	tempprobe = new Probe(ido->num, ido->id,ido->phase);
-                node1->call(Node::Probing, tempprobe);
+                // Unpack probe
+                ido->phase = 1;
+                node1->call(Node::Probing, ido);
+                return;
             }
 
         }
