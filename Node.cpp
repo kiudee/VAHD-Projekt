@@ -157,7 +157,7 @@ Action Node::FinishSearch(SearchJob *sj)
             delete temprelay;
             break;
         }
-        case JOIN:
+        case JOIN: {
             IdObj *ido = sj->ido;
             BuildList(ido); // just connect to given reference; BuildList will add it to the right!
 
@@ -167,10 +167,15 @@ Action Node::FinishSearch(SearchJob *sj)
                 TriggerDataTransfer(tempido);
             } else if (ido->num <= num && left != NULL) {
                 IdObj *tempido = new IdObj(left->num, new Identity(left->out));
-                SearchJob sj = new SearchJob(MAX, DATATRANSFER,
-                                             Node::calcRoutingBound(), tempido);
+                SearchJob *sj = new SearchJob(MAX, DATATRANSFER,
+                                              Node::calcRoutingBound(), tempido);
             }
             break;
+        }
+        case DATATRANSFER: {
+            // TODO: Implement data transfer
+            break;
+        }
         }
         delete sj;
         return;
@@ -268,22 +273,23 @@ Action Node::Search(SearchJob *sj)
     //TODO take end points into account:
     //find next ideal position along list
     if (hashedkey > num) {
-        if (leftstable && fabs((1 + left->num) / 2 - hashedkey) < fabs((1
-                + right->num) / 2 - hashedkey)) {
-            sj->round++;
-            left->out->call(Node::Search, sj);
-            return;
-        } else if (rightstable && fabs((1 + left->num) / 2 - hashedkey) >= fabs(
-                       (1 + right->num) / 2 - hashedkey)) {//TODO check this
-            sj->round++;
-            right->out->call(Node::Search, sj);
-            return;
-        } else {
-            call(Node::Search, sj);
-            return;
+        if (left != NULL && right != NULL) {
+            if (leftstable
+                    && fabs((1 + left->num) / 2 - hashedkey) < fabs((1 + right->num) / 2 - hashedkey)) {
+                sj->round++;
+                left->out->call(Node::Search, sj);
+                return;
+            } else if (rightstable
+                       && fabs((1 + left->num) / 2 - hashedkey) >= fabs((1 + right->num) / 2 - hashedkey)) {
+                //TODO check this
+                sj->round++;
+                right->out->call(Node::Search, sj);
+                return;
+            }
         }
-
-    } else if(hashedkey < num) {
+        call(Node::Search, sj);
+        return;
+    } else if (hashedkey < num) {
         if (leftstable && fabs(left->num / 2 - hashedkey) <= fabs(right->num / 2
                 - hashedkey)) { //TODO check this
             sj->round++;
@@ -302,7 +308,7 @@ Action Node::Search(SearchJob *sj)
     } else {
         //hashedkey == num but it may not be a real node
         //we could be anywhere in a sequence of nodes with the same id. so we have to find the right end before we can call finishsearch
-        if(rightstable && right->num == hashedkey) {
+        if (rightstable && right->num == hashedkey) {
             right->out->call(Node::Search, sj);
             return;
         } else {

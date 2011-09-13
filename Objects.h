@@ -5,7 +5,7 @@
 
 #define DATATYPE std::string
 
-enum SearchJobType { INSERT, DELETE, LOOKUP, JOIN };
+enum SearchJobType { INSERT, DELETE, LOOKUP, JOIN, DATATRANSFER };
 
 ObjectType(NumObj)
 {
@@ -65,13 +65,19 @@ public:
 ObjectType(NodeRelay)
 {
 public:
-    double value;
+    double num;
     Relay *out;
 
     NodeRelay(IdObj *ido) {
-        value = ido->num;
+        num = ido->num;
         out = new Relay(ido->id);
         delete ido;
+    }
+
+    NodeRelay(double value, Identity * d) {
+        num = value;
+        out = new Relay(d);
+        delete d;
     }
 };
 
@@ -84,11 +90,11 @@ ObjectType(Probe)
 {
 public:
     int phase;
-    double value;
+    double num;
     Identity *id;
 
     Probe(double v, Identity *d, int p) {
-        value = v;
+        num = v;
         phase = p;
         id = d;
     }
