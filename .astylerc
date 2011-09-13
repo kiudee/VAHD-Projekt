@@ -1,0 +1,15 @@
+# Linux Brace style:
+--style=otbs
+
+# 4 Spaces indentation:
+-s4
+
+# Space padding around operators:
+pad-oper
+pad-header
+unpad-paren
+
+# Pointer formatting:
+-k3
+
+--suffix=none
