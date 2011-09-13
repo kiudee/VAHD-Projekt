@@ -1,4 +1,6 @@
 #include "Supervisor.h"
+#include <fstream>
+#include <sstream>
 
 Action Supervisor::Init(NumObj *num)
 {
@@ -49,20 +51,32 @@ Action Supervisor::SetLink(IdPair *idop)
         call(Supervisor::Wakeup, numo);
     }
 }
+
+std::string Supervisor::Node2GDL(double id)
+{
+    std::string result("");
+    result += "node: { title: \"";
+    
+    // Convert double to String:
+    std::ostringstream s;
+    s << id;
+    result += s.str();
+
+    result += "\" }\n";
+    return result;
+}
+
 Action Supervisor::Wakeup(NumObj *numo)
 {
-    //NumObj *searchnum;
-
     if (numo->num > 0) {
         numo->num--;
         call(Supervisor::Wakeup, numo);
     } else {
-        // test Delete or Search
-        /*
-         *ListNode[3]->call(List::Delete, NONE);
-         */
-        //searchnum = new NumObj(9);
-        //ListNode[3]->call(List::Search, searchnum);
+        std::ofstream out("graph.gdl");
+        out << "Graph {\n";
+        out << Node2GDL(0.1337);
+        out << Node2GDL(0.424242);
+        out << "}\n";
     }
 }
 

@@ -5,6 +5,8 @@
 #include <vector>
 #undef new
 
+#include <fstream>
+#include <sstream>
 #include <iostream>
 #include "Subjects1-6.h"
 
@@ -24,6 +26,7 @@ protected:
     std::vector<Relay *> Nodes;
     std::vector<IdObj *> StartID;
 
+    std::string Node2GDL(double id);
 public:
     FirstAction(Supervisor, Init)
 
