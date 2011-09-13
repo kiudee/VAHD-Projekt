@@ -529,16 +529,14 @@ Action Node::Probing(Probe *ido)
                 left = new NodeRelay(tempido);
             } else {
                 //(1) send probe to left introducing the first phase (indicating by parameter 0)
-                tempprobe = new Probe(num, new Identity(in), 0);
-                left->out->call(Node::Probing, tempprobe);
+                left->out->call(Node::Probing, ido);
             }
             //If no right neighbor is set, set it to node1 and probing is done, else send the probe to the right neighbor
             if (right == NULL) {
                 tempido = new IdObj((1 + num) / 2, new Identity(node1));
                 right = new NodeRelay(tempido);
             } else {
-                tempprobe = new Probe(num, new Identity(in), 0);
-                right->out->call(Node::Probing, tempprobe);
+                right->out->call(Node::Probing, ido);
             }
         } else {
             //probe reaches v.0 or v.1. finish probing.
