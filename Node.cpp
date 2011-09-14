@@ -115,7 +115,7 @@ double Node::calcRoutingBound()
 
 Action Node::BuildDeBruijn()
 {
-	std::cout << num << "<-BuildDeBruijn();\n";
+    std::cout << num << "<-BuildDeBruijn();\n";
     BuildList(NULL);
     Probing(NULL);
 }
@@ -127,7 +127,7 @@ Action Node::BuildDeBruijn()
  */
 Action Node::Insert(DateObj *dob)
 {
-	std::cout << num << "<-Insert(key:" << dob->num << ", data:" << dob->date << ")\n";
+    std::cout << num << "<-Insert(key:" << dob->num << ", data:" << dob->date << ")\n";
     SearchJob *sj = new SearchJob(g(dob->num), INSERT,
                                   Node::calcRoutingBound(), dob);
     Search(sj);
@@ -142,7 +142,7 @@ Action Node::Insert(DateObj *dob)
  */
 Action Node::FinishSearch(SearchJob *sj)
 {
-	std::cout << num << "<-FinishSearch(" << sj->sid << ");\n";
+    std::cout << num << "<-FinishSearch(" << sj->sid << ");\n";
     double hashedkey = sj->sid;
     if (sj->type == JOIN // SearchJob is a Join
             || (isReal && right == NULL && num <= hashedkey) // There is no right node and this node is responsible
@@ -192,8 +192,8 @@ Action Node::FinishSearch(SearchJob *sj)
     } else {
         //the actual node is the end of the list. send searchjob to the other end.
         if (left == NULL) {
-            if(sj->sid < MAX){ //break recursion
-            	sj->sid = MAX;//TO DO this won't work because we want to search for MAX and not for g(MAX)! adjust searchjob=> fixed
+            if (sj->sid < MAX) { //break recursion
+                sj->sid = MAX;//TO DO this won't work because we want to search for MAX and not for g(MAX)! adjust searchjob=> fixed
                 sj->round = 0;//TODO can we write into a object without subjects.h deleting that object?
                 Search(sj);
                 return;
@@ -208,39 +208,12 @@ Action Node::FinishSearch(SearchJob *sj)
     }
 }
 
-/**
- * Routes to the next best node and does a dictionary operation
- * @author Simon
- * @param the SearchJob
- */
-Action Node::Search(SearchJob *sj)
+void doLastRoutingPhase(SearchJob *sj)
 {
 
-    //TO DO how to determine the responsibility area for the last node? ring needed? solution: send job to MAX!
-    //TO DO doing searchjob allowed only at real nodes!
-    /*	if(!isStable()){//TO DO it is not necessary, that both links are stable!
-     //TO DO what if routing gets stuck? it cannot get stuck, because we are only routing in stable state
-     call(Node::Search, sj);
-     return;
-     }*/
-
-    //sj->round++;
-	std::cout << num << "<-Search(" << sj->sid << ");\n";
     double hashedkey = sj->sid;
-
-    //responsible node for date was found
-    if ((isReal && right == NULL && num <= hashedkey) // There is no right node and this node is responsible
-            || (isReal && num <= hashedkey && right->num > hashedkey)// There is a right node but not responsible
-            || (isReal && sj->sid == MAX && right == NULL) //The searchjob was delegated to the last node and now we reached the last node
-            || (sj->type == JOIN && left == NULL && hashedkey < num)) {
-        //it is prohibited to do operations on virtual nodes (TO DO except for Join? => yes!)
-        FinishSearch(sj);
-        return;
-    }
-
-    //last phase for routing
+    //search accoringly to the order of the list
     if (sj->round >= sj->bound) {
-        //search accoringly to the order of the list
         if (hashedkey < num) {
             if (left == NULL) {
                 FinishSearch(sj);//FinishSearch will start a new search and set sid=MAX
@@ -264,67 +237,85 @@ Action Node::Search(SearchJob *sj)
             }
         }
     }
+}
 
-    //do next debruijn hop
-    if (isReal) {
-        if (hashedkey < num) {
-            sj->round++;
-            node0->call(Node::Search, sj);
-            return;
-        } else if (hashedkey > num) {
-            sj->round++;
-            node1->call(Node::Search, sj);
-            return;
-        } else {
-            FinishSearch(sj);
-            return;
-        }
+void doDebruijnHop(SearchJob *sj)
+{
+    if (!isReal) {
+        return;
     }
-    //TO DO take end points into account: end points handled by FinishSearch
-    //find next ideal position along list
+
+    if (hashedkey < num) {
+        sj->round++;
+        node0->call(Node::Search, sj);
+    } else if (hashedkey > num) {
+        sj->round++;
+        node1->call(Node::Search, sj);
+    } else { // hashedkey == num
+        FinishSearch(sj);
+    }
+    return;
+}
+
+void findNextIdealPosition(SearchJob *sj)
+{
+    if (left == NULL || right == NULL) {
+        return;
+    }
+
+    //TODO take end points into account: end points handled by FinishSearch
+    bool nearerToLeft;
     if (hashedkey >= num) {
-        if (left != NULL && right != NULL) {
-            if (leftstable
-                    && fabs((1 + left->num) / 2 - hashedkey) < fabs((1 + right->num / 2) - hashedkey)) {
-                //left.1 is nearer to hashedkey than right.1 => go to left
-                sj->round++;
-                left->out->call(Node::Search, sj);
-                return;
-            } else if (rightstable
-                       && fabs((1 + left->num) / 2 - hashedkey) >= fabs((1 + right->num) / 2 - hashedkey)) {
-                //(>) right.1 is nearer to hashedkey than left.1 => go to right
-                //(=) when we are in the middle of a sequence of nodes with the same id, go to the right
-                sj->round++;
-                right->out->call(Node::Search, sj);
-                return;
-            }
-            call(Node::Search, sj);
-            return;
-        }
-    } else { /*if (hashedkey < num)*/
-        if (left != NULL && right != NULL) {
-            if (leftstable && fabs(left->num / 2 - hashedkey) <= fabs(right->num / 2
-                    - hashedkey)) {
-                //(<) left.0 is nearer to hashedkey than right.0 => go to left
-                //(=) when we are in the middle of a sequence of nodes with the same id, go to the left
-                sj->round++;
-                left->out->call(Node::Search, sj);
-                return;
-            } else if (rightstable && fabs(left->num / 2 - hashedkey) > fabs(
-                           right->num / 2 - hashedkey)) {
-                sj->round++;
-                right->out->call(Node::Search, sj);
-                return;
-            }
-            call(Node::Search, sj);
-            return;
-        }
+        nearerToLeft = fabs((1 + left->num) / 2 - hashedkey) < fabs((1 + right->num / 2) - hashedkey);
+    } else {
+        nearerToLeft = fabs(left->num / 2 - hashedkey) <= fabs(right->num / 2 - hashedkey);
     }
+
+    if (leftstable && nearerToLeft) {
+        //left.1 is nearer to hashedkey than right.1 => go to left
+        sj->round++;
+        left->out->call(Node::Search, sj);
+    } else if (rightstable && !nearerToLeft) {
+        //(>) right.1 is nearer to hashedkey than left.1 => go to right
+        //(=) when we are in the middle of a sequence of nodes with the same id, go to the right
+        sj->round++;
+        right->out->call(Node::Search, sj);
+    } else {
+        call(Node::Search, sj);
+    }
+    return;
+}
+
+/**
+ * Routes to the next best node and does a dictionary operation
+ * @author Simon
+ * @param the SearchJob
+ */
+Action Node::Search(SearchJob *sj)
+{
+    std::cout << num << "<-Search(" << sj->sid << ");\n";
+    double hashedkey = sj->sid;
+
+    //responsible node for date was found
+    if ((isReal && right == NULL && num <= hashedkey) // There is no right node and this node is responsible
+            || (isReal && num <= hashedkey && right->num > hashedkey)// There is a right node but not responsible
+            || (isReal && sj->sid == MAX && right == NULL) //The searchjob was delegated to the last node and now we reached the last node
+            || (sj->type == JOIN && left == NULL && hashedkey < num)) {
+        //it is prohibited to do operations on virtual nodes (TO DO except for Join? => yes!)
+        FinishSearch(sj);
+        return;
+    }
+
+    doLastRoutingPhase(sj);
+    doDebruijnHop(sj);
+    findNextIdealPosition(sj);
+
     //left OR right are NULL, so finish Search
     //if right==NULL, than we might be at the end of the list
     //if left==NULL, than we don't care because hashedkey > num.
     FinishSearch(sj);
 }
+
 /**
  * Deletes a date from a node
  * @author Simon
@@ -488,10 +479,11 @@ void Node::BuildSide(IdObj *ido, NodeRelay **side, bool right)
  */
 Action Node::BuildList(IdObj *ido)
 {
-	if(ido!=NULL)
-	std::cout << num << "<-BuildList("<<ido->num<<");\n";
-	else
-	std::cout << num << "<-BuildList();\n";
+    if (ido != NULL) {
+        std::cout << num << "<-BuildList(" << ido->num << ");\n";
+    } else {
+        std::cout << num << "<-BuildList();\n";
+    }
 
     IdObj *tempido;
     // Check if there are dead links from both sides:

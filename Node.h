@@ -24,11 +24,17 @@ protected:
     bool rightstable;
     HashMap data;//for a datatransfer another data structure would be better e.g. a binary tree.
 
+    // BuildDeBruijn:
     void checkDead(NodeRelay **side);
     void checkValid();
     double calcRoutingBound();
     void checkStable(double id);
     void BuildSide(IdObj * ido, NodeRelay **side, bool right);
+
+    // Search:
+    void doLastRoutingPhase(SearchJob * sj);
+    void doDebruijnHop(SearchJob * sj);
+    void findNextIdealPosition(SearchJob * sj);
 
 
 public:
