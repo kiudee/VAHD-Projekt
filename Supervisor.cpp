@@ -60,9 +60,9 @@ Action Supervisor::Wakeup(NumObj *numo)
         // test Delete or Search
 
         DateObj *dob = new DateObj(14, "me lov subjectz. lolz.");
-        Nodes[3]->call(Node::Insert, dob);
+        //Nodes[3]->call(Node::Insert, dob);
         NumObj *numo2 = new NumObj(14);
-        Nodes[5]->call(Node::LookUp, numo2);
+        //Nodes[5]->call(Node::LookUp, numo2);
     }
 }
 

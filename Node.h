@@ -30,6 +30,7 @@ protected:
     double calcRoutingBound();
     void checkStable(double id);
     void BuildSide(IdObj * ido, NodeRelay **side, bool right);
+    bool isSelf(IdObj * ido);
 
     // Search:
     void doLastRoutingPhase(SearchJob * sj);

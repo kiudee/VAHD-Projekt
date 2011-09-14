@@ -149,6 +149,7 @@ Action Node::FinishSearch(SearchJob *sj)
             || (isReal && right == NULL && num <= hashedkey) // There is no right node and this node is responsible
             || (isReal && num <= hashedkey && right->num > hashedkey)// There is a right node but not responsible
             || (isReal && sj->sid == MAX)) { //The searchjob was delegated to the last node and now we reached the last node
+        std::cout << num << ": Search terminated!(" << sj->sid << ");\n";
         switch (sj->type) {
         case INSERT:
             data[sj->dob->num] = sj->dob->date;
@@ -166,14 +167,17 @@ Action Node::FinishSearch(SearchJob *sj)
         }
         case JOIN: {
             IdObj *ido = sj->ido;
-            std::cout << "Finished Search JOIN \n";
+            std::cout << ido->num << " joins at " << num << "\n";
             BuildList(ido); // just connect to given reference;
 
             if (ido->num > num && right != NULL) {
+                std::cout << num << " triggers a data transfer for " << ido->num << " (to right) \n";
                 IdObj *tempido =
                     new IdObj(right->num, new Identity(right->out));
                 TriggerDataTransfer(tempido);
+
             } else if (ido->num <= num && left != NULL) {//this case matches iff we are joining the new node in front of the first node
+                std::cout << num << " triggers a data transfer for " << ido->num << " (to left)\n";
                 IdObj *tempido = new IdObj(left->num, new Identity(left->out));
                 SearchJob *newsj = new SearchJob(MAX, DATATRANSFER,
                                                  Node::calcRoutingBound(), tempido);
@@ -239,6 +243,7 @@ void Node::doLastRoutingPhase(SearchJob *sj)
 
 void Node::delegateSearchJobToLastNode(SearchJob *sj)
 {
+    std::cout << num << "<-delegateSearchJobToLastNode(" << sj->sid << ");\n";
     //SearchJob *newsj = new SearchJob(sj);
     sj->sid = MAX;//TO DO this won't work because we want to search for MAX and not for g(MAX)! adjust searchjob=> fixed
     sj->round = 0;
@@ -346,7 +351,7 @@ Action Node::Search(SearchJob *sj)
     doDebruijnHop(sj);
     findNextIdealPosition(sj);
 
-    std::cout << "MESSAGE LOST: " << sj->sid << "\n";
+
     //call(Node::Search, sj);//because of virtual nodes, every node will eventually have at least one neighbor
 
     //left OR right are NULL, so finish Search
@@ -507,6 +512,7 @@ void Node::BuildSide(IdObj *ido, NodeRelay **side, bool right)
                   << ".\n";
         *side = new NodeRelay(ido);
     } else {
+        //std::cout << "compare: " << compare(ido->num, (*side)->num) << " num: " << ido->num << " side->num: " << (*side)->num <<"\n";
         if (compare(ido->num, (*side)->num)) { // ido beyond link
             std::cout << "Node " << num << ": forwarding " << ido->num
                       << " to " << (*side)->num << ".\n";
@@ -528,6 +534,14 @@ void Node::BuildSide(IdObj *ido, NodeRelay **side, bool right)
     }
 }
 
+bool Node::isSelf(IdObj *ido)
+{
+    Identity *self = new Identity(in);
+    bool r = self->_base->ID == ido->id->_base->ID;
+    delete self;
+    return r;
+}
+
 /**
  * Standard implementation of BuildList. Stable flags added
  * @author Simon
@@ -540,6 +554,22 @@ Action Node::BuildList(IdObj *ido)
         std::cout << num << "<-BuildList();\n";
     }
 
+    std::cout << "Node: " << num;
+    if (left == NULL) {
+        std::cout << "\tLeft: NULL";
+    } else {
+        std::cout << "\tLeft: " << left->num;
+    }
+
+    if (right == NULL) {
+        std::cout << "\tRight: NULL";
+    } else {
+        std::cout << "\tRight: " << right->num;
+    }
+
+    std::cout << "\n";
+
+
     IdObj *tempido;
     // Check if there are dead links from both sides:
     //   -> Delete if dead.
@@ -549,6 +579,19 @@ Action Node::BuildList(IdObj *ido)
     // Check if both links are still valid:
     //   -> Call BuildDeBruijn if not.
     checkValid();
+
+    /*    if(left!=NULL && num == left->num){
+
+        	std::cout << "HELP!" << num << " <<>> "<< left->num << "\n" ;
+        }*/
+
+    if (ido != NULL && isSelf(ido)) {
+        //std::cout << "IS SELF\n";
+        //delete ido;
+        return;
+    }
+
+
 
     if (ido == NULL) {
         // timeout: ask neighbors to create return links
