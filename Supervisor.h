@@ -18,6 +18,8 @@
 #include "Node.h"
 #include "Hash.h"
 
+
+
 SubjectType(Supervisor)
 {
 protected:
@@ -26,7 +28,8 @@ protected:
     std::vector<Relay *> Nodes;
     std::vector<IdObj *> StartID;
 
-    std::string Node2GDL(double id);
+    std::string Node2GDL(IdObj *id);
+    std::string Edge2GDL(IdObj *src, IdObj *target);
 public:
     FirstAction(Supervisor, Init)
 

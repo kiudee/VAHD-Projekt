@@ -50,15 +50,48 @@ Action Supervisor::SetLink(IdPair *idop)
     }
 }
 
-std::string Supervisor::Node2GDL(double id)
+std::string Supervisor::Node2GDL(IdObj *id)
 {
     std::string result("");
-    result += "node: { title: \"";
+    result += "node: {\n";
+
+
+    // Title attribute
+    result += "title: \"";
+    std::ostringstream title;
+    title << id->id->_base->ID;
+    result += title.str();
+    result += "\"\n";
+
+    // Label attribute
+    result += "label: \"";
+    std::ostringstream label;
+    label << id->num;
+    result+= label.str();
+    result += "\"\n";
+
+    result += "}\n";
+    return result;
+}
+
+std::string Supervisor::Edge2GDL(IdObj *src, IdObj *target)
+{
+    std::string result("");
+    result += "edge: {\n";
     
-    // Convert double to String:
-    std::ostringstream s;
-    s << id;
-    result += s.str();
+    // Source Node
+    result += "source: \"";
+    std::ostringstream s1;
+    s1 << src->id->_base->ID;
+    result += s1.str();
+    result += "\"\n";
+
+    // Target Node
+    result += "target: \"";
+    std::ostringstream s2;
+    s2 << src->id->_base->ID;
+    result += s2.str();
+    result += "\"\n";
 
     result += "\" }\n";
     return result;
@@ -72,8 +105,10 @@ Action Supervisor::Wakeup(NumObj *numo)
     } else {
         std::ofstream out("graph.gdl");
         out << "Graph {\n";
-        out << Node2GDL(0.1337);
-        out << Node2GDL(0.424242);
+        auto node1 = Nodes[0];
+        auto node2 = Nodes[1];
+        out << Node2GDL(new IdObj(0.4242, new Identity(node1)));
+        out << Node2GDL(new IdObj(0.1337, new Identity(node2)));
         out << "}\n";
     }
 }
