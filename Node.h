@@ -22,13 +22,20 @@ protected:
     bool isReal;
     bool leftstable;
     bool rightstable;
-    HashMap data;//was soll gespeichert werden?
+    HashMap data;//for a datatransfer another data structure would be better e.g. a binary tree.
 
+    // BuildDeBruijn:
     void checkDead(NodeRelay **side);
     void checkValid();
     double calcRoutingBound();
     void checkStable(double id);
     void BuildSide(IdObj * ido, NodeRelay **side, bool right);
+
+    // Search:
+    void doLastRoutingPhase(SearchJob * sj);
+    void doDebruijnHop(SearchJob * sj);
+    void findNextIdealPosition(SearchJob * sj);
+    void delegateSearchJobToLastNode(SearchJob * sj);
 
 
 public:
@@ -43,6 +50,7 @@ public:
     Action LookUp(NumObj * key);
     Action Join(IdObj * id);
     Action Leave(IdObj * id);
+    Action VirtualNodeLeave();
     Action Probing(Probe * ido);
     Action BuildList(IdObj * id);
     Action BuildWeakConnectedComponent(NumObj * numo);

@@ -5,7 +5,7 @@
 
 #define DATATYPE std::string
 
-enum SearchJobType { INSERT, DELETE, LOOKUP, JOIN };
+enum SearchJobType { INSERT, DELETE, LOOKUP, JOIN, DATATRANSFER };
 
 ObjectType(NumObj)
 {
@@ -74,10 +74,10 @@ public:
         delete ido;
     }
 
-    NodeRelay(double n, Identity * i) {
-        num = n;
-        out = new Relay(i);
-        delete i;
+    NodeRelay(double value, Identity * d) {
+        num = value;
+        out = new Relay(d);
+        delete d;
     }
 };
 
@@ -93,8 +93,8 @@ public:
     double num;
     Identity *id;
 
-    Probe(double n, Identity * d, int p) {
-        num = n;
+    Probe(double v, Identity * d, int p) {
+        num = v;
         phase = p;
         id = d;
     }
@@ -147,6 +147,7 @@ public:
     int key;
 
     //if overloading not possible: one constructor with all arguments! (unneeded arguments are NULL)
+    //TODO make sure sid <= MAX && ido->num <=MAX (?)
     SearchJob(double s, int t, double b) {
         sid = s;
         dob = NULL;
@@ -194,6 +195,20 @@ public:
         round = 0;
         bound = b;
         key = k;
+    }
+
+    SearchJob(SearchJob * sj) {
+        sid = sj->sid;
+        if (sj->dob != NULL) {
+            dob = sj->dob;
+        }
+        if (sj->ido != NULL) {
+            ido = sj->ido;
+        }
+        type = sj->type;
+        round = 0;
+        bound = sj->bound;
+        key = sj->key;
     }
 
 };
