@@ -89,11 +89,11 @@ std::string Supervisor::Edge2GDL(IdObj *src, IdObj *target)
     // Target Node
     result += "target: \"";
     std::ostringstream s2;
-    s2 << src->id->_base->ID;
+    s2 << target->id->_base->ID;
     result += s2.str();
     result += "\"\n";
 
-    result += "\" }\n";
+    result += "}\n";
     return result;
 }
 
@@ -104,11 +104,12 @@ Action Supervisor::Wakeup(NumObj *numo)
         call(Supervisor::Wakeup, numo);
     } else {
         std::ofstream out("graph.gdl");
-        out << "Graph {\n";
-        auto node1 = Nodes[0];
-        auto node2 = Nodes[1];
-        out << Node2GDL(new IdObj(0.4242, new Identity(node1)));
-        out << Node2GDL(new IdObj(0.1337, new Identity(node2)));
+        out << "graph: {\n";
+        auto node1 = new IdObj(0.4242, new Identity(Nodes[0]));
+        auto node2 = new IdObj(0.1337, new Identity(Nodes[1]));
+        out << Node2GDL(node1);
+        out << Node2GDL(node2);
+        out << Edge2GDL(node1, node2);
         out << "}\n";
     }
 }
