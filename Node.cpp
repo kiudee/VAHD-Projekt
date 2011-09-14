@@ -115,6 +115,7 @@ double Node::calcRoutingBound()
 
 Action Node::BuildDeBruijn()
 {
+	std::cout << num << "<-BuildDeBruijn();\n";
     BuildList(NULL);
     Probing(NULL);
 }
@@ -126,6 +127,7 @@ Action Node::BuildDeBruijn()
  */
 Action Node::Insert(DateObj *dob)
 {
+	std::cout << num << "<-Insert(key:" << dob->num << ", data:" << dob->date << ")\n";
     SearchJob *sj = new SearchJob(g(dob->num), INSERT,
                                   Node::calcRoutingBound(), dob);
     Search(sj);
@@ -140,6 +142,7 @@ Action Node::Insert(DateObj *dob)
  */
 Action Node::FinishSearch(SearchJob *sj)
 {
+	std::cout << num << "<-FinishSearch(" << sj->sid << ");\n";
     double hashedkey = sj->sid;
     if (sj->type == JOIN // SearchJob is a Join
             || (isReal && right == NULL && num <= hashedkey) // There is no right node and this node is responsible
@@ -162,6 +165,7 @@ Action Node::FinishSearch(SearchJob *sj)
         }
         case JOIN: {
             IdObj *ido = sj->ido;
+            std::cout << "Finished Search JOIN \n";
             BuildList(ido); // just connect to given reference;
 
             if (ido->num > num && right != NULL) {
@@ -188,10 +192,12 @@ Action Node::FinishSearch(SearchJob *sj)
     } else {
         //the actual node is the end of the list. send searchjob to the other end.
         if (left == NULL) {
-            sj->sid = MAX;//TO DO this won't work because we want to search for MAX and not for g(MAX)! adjust searchjob=> fixed
-            sj->round = 0;
-            Search(sj);
-            return;
+            if(sj->sid < MAX){ //break recursion
+            	sj->sid = MAX;//TO DO this won't work because we want to search for MAX and not for g(MAX)! adjust searchjob=> fixed
+                sj->round = 0;//TODO can we write into a object without subjects.h deleting that object?
+                Search(sj);
+                return;
+            }
         } else if (leftstable) {
             left->out->call(Node::FinishSearch, sj);
             return;
@@ -219,6 +225,7 @@ Action Node::Search(SearchJob *sj)
      }*/
 
     //sj->round++;
+	std::cout << num << "<-Search(" << sj->sid << ");\n";
     double hashedkey = sj->sid;
 
     //responsible node for date was found
@@ -317,7 +324,6 @@ Action Node::Search(SearchJob *sj)
     //if right==NULL, than we might be at the end of the list
     //if left==NULL, than we don't care because hashedkey > num.
     FinishSearch(sj);
-    return;
 }
 /**
  * Deletes a date from a node
@@ -482,6 +488,11 @@ void Node::BuildSide(IdObj *ido, NodeRelay **side, bool right)
  */
 Action Node::BuildList(IdObj *ido)
 {
+	if(ido!=NULL)
+	std::cout << num << "<-BuildList("<<ido->num<<");\n";
+	else
+	std::cout << num << "<-BuildList();\n";
+
     IdObj *tempido;
     // Check if there are dead links from both sides:
     //   -> Delete if dead.

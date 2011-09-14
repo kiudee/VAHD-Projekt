@@ -58,11 +58,11 @@ Action Supervisor::Wakeup(NumObj *numo)
         call(Supervisor::Wakeup, numo);
     } else {
         // test Delete or Search
-        /*
-         *ListNode[3]->call(List::Delete, NONE);
-         */
-        //searchnum = new NumObj(9);
-        //ListNode[3]->call(List::Search, searchnum);
+
+    	DateObj *dob = new DateObj(14, "me lov subjectz. lolz.");
+    	Nodes[3]->call(Node::Insert, dob);
+    	NumObj *numo2 = new NumObj(14);
+    	Nodes[5]->call(Node::LookUp, numo2);
     }
 }
 

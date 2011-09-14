@@ -22,7 +22,7 @@ protected:
     bool isReal;
     bool leftstable;
     bool rightstable;
-    HashMap data;//was soll gespeichert werden?
+    HashMap data;//for a datatransfer another data structure would be better e.g. a binary tree.
 
     void checkDead(NodeRelay **side);
     void checkValid();
