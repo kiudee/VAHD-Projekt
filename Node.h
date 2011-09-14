@@ -35,6 +35,7 @@ protected:
     void doLastRoutingPhase(SearchJob * sj);
     void doDebruijnHop(SearchJob * sj);
     void findNextIdealPosition(SearchJob * sj);
+    void delegateSearchJobToLastNode(SearchJob * sj);
 
 
 public:
@@ -49,6 +50,7 @@ public:
     Action LookUp(NumObj * key);
     Action Join(IdObj * id);
     Action Leave(IdObj * id);
+    Action VirtualNodeLeave();
     Action Probing(Probe * ido);
     Action BuildList(IdObj * id);
     Action BuildWeakConnectedComponent(NumObj * numo);

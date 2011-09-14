@@ -147,6 +147,7 @@ public:
     int key;
 
     //if overloading not possible: one constructor with all arguments! (unneeded arguments are NULL)
+    //TODO make sure sid <= MAX && ido->num <=MAX (?)
     SearchJob(double s, int t, double b) {
         sid = s;
         dob = NULL;
@@ -194,6 +195,20 @@ public:
         round = 0;
         bound = b;
         key = k;
+    }
+
+    SearchJob(SearchJob * sj) {
+        sid = sj->sid;
+        if (sj->dob != NULL) {
+            dob = sj->dob;
+        }
+        if (sj->ido != NULL) {
+            ido = sj->ido;
+        }
+        type = sj->type;
+        round = 0;
+        bound = sj->bound;
+        key = sj->key;
     }
 
 };
