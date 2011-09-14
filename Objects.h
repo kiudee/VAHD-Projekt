@@ -197,19 +197,6 @@ public:
         key = k;
     }
 
-    SearchJob(SearchJob * sj) {
-        sid = sj->sid;
-        if (sj->dob != NULL) {
-            dob = sj->dob;
-        }
-        if (sj->ido != NULL) {
-            ido = sj->ido;
-        }
-        type = sj->type;
-        round = 0;
-        bound = sj->bound;
-        key = sj->key;
-    }
 
 };
 

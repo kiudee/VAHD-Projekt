@@ -33,8 +33,8 @@ protected:
     bool isSelf(IdObj * ido);
 
     // Search:
-    void doLastRoutingPhase(SearchJob * sj);
-    void doDebruijnHop(SearchJob * sj);
+    bool doLastRoutingPhase(SearchJob * sj);
+    bool doDebruijnHop(SearchJob * sj);
     void findNextIdealPosition(SearchJob * sj);
     void delegateSearchJobToLastNode(SearchJob * sj);
 
@@ -59,6 +59,8 @@ public:
     Action FinishSearch(SearchJob * sj);
     Action Search(SearchJob * sj);
     Action TriggerDataTransfer(IdObj * ido);
+
+    Action _DebugRouteFromLeftToRight();
 };
 
 
