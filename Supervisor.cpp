@@ -8,7 +8,9 @@ Action Supervisor::Init(NumObj *num)
     InitObj *tempObj;
     for (int i = 1; i <= num->num; i++) {
         tempObj = new InitObj(h(i), true);
-        new(Node, tempObj);
+        auto subject = new Node((Object* &) tempObj);
+        Subjects.push_back((Subject *) subject);
+        _create((Subject *) this, (Subject *) subject);
     }
 
     delete num;
@@ -48,23 +50,24 @@ Action Supervisor::SetLink(IdPair *idop)
     }
 }
 
-std::string Supervisor::Node2GDL(IdObj *id)
+std::string Supervisor::Node2GDL(Subject *subject)
 {
     std::string result("");
     result += "node: {\n";
 
+    auto node = dynamic_cast<Node*>(subject);
 
     // Title attribute
     result += "title: \"";
     std::ostringstream title;
-    title << id->id->_base->ID;
+    title << node->_debugID;
     result += title.str();
     result += "\"\n";
 
     // Label attribute
     result += "label: \"";
     std::ostringstream label;
-    label << id->num;
+    label << node->num;
     result+= label.str();
     result += "\"\n";
 
@@ -72,7 +75,7 @@ std::string Supervisor::Node2GDL(IdObj *id)
     return result;
 }
 
-std::string Supervisor::Edge2GDL(IdObj *src, IdObj *target)
+std::string Supervisor::Edge2GDL(Subject *src, Subject *target)
 {
     std::string result("");
     result += "edge: {\n";
@@ -80,14 +83,15 @@ std::string Supervisor::Edge2GDL(IdObj *src, IdObj *target)
     // Source Node
     result += "source: \"";
     std::ostringstream s1;
-    s1 << src->id->_base->ID;
+    s1 << src->_debugID;
     result += s1.str();
     result += "\"\n";
 
     // Target Node
     result += "target: \"";
     std::ostringstream s2;
-    s2 << target->id->_base->ID;
+    assert()
+    s2 << target->id->_debugID;
     result += s2.str();
     result += "\"\n";
 
@@ -121,9 +125,23 @@ Action Supervisor::Wakeup(NumObj *numo)
         std::ofstream out("graph.gdl");
         out << "graph: {\n";
         for (int i = 0; i < total; i++) {
-            auto tempido = new IdObj(Nodes[i]->num, new Identity(Nodes[i]->out));
-            out << Node2GDL(tempido);
-            delete tempido;
+            out << Node2GDL(Subjects[i]);
+        }
+        for (int i = 0; i < total; i++) {
+            auto node = dynamic_cast<Node *>(Subjects[i]);
+            auto subject = Subjects[i];
+            if (node->left != NULL) {
+                out << Edge2GDL(subject, new IdObj(node->left->num, new Identity(node->left->out)));
+            }
+            if (node->right != NULL) {
+                out << Edge2GDL(subject, new IdObj(node->right->num, new Identity(node->right->out)));
+            }
+            if (node->node0 != NULL) {
+                out << Edge2GDL(subject, new IdObj(node->num / 2, new Identity(node->node0)));
+            }
+            if (node->node1 != NULL) {
+                out << Edge2GDL(subject, new IdObj((node->num + 1) / 2, new Identity(node->node1)));
+            }
         }
         out << "}\n";
 

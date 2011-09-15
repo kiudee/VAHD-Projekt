@@ -15,10 +15,6 @@ typedef std::unordered_map<int, DATATYPE> HashMap;
 SubjectType(Node)
 {
 protected:
-    NodeRelay *left, *right;//, *node0, *node1;
-    Relay *node0, *node1;
-    Relay *in;
-    double num;
     bool isReal;
     bool leftstable;
     bool rightstable;
@@ -40,6 +36,12 @@ protected:
 
 
 public:
+    // Needed for Supervisor output:
+    double num;
+    Relay *in;
+    NodeRelay *left, *right;//, *node0, *node1;
+    Relay *node0, *node1;
+
     FirstAction(Node, Init)
 
     Action Init(InitObj * init);

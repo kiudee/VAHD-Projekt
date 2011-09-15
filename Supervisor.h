@@ -28,10 +28,11 @@ protected:
     std::vector<NodeRelay *> Nodes;
     std::vector<IdObj *> StartID;
 
+    std::vector<Subject *> Subjects;
     void freezeGraph();
     void unfreezeGraph();
-    std::string Node2GDL(IdObj *id);
-    std::string Edge2GDL(IdObj *src, IdObj *target);
+    std::string Node2GDL(Subject *subject);
+    std::string Edge2GDL(Subject *src, Subject *target);
 public:
     FirstAction(Supervisor, Init)
 
