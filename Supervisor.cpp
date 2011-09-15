@@ -2,7 +2,6 @@
 
 Action Supervisor::Init(NumObj *num)
 {
-
     total = num->num;
     count = 0;
 
@@ -19,8 +18,7 @@ Action Supervisor::SetLink(IdPair *idop)
 {
     NumObj *numo;
 
-    Nodes.push_back(new Relay(idop->ido1->id));
-    delete idop->ido1;
+    Nodes.push_back(new NodeRelay(idop->ido1));
     StartID.push_back(idop->ido2);
     delete idop;
     count++;
@@ -33,14 +31,14 @@ Action Supervisor::SetLink(IdPair *idop)
         for (int i = 0; i < total; i++) {
             // make sure that node i periodically wakes up
             numo = new NumObj(5);
-            Nodes[i]->call(Node::Wakeup, numo);
+            Nodes[i]->out->call(Node::Wakeup, numo);
 
             // initially connect node i to nodes 2i and 2i+1
             if (2 * i + 1 < total) {
-                Nodes[i]->call(Node::Join, StartID[2 * i + 1]);
+                Nodes[i]->out->call(Node::Join, StartID[2 * i + 1]);
             }
             if (2 * i + 2 < total) {
-                Nodes[i]->call(Node::Join, StartID[2 * i + 2]);
+                Nodes[i]->out->call(Node::Join, StartID[2 * i + 2]);
             }
         }
 
@@ -97,20 +95,39 @@ std::string Supervisor::Edge2GDL(IdObj *src, IdObj *target)
     return result;
 }
 
+void Supervisor::freezeGraph()
+{
+    for (int i = 0; i < total; i++) {
+        freeze(Nodes[i]->out->_home);
+    }
+}
+
+void Supervisor::unfreezeGraph()
+{
+    for (int i = 0; i < total; i++) {
+        wakeup(Nodes[i]->out->_home);
+    }
+}
+
 Action Supervisor::Wakeup(NumObj *numo)
 {
     if (numo->num > 0) {
         numo->num--;
         call(Supervisor::Wakeup, numo);
     } else {
+        delete numo;
+        freezeGraph();
+
         std::ofstream out("graph.gdl");
         out << "graph: {\n";
-        auto node1 = new IdObj(0.4242, new Identity(Nodes[0]));
-        auto node2 = new IdObj(0.1337, new Identity(Nodes[1]));
-        out << Node2GDL(node1);
-        out << Node2GDL(node2);
-        out << Edge2GDL(node1, node2);
+        for (int i = 0; i < total; i++) {
+            auto tempido = new IdObj(Nodes[i]->num, new Identity(Nodes[i]->out));
+            out << Node2GDL(tempido);
+            delete tempido;
+        }
         out << "}\n";
+
+        unfreezeGraph();
     }
 }
 

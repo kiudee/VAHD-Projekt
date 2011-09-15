@@ -25,9 +25,11 @@ SubjectType(Supervisor)
 protected:
     int count;
     int total;
-    std::vector<Relay *> Nodes;
+    std::vector<NodeRelay *> Nodes;
     std::vector<IdObj *> StartID;
 
+    void freezeGraph();
+    void unfreezeGraph();
     std::string Node2GDL(IdObj *id);
     std::string Edge2GDL(IdObj *src, IdObj *target);
 public:
