@@ -18,7 +18,7 @@
 #include "Node.h"
 #include "Hash.h"
 
-
+enum EdgeType { LEFT, RIGHT, EDGE1, EDGE0 };
 
 SubjectType(Supervisor)
 {
@@ -31,8 +31,8 @@ protected:
     std::vector<Subject *> Subjects;
     void freezeGraph();
     void unfreezeGraph();
-    std::string Node2GDL(int id, double num);
-    std::string Edge2GDL(int sourceid, int targetid);
+    std::string Node2GDL(int id, double num, bool isReal);
+    std::string Edge2GDL(int sourceid, int targetid, int edgetype);
 public:
     FirstAction(Supervisor, Init)
 

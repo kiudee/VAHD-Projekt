@@ -15,7 +15,6 @@ typedef std::unordered_map<int, DATATYPE> HashMap;
 SubjectType(Node)
 {
 protected:
-    bool isReal;
     bool leftstable;
     bool rightstable;
     HashMap data;//for a datatransfer another data structure would be better e.g. a binary tree.
@@ -38,6 +37,7 @@ protected:
 public:
     // Needed for Supervisor output:
     double num;
+    bool isReal;
     Relay *in;
     NodeRelay *left, *right;//, *node0, *node1;
     NodeRelay *node0, *node1;

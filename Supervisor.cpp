@@ -57,10 +57,15 @@ Action Supervisor::AddVirtuals(NodePair * np)
    delete np;
 }
 
-std::string Supervisor::Node2GDL(int id, double num)
+std::string Supervisor::Node2GDL(int id, double num, bool isReal)
 {
     std::string result("");
     result += "node: {\n";
+    if (isReal) {
+        result += "color: 36\n";
+    } else {
+        result += "color: 37\n";
+    }
 
     // Title attribute
     result += "title: \"";
@@ -80,10 +85,27 @@ std::string Supervisor::Node2GDL(int id, double num)
     return result;
 }
 
-std::string Supervisor::Edge2GDL(int sourceid, int targetid)
+std::string Supervisor::Edge2GDL(int sourceid, int targetid, int edgetype)
 {
     std::string result("");
-    result += "edge: {\n";
+    switch (edgetype) {
+    case LEFT:
+        result += "leftnearedge: {\n";
+        result += "color: 32\n";
+        break;
+    case RIGHT:
+        result += "rightnearedge: {\n";
+        result += "color: 33\n";
+        break;
+    case EDGE0:
+        result += "edge: {\n";
+        result += "color: 34\n";
+        break;
+    case EDGE1:
+        result += "edge: {\n";
+        result += "color: 35\n";
+        break;
+    }
     
     // Source Node
     result += "source: \"";
@@ -128,24 +150,33 @@ Action Supervisor::Wakeup(NumObj *numo)
 
         std::ofstream out("graph.gdl");
         out << "graph: {\n";
+
+        // Colors:
+        out << "colorentry 32: 60 236 93\n"; //left edges: bright green
+        out << "colorentry 33: 31 130 13\n"; //right edges: darker green
+        out << "colorentry 34: 56 89 255\n"; //edge 0: bright blue
+        out << "colorentry 35: 30 48 138\n"; //edge 1: darker blue
+        out << "colorentry 36: 114 165 255\n"; //node real: light purple
+        out << "colorentry 37: 255 210 114\n"; //node virtual: light sepia
+
         for (int i = 0; i < (total*3); i++) {
             auto node = dynamic_cast<Node *>(Subjects[i]);
-            out << Node2GDL(Subjects[i]->_debugID, node->num);
+            out << Node2GDL(Subjects[i]->_debugID, node->num, node->isReal);
         }
         for (int i = 0; i < (total*3); i++) {
             auto node = dynamic_cast<Node *>(Subjects[i]);
             auto subject = Subjects[i];
             if (node->left != NULL) {
-                out << Edge2GDL(subject->_debugID, node->left->debugID);
+                out << Edge2GDL(subject->_debugID, node->left->debugID, LEFT);
             }
             if (node->right != NULL) {
-                out << Edge2GDL(subject->_debugID, node->right->debugID);
+                out << Edge2GDL(subject->_debugID, node->right->debugID, RIGHT);
             }
             if (node->node0 != NULL) {
-                out << Edge2GDL(subject->_debugID, node->node0->debugID); 
+                out << Edge2GDL(subject->_debugID, node->node0->debugID, EDGE0); 
             }
             if (node->node1 != NULL) {
-                out << Edge2GDL(subject->_debugID, node->node1->debugID); 
+                out << Edge2GDL(subject->_debugID, node->node1->debugID, EDGE1); 
             }
         }
         out << "}\n";
