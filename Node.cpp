@@ -33,6 +33,8 @@ Action Node::Init(InitObj *init)
         IdObj *tempid = new IdObj(num, new Identity(in));
         parent->call(Node::ConnectChild, tempid);
     }
+
+    std::cout << num << "\t" << _debugID << "\n";
 }
 
 /**
@@ -132,7 +134,7 @@ Action Node::BuildDeBruijn()
  */
 Action Node::Insert(DateObj *dob)
 {
-    std::cout << num << "<-Insert(key:" << dob->num << ", data:" << dob->date << ")\n";
+	std::cout << num << "<-Insert(key:" << dob->num << ", data:" << dob->date << ")\n";
     SearchJob *sj = new SearchJob(g(dob->num), INSERT,
                                   Node::calcRoutingBound(), dob);
     Search(sj);
@@ -148,7 +150,7 @@ Action Node::Insert(DateObj *dob)
 Action Node::FinishSearch(SearchJob *sj)
 {
     //TODO dont insert data on leaving nodes! num > MAX!
-    std::cout << num << "<-FinishSearch(" << sj->sid << ");\n";
+	std::cout << num << "<-FinishSearch(" << sj->sid << ");\n";
     double hashedkey = sj->sid;
     if (sj->type == JOIN // SearchJob is a Join
             || (isReal && right == NULL && num <= hashedkey) // There is no right node and this node is responsible
@@ -346,9 +348,9 @@ void Node::findNextIdealPosition(SearchJob *sj)
  */
 Action Node::Search(SearchJob *sj)
 {
-    std::cout << num << "<-Search(" << sj->sid << ");\n";
     double hashedkey = sj->sid;
 
+    std::cout << num << "<-FinishSearch(" << sj->sid << ");\n";
     //responsible node for date was found
     if ((right == NULL && num <= hashedkey && num < MAX) // There is no right node and this node is responsible
             || (num <= hashedkey && right->num > hashedkey && num < MAX)// There is a right node but not responsible
@@ -404,11 +406,6 @@ Action Node::LookUp(NumObj *key)
 
 Action Node::ReceiveLookUp(DateObj *dob)
 {
-    if (dob->date != "") {
-        std::cout << "Node " << num << ": receives data for key" << dob->num << ":" << dob->date;
-    } else {
-        std::cout << "Node " << num << ": receives data for key" << dob->num << ": NULL";
-    }
     delete dob;
 }
 
@@ -420,7 +417,8 @@ Action Node::Join(IdObj *ido)
      * solution: we are routing only in stable state and the node
      * joins at the right place!
      */
-    std::cout << num << "<-Join(" << ido->num << ");\n";
+	std::cout << num << "<-Join(" << ido->num << ");\n";
+
     SearchJob *sj =
         new SearchJob(ido->num, JOIN, Node::calcRoutingBound(), ido);
     Search(sj);
@@ -464,8 +462,8 @@ Action Node::TriggerDataTransfer(IdObj *ido)
  */
 Action Node::Leave(IdObj *ido)
 {
+	std::cout << num << "<-Leave(" << ido->num << ");\n";
     //TODO remove/invalidate virtual nodes
-    std::cout << num << "<-Leave(" << ido->num << ");\n";
     if (leftstable && left != NULL) { //first node must be a virtual node, so it must exist
         for (HashMap::iterator it = data.begin(); it != data.end(); ++it) {
             DateObj *dob = new DateObj(it->first, it->second);
@@ -569,28 +567,6 @@ Action Node::_DebugRouteFromLeftToRight()
  */
 Action Node::BuildList(IdObj *ido)
 {
-    if (ido != NULL) {
-        std::cout << num << "<-BuildList(" << ido->num << ");\n";
-    } else {
-        std::cout << num << "<-BuildList();\n";
-    }
-
-    std::cout << "Node: " << num;
-    if (left == NULL) {
-        std::cout << "\tLeft: NULL";
-    } else {
-        std::cout << "\tLeft: " << left->num;
-    }
-
-    if (right == NULL) {
-        std::cout << "\tRight: NULL";
-    } else {
-        std::cout << "\tRight: " << right->num;
-    }
-
-    std::cout << "\n";
-
-
     IdObj *tempido;
     // Check if there are dead links from both sides:
     //   -> Delete if dead.
@@ -601,14 +577,10 @@ Action Node::BuildList(IdObj *ido)
     //   -> Call BuildDeBruijn if not.
     checkValid();
 
-
-
     if (ido != NULL && isSelf(ido)) {
         //delete ido;
         return;
     }
-
-
 
     if (ido == NULL) {
         // timeout: ask neighbors to create return links
@@ -627,10 +599,35 @@ Action Node::BuildList(IdObj *ido)
         checkStable(ido->num);
         if (ido->num > num) {
             BuildSide(ido, &right, true);
-        } else { // ido->num <= num
+        } else if(ido->num < num) { // ido->num <= num
             BuildSide(ido, &left, false);
+        } else if(isReal) { // prioritize real nodes
+            BuildSide(ido, &left, false);
+        } else {
+            BuildSide(ido, &right, true);
         }
     }
+
+    if(isReal)
+        std::cout << "REAL";
+    else
+        std::cout << "VIRTUAL";
+
+    std::cout << "\tNode: " << num << " " << _debugID;
+
+    if (left == NULL) {
+        std::cout << "\tLeft: NULL";
+    } else {
+        std::cout << "\tLeft: " << left->num << " " << left->_debugID;
+    }
+
+    if (right == NULL) {
+        std::cout << "\tRight: NULL";
+    } else {
+        std::cout << "\tRight: " << right->num << " " << right->_debugID;
+    }
+
+    std::cout << "\n";
 }
 
 /**
@@ -643,11 +640,6 @@ Action Node::BuildList(IdObj *ido)
  */
 Action Node::Probing(Probe *ido)
 {
-    if (ido != NULL) {
-        std::cout << num << "<-Probing(" << ido->num << ");\n";
-    } else {
-        std::cout << num << "<-Probing();\n";
-    }
     IdObj *tempido;
     Probe *tempprobe;
     if (isReal) {
