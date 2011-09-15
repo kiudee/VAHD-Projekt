@@ -32,10 +32,12 @@ ObjectType(IdObj)
 public:
     double num;
     Identity *id;
+    int debugID;
 
-    IdObj(double value, Identity * d) {
+    IdObj(double value, Identity * d, int did) {
         num = value;
         id = d;
+        debugID = did;
     }
 };
 
@@ -67,10 +69,12 @@ ObjectType(NodeRelay)
 public:
     double num;
     Relay *out;
+    int debugID;
 
     NodeRelay(IdObj * ido) {
         num = ido->num;
         out = new Relay(ido->id);
+        debugID = ido->debugID;
         delete ido;
     }
 
@@ -218,6 +222,19 @@ public:
     }
 };
 
+/**
+ * Used by supervisor to get to know the virtual nodes.
+ */
+ObjectType(NodePair)
+{
+public:
+    Subject* node0;
+    Subject* node1;
 
+    NodePair(Subject * n0, Subject * n1) {
+        node0 = n0;
+        node1 = n1;
+    }
+};
 
 #endif  // OBJECTS_H_

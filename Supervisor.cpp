@@ -50,24 +50,29 @@ Action Supervisor::SetLink(IdPair *idop)
     }
 }
 
-std::string Supervisor::Node2GDL(Subject *subject)
+Action Supervisor::AddVirtuals(NodePair * np)
+{
+   Subjects.push_back(np->node0);
+   Subjects.push_back(np->node1);
+   delete np;
+}
+
+std::string Supervisor::Node2GDL(int id, double num)
 {
     std::string result("");
     result += "node: {\n";
 
-    auto node = dynamic_cast<Node*>(subject);
-
     // Title attribute
     result += "title: \"";
     std::ostringstream title;
-    title << node->_debugID;
+    title << id;
     result += title.str();
     result += "\"\n";
 
     // Label attribute
     result += "label: \"";
     std::ostringstream label;
-    label << node->num;
+    label << num;
     result+= label.str();
     result += "\"\n";
 
@@ -75,7 +80,7 @@ std::string Supervisor::Node2GDL(Subject *subject)
     return result;
 }
 
-std::string Supervisor::Edge2GDL(Subject *src, Subject *target)
+std::string Supervisor::Edge2GDL(int sourceid, int targetid)
 {
     std::string result("");
     result += "edge: {\n";
@@ -83,15 +88,14 @@ std::string Supervisor::Edge2GDL(Subject *src, Subject *target)
     // Source Node
     result += "source: \"";
     std::ostringstream s1;
-    s1 << src->_debugID;
+    s1 << sourceid;
     result += s1.str();
     result += "\"\n";
 
     // Target Node
     result += "target: \"";
     std::ostringstream s2;
-    assert()
-    s2 << target->id->_debugID;
+    s2 << targetid;
     result += s2.str();
     result += "\"\n";
 
@@ -124,23 +128,24 @@ Action Supervisor::Wakeup(NumObj *numo)
 
         std::ofstream out("graph.gdl");
         out << "graph: {\n";
-        for (int i = 0; i < total; i++) {
-            out << Node2GDL(Subjects[i]);
+        for (int i = 0; i < (total*3); i++) {
+            auto node = dynamic_cast<Node *>(Subjects[i]);
+            out << Node2GDL(Subjects[i]->_debugID, node->num);
         }
-        for (int i = 0; i < total; i++) {
+        for (int i = 0; i < (total*3); i++) {
             auto node = dynamic_cast<Node *>(Subjects[i]);
             auto subject = Subjects[i];
             if (node->left != NULL) {
-                out << Edge2GDL(subject, new IdObj(node->left->num, new Identity(node->left->out)));
+                out << Edge2GDL(subject->_debugID, node->left->debugID);
             }
             if (node->right != NULL) {
-                out << Edge2GDL(subject, new IdObj(node->right->num, new Identity(node->right->out)));
+                out << Edge2GDL(subject->_debugID, node->right->debugID);
             }
             if (node->node0 != NULL) {
-                out << Edge2GDL(subject, new IdObj(node->num / 2, new Identity(node->node0)));
+                out << Edge2GDL(subject->_debugID, node->node0->debugID); 
             }
             if (node->node1 != NULL) {
-                out << Edge2GDL(subject, new IdObj((node->num + 1) / 2, new Identity(node->node1)));
+                out << Edge2GDL(subject->_debugID, node->node1->debugID); 
             }
         }
         out << "}\n";

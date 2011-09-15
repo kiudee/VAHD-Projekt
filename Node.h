@@ -40,7 +40,7 @@ public:
     double num;
     Relay *in;
     NodeRelay *left, *right;//, *node0, *node1;
-    Relay *node0, *node1;
+    NodeRelay *node0, *node1;
 
     FirstAction(Node, Init)
 

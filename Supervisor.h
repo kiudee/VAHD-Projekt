@@ -31,13 +31,14 @@ protected:
     std::vector<Subject *> Subjects;
     void freezeGraph();
     void unfreezeGraph();
-    std::string Node2GDL(Subject *subject);
-    std::string Edge2GDL(Subject *src, Subject *target);
+    std::string Node2GDL(int id, double num);
+    std::string Edge2GDL(int sourceid, int targetid);
 public:
     FirstAction(Supervisor, Init)
 
     Action Init(NumObj * num);
     Action SetLink(IdPair * id);
+    Action AddVirtuals(NodePair * np);
     Action Wakeup(NumObj * num);
 };
 

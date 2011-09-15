@@ -284,7 +284,7 @@ class _idLinks;   // list of identities
 
 #define SubjectType(type) \
     class type: public Subject \
- 
+
 #define FirstAction(type,verb) \
     type(Object* &object) { _handle((Subject *) this, new _Message((_SubjectCall) &type::verb, object)); }
 
