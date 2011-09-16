@@ -42,7 +42,7 @@ Action Supervisor::SetLink(IdPair *idop)
         }
 
         // wait 100 rounds till testing Delete or Search
-        numo = new NumObj(1000);
+        numo = new NumObj(100);
         call(Supervisor::Wakeup, numo);
     }
 }
@@ -55,9 +55,8 @@ Action Supervisor::Wakeup(NumObj *numo)
         call(Supervisor::Wakeup, numo);
     } else {
         // test Delete or Search
-
         //DateObj *dob = new DateObj(14, "me lov subjectz. lolz.");
-        //Nodes[3]->call(Node::Insert, dob);
+        //Nodes[4]->call(Node::Insert, dob);
         //NumObj *numo2 = new NumObj(14);
         //Nodes[5]->call(Node::LookUp, numo2);
         Nodes[4]->call(Node::_DebugRouteFromLeftToRight, NONE);
