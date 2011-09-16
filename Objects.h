@@ -228,8 +228,8 @@ public:
 ObjectType(NodePair)
 {
 public:
-    Subject* node0;
-    Subject* node1;
+    Subject *node0;
+    Subject *node1;
 
     NodePair(Subject * n0, Subject * n1) {
         node0 = n0;

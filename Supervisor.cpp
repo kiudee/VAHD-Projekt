@@ -47,11 +47,11 @@ Action Supervisor::SetLink(IdPair *idop)
     }
 }
 
-Action Supervisor::AddVirtuals(NodePair * np)
+Action Supervisor::AddVirtuals(NodePair *np)
 {
-   Subjects.push_back(np->node0);
-   Subjects.push_back(np->node1);
-   delete np;
+    Subjects.push_back(np->node0);
+    Subjects.push_back(np->node1);
+    delete np;
 }
 
 std::string Supervisor::Node2GDL(int id, double num, bool isReal)
@@ -75,7 +75,7 @@ std::string Supervisor::Node2GDL(int id, double num, bool isReal)
     result += "label: \"";
     std::ostringstream label;
     label << num;
-    result+= label.str();
+    result += label.str();
     result += "\"\n";
 
     result += "}\n";
@@ -103,7 +103,7 @@ std::string Supervisor::Edge2GDL(int sourceid, int targetid, int edgetype)
         result += "color: 35\n";
         break;
     }
-    
+
     // Source Node
     result += "source: \"";
     std::ostringstream s1;
@@ -156,11 +156,11 @@ Action Supervisor::Wakeup(NumObj *numo)
         out << "colorentry 36: 114 165 255\n"; //node real: light purple
         out << "colorentry 37: 255 210 114\n"; //node virtual: light sepia
 
-        for (int i = 0; i < (total*3); i++) {
+        for (int i = 0; i < (total * 3); i++) {
             auto node = dynamic_cast<Node *>(Subjects[i]);
             out << Node2GDL(Subjects[i]->_debugID, node->num, node->isReal);
         }
-        for (int i = 0; i < (total*3); i++) {
+        for (int i = 0; i < (total * 3); i++) {
             auto node = dynamic_cast<Node *>(Subjects[i]);
             auto subject = Subjects[i];
             if (node->left != NULL) {
@@ -170,10 +170,10 @@ Action Supervisor::Wakeup(NumObj *numo)
                 out << Edge2GDL(subject->_debugID, node->right->debugID, RIGHT);
             }
             if (node->node0 != NULL) {
-                out << Edge2GDL(subject->_debugID, node->node0->debugID, EDGE0); 
+                out << Edge2GDL(subject->_debugID, node->node0->debugID, EDGE0);
             }
             if (node->node1 != NULL) {
-                out << Edge2GDL(subject->_debugID, node->node1->debugID, EDGE1); 
+                out << Edge2GDL(subject->_debugID, node->node1->debugID, EDGE1);
             }
         }
         out << "}\n";
