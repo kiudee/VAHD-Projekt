@@ -18,6 +18,7 @@ Action Node::Init(InitObj *init)
     delete init;
 
     if (isReal) {
+        std::cout << num << "\n";
         // connect to supervisor:
         IdPair *idp = new IdPair(new IdObj(num, new Identity(in), _debugID),
                                  new IdObj(num, new Identity(in), _debugID));
@@ -35,11 +36,12 @@ Action Node::Init(InitObj *init)
         _create((Subject *) this, (Subject *) tmpnode0);
         _create((Subject *) this, (Subject *) tmpnode1);
     } else {
+        //std::cout << "virtual node init: " << num << "\n";
         IdObj *tempid = new IdObj(num, new Identity(in), _debugID);
         parent->call(Node::ConnectChild, tempid);
     }
 
-    std::cout << num << "\t" << _debugID << "\n";
+    //std::cout << num << "\t" << _debugID << "\n";
 }
 
 /**
@@ -126,7 +128,7 @@ double Node::calcRoutingBound()
 
 Action Node::BuildDeBruijn()
 {
-    std::cout << num << "<-BuildDeBruijn();\n";
+    //std::cout << num << "<-BuildDeBruijn();\n";
     BuildList(NULL);
     Probing(NULL);
 }
@@ -158,7 +160,7 @@ Action Node::FinishSearch(SearchJob *sj)
     double hashedkey = sj->sid;
     if (sj->type == JOIN // SearchJob is a Join
             || (isReal && right == NULL && num <= hashedkey) // There is no right node and this node is responsible
-            || (isReal && num <= hashedkey && right->num > hashedkey)// There is a right node but not responsible
+            || (isReal && num <= hashedkey)// There is a right node but not responsible
             || (isReal && sj->sid == MAX)) { //The searchjob was delegated to the last node and now we reached the last node
         std::cout << num << ": Search terminated!(" << sj->sid << ");\n";
         switch (sj->type) {
@@ -178,21 +180,23 @@ Action Node::FinishSearch(SearchJob *sj)
         }
         case JOIN: {
             IdObj *ido = sj->ido;
-            std::cout << ido->num << " joins at " << num << "\n";
+            //std::cout << ido->num << " joins at " << num << "\n";
             BuildList(ido); // just connect to given reference;
 
             if (ido->num > num && right != NULL) {
-                std::cout << num << " triggers a data transfer for " << ido->num << " (to right) \n";
+                //std::cout << num << " triggers a data transfer for " << ido->num << " (to right) \n";
                 IdObj *tempido =
                     new IdObj(right->num, new Identity(right->out), right->debugID);
                 TriggerDataTransfer(tempido);
 
-            } else if (ido->num <= num && left != NULL) {//this case matches iff we are joining the new node in front of the first node
-                std::cout << num << " triggers a data transfer for " << ido->num << " (to left)\n";
-                IdObj *tempido = new IdObj(left->num, new Identity(left->out), left->debugID);
-                SearchJob *newsj = new SearchJob(MAX, DATATRANSFER,
-                                                 Node::calcRoutingBound(), tempido);
-                Search(newsj);
+            } else if (ido->num <= num && left != NULL) {//this case matches iff we are joining the new node in front of the first node.
+                //std::cout << num << " triggers a data transfer for " << ido->num << " (to left)\n";
+                if (!(right == NULL && !isReal)) { //we know that the joined node is the first from now on. if the actual node has no right neighbor and is not real, there is no data to transfer (because FinishSearch will determine that the joined node is responsible)
+                    IdObj *tempido = new IdObj(left->num, new Identity(left->out), left->debugID);
+                    SearchJob *newsj = new SearchJob(MAX, DATATRANSFER,
+                                                     Node::calcRoutingBound(), tempido);
+                    Search(newsj);
+                }
             }
 
             break;
@@ -233,20 +237,22 @@ bool Node::doLastRoutingPhase(SearchJob *sj)
                 return true;
             } else if (leftstable) {
                 sj->round++;
+                std::cout << num << "<-doLastRoutingPhase() => left \n";
                 left->out->call(Node::Search, sj);
                 return true;
             } else {
-                std::cout << "SearchJob " << sj->sid << " waiting at " << num << " (1) \n";
+                //std::cout << "SearchJob " << sj->sid << " waiting at " << num << " (1) \n";
                 call(Node::Search, sj);
                 return true;
             }
         } else if (hashedkey >= num) {//find the right end of a sequence of nodes with the same id
             if (rightstable) {//at this point right must be !=NULL, otherwise we would not reach this point
                 sj->round++;
+                std::cout << num << "<-doLastRoutingPhase() => right \n";
                 right->out->call(Node::Search, sj);
                 return true;
             } else {
-                std::cout << "SearchJob " << sj->sid << " waiting at " << num << " (2)\n";
+                //std::cout << "SearchJob " << sj->sid << " waiting at " << num << " (2)\n";
                 call(Node::Search, sj);
                 return true;
             }
@@ -260,7 +266,7 @@ void Node::delegateSearchJobToLastNode(SearchJob *sj)
     //SearchJob *newsj = new SearchJob(sj);
     sj->sid = MAX;//TO DO this won't work because we want to search for MAX and not for g(MAX)! adjust searchjob=> fixed
     sj->round = 0;
-    std::cout << num << "<-delegateSearchJobToLastNode(" << sj->sid << ");\n";
+    //std::cout << num << "<-delegateSearchJobToLastNode(" << sj->sid << ");\n";
     Search(sj);
     //delete sj;
     return;
@@ -275,9 +281,17 @@ bool Node::doDebruijnHop(SearchJob *sj)
 
     if (hashedkey < num) {
         sj->round++;
+        if (hashedkey > num / 2) {
+            sj->bound =  -1; //introduce last routing phase
+        }
+        std::cout << num << "<-doDebruijnHop() to " << (num / 2) << "\n";
         node0->out->call(Node::Search, sj);
     } else if (hashedkey > num) {
         sj->round++;
+        if (hashedkey < (1 + num) / 2) {
+            sj->bound =  -1; //introduce last routing phase
+        }
+        std::cout << num << "<-doDebruijnHop() to " << ((1 + num) / 2) << "\n";
         node1->out->call(Node::Search, sj);
     } else { // hashedkey == num
         FinishSearch(sj);
@@ -289,7 +303,7 @@ void Node::findNextIdealPosition(SearchJob *sj)
 {
     double hashedkey = sj->sid;
     if (left == NULL && right == NULL) {
-        std::cout << "SearchJob " << sj->sid << " waiting at " << num << " (3)\n";
+        //std::cout << "SearchJob " << sj->sid << " waiting at " << num << " (3)\n";
         call(Node::Search, sj);//because of virtual nodes, every node will eventually have at least one neighbor
         return;
     } else if (left == NULL || right == NULL) {
@@ -304,7 +318,7 @@ void Node::findNextIdealPosition(SearchJob *sj)
                 left->out->call(Node::Search, sj);
                 return;
             } else {
-                std::cout << "SearchJob " << sj->sid << " waiting at " << num << " (4)\n";
+                //std::cout << "SearchJob " << sj->sid << " waiting at " << num << " (4)\n";
                 call(Node::Search, sj);
                 return;
             }
@@ -314,7 +328,7 @@ void Node::findNextIdealPosition(SearchJob *sj)
                 right->out->call(Node::Search, sj);
                 return;
             } else {
-                std::cout << "SearchJob " << sj->sid << " waiting at " << num << " (5)\n";
+                //std::cout << "SearchJob " << sj->sid << " waiting at " << num << " (5)\n";
                 call(Node::Search, sj);
                 return;
             }
@@ -322,6 +336,7 @@ void Node::findNextIdealPosition(SearchJob *sj)
     }
 
     //TODO take end points into account: end points handled by FinishSearch
+    std::cout << "hashedkey: " << hashedkey << " <<>> " << "num: " << num << "\n";
     bool nearerToLeft;
     if (hashedkey >= num) {
         nearerToLeft = fabs((1 + left->num) / 2 - hashedkey) < fabs((1 + right->num / 2) - hashedkey);
@@ -332,14 +347,16 @@ void Node::findNextIdealPosition(SearchJob *sj)
     if (leftstable && nearerToLeft) {
         //left.1 is nearer to hashedkey than right.1 => go to left
         sj->round++;
+        std::cout << num << "<-findNextIdealPosition() => left \n";
         left->out->call(Node::Search, sj);
     } else if (rightstable && !nearerToLeft) {
         //(>) right.1 is nearer to hashedkey than left.1 => go to right
         //(=) when we are in the middle of a sequence of nodes with the same id, go to the right
+        std::cout << num << "<-findNextIdealPosition() => right \n";
         sj->round++;
         right->out->call(Node::Search, sj);
     } else {
-        std::cout << "SearchJob " << sj->sid << " waiting at " << num << " (6), isReal = " << isReal << ", right==NULL =" << (right == NULL) << " rightstable =" << rightstable << "\n";
+        //std::cout << "SearchJob " << sj->sid << " waiting at " << num << " (6), isReal = " << isReal << ", right==NULL =" << (right == NULL) << " rightstable =" << rightstable << "\n";
         call(Node::Search, sj);
     }
     return;
@@ -354,7 +371,7 @@ Action Node::Search(SearchJob *sj)
 {
     double hashedkey = sj->sid;
 
-    std::cout << num << "<-FinishSearch(" << sj->sid << ");\n";
+    std::cout << num << "<-Search(" << sj->sid << ");\n";
     //responsible node for date was found
     if ((right == NULL && num <= hashedkey && num < MAX) // There is no right node and this node is responsible
             || (num <= hashedkey && right->num > hashedkey && num < MAX)// There is a right node but not responsible
@@ -421,7 +438,7 @@ Action Node::Join(IdObj *ido)
      * solution: we are routing only in stable state and the node
      * joins at the right place!
      */
-	std::cout << num << "<-Join(" << ido->num << ");\n";
+    //std::cout << num << "<-Join(" << ido->num << ");\n";
 
     SearchJob *sj =
         new SearchJob(ido->num, JOIN, Node::calcRoutingBound(), ido);
@@ -435,7 +452,8 @@ Action Node::Join(IdObj *ido)
  */
 Action Node::TriggerDataTransfer(IdObj *ido)
 {
-    std::cout << num << "<-TriggerDataTransfer(" << ido->num << ");\n";
+    //std::cout << num << "<-TriggerDataTransfer(" << ido->num << ");\n";
+
     if (isReal) {
         Relay *temprelay = new Relay(ido->id);
         for (HashMap::iterator it = data.begin(); it != data.end(); ++it) {
@@ -444,7 +462,7 @@ Action Node::TriggerDataTransfer(IdObj *ido)
                 temprelay->call(Node::Insert, dob);//routing unnecessary (ido is the target)
             }
         }
-        delete temprelay;
+        //delete temprelay;
         delete ido;
     } else {
         if (left == NULL) {
@@ -466,7 +484,7 @@ Action Node::TriggerDataTransfer(IdObj *ido)
  */
 Action Node::Leave(IdObj *ido)
 {
-	std::cout << num << "<-Leave(" << ido->num << ");\n";
+    //std::cout << num << "<-Leave(" << ido->num << ");\n";
     //TODO remove/invalidate virtual nodes
     if (leftstable && left != NULL) { //first node must be a virtual node, so it must exist
         for (HashMap::iterator it = data.begin(); it != data.end(); ++it) {
@@ -475,7 +493,7 @@ Action Node::Leave(IdObj *ido)
         }
         data.clear();
 
-        std::cout << "Node " << num << ": preparing to leave system.\n";
+        //std::cout << "Node " << num << ": preparing to leave system.\n";
         num = num + MAX; // increase num to get to end of list
         delete in; // invalidate existing links/identities to 'in'
         in = new Relay; // create new 'in' to be used for new 'num'
@@ -503,7 +521,14 @@ Action Node::VirtualNodeLeave()
 void Node::checkStable(double id)
 {
     //TODO quorum needed? or is it checked by subjects environment?
-    if (id < num && left != NULL) {
+    if (id == num) {
+        if (left != NULL && left->num == id) {
+            leftstable = true;
+        }
+        if (right != NULL && right->num == id) {
+            rightstable = true;
+        }
+    } else if (id < num && left != NULL) {
         leftstable = left->num == id;
     } else if (id > num && right != NULL) {
         rightstable = right->num == id;
@@ -512,6 +537,7 @@ void Node::checkStable(double id)
 
 void Node::BuildSide(IdObj *ido, NodeRelay **side, bool right)
 {
+    //TODO when a node is replaced: do we have to reset its stable flags?
     auto compare = [right](double x, double y) -> bool {
         if (right) {
             return x > y;
@@ -522,19 +548,19 @@ void Node::BuildSide(IdObj *ido, NodeRelay **side, bool right)
     };
 
     if (*side == NULL) { // link not yet defined
-        std::cout << "Node " << num << ": creating link to " << ido->num
-                  << ".\n";
+        //std::cout << "Node " << num << ": creating link to " << ido->num
+        //          << ".\n";
         *side = new NodeRelay(ido);
     } else {
         if (compare(ido->num, (*side)->num)) { // ido beyond link
-            std::cout << "Node " << num << ": forwarding " << ido->num
-                      << " to " << (*side)->num << ".\n";
+            //std::cout << "Node " << num << ": forwarding " << ido->num
+            //          << " to " << (*side)->num << ".\n";
             (*side)->out->call(Node::BuildList, ido);
         } else {
             // ido between node and link
             if (idle((*side)->out)) {
-                std::cout << "Node " << num << ": new side " << ido->num
-                          << ", forwarding " << (*side)->num << ".\n";
+                //std::cout << "Node " << num << ": new side " << ido->num
+                //          << ", forwarding " << (*side)->num << ".\n";
                 IdObj *tempido = new IdObj((*side)->num,
                                            extractIdentity((*side)->out),
                                            (*side)->debugID);
@@ -572,6 +598,8 @@ Action Node::_DebugRouteFromLeftToRight()
  */
 Action Node::BuildList(IdObj *ido)
 {
+    //TODO adjustments for delete needed!
+
     IdObj *tempido;
     // Check if there are dead links from both sides:
     //   -> Delete if dead.
@@ -604,35 +632,38 @@ Action Node::BuildList(IdObj *ido)
         checkStable(ido->num);
         if (ido->num > num) {
             BuildSide(ido, &right, true);
-        } else if(ido->num < num) { // ido->num <= num
+        } else if (ido->num < num) { // ido->num <= num
             BuildSide(ido, &left, false);
-        } else if(isReal) { // prioritize real nodes
+        } else if (isReal) { // prioritize real nodes
             BuildSide(ido, &left, false);
         } else {
             BuildSide(ido, &right, true);
         }
     }
 
+    /*
     if(isReal)
         std::cout << "REAL";
     else
         std::cout << "VIRTUAL";
 
+
     std::cout << "\tNode: " << num << " " << _debugID;
 
     if (left == NULL) {
-        std::cout << "\tLeft: NULL";
+        //std::cout << "\tLeft: NULL";
     } else {
-        std::cout << "\tLeft: " << left->num << " " << left->_debugID;
+        //std::cout << "\tLeft: " << left->num << " " << left->_debugID;
     }
 
     if (right == NULL) {
-        std::cout << "\tRight: NULL";
+        //std::cout << "\tRight: NULL";
     } else {
-        std::cout << "\tRight: " << right->num << " " << right->_debugID;
+        //std::cout << "\tRight: " << right->num << " " << right->_debugID;
     }
 
-    std::cout << "\n";
+    //std::cout << "\n";
+     */
 }
 
 /**
@@ -771,9 +802,9 @@ Action Node::Probing(Probe *ido)
 Action Node::BuildWeakConnectedComponent(NumObj *numo)
 {
     if (numo->num == 0) {
-        std::cout << num << "<-BuildWeakConnectedComponent(0);\n";
+        //std::cout << num << "<-BuildWeakConnectedComponent(0);\n";
     } else {
-        std::cout << num << "<-BuildWeakConnectedComponent(1);\n";
+        //std::cout << num << "<-BuildWeakConnectedComponent(1);\n";
     }
 
     IdObj *tempido;

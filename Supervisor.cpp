@@ -42,7 +42,7 @@ Action Supervisor::SetLink(IdPair *idop)
         }
 
         // wait 100 rounds till testing Delete or Search
-        numo = new NumObj(1000);
+        numo = new NumObj(100);
         call(Supervisor::Wakeup, numo);
     }
 }
