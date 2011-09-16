@@ -61,6 +61,7 @@ public:
     Action TriggerDataTransfer(IdObj * ido);
 
     Action _DebugRouteFromLeftToRight();
+    Action _DebugRouteFromRightToLeft();
 };
 
 

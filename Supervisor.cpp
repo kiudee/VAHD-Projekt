@@ -6,6 +6,7 @@ Action Supervisor::Init(NumObj *num)
     total = num->num;
     count = 0;
 
+
     InitObj *tempObj;
     for (int i = 1; i <= num->num; i++) {
         tempObj = new InitObj(h(i), true);
@@ -55,11 +56,12 @@ Action Supervisor::Wakeup(NumObj *numo)
         call(Supervisor::Wakeup, numo);
     } else {
         // test Delete or Search
-        //DateObj *dob = new DateObj(14, "me lov subjectz. lolz.");
-        //Nodes[4]->call(Node::Insert, dob);
-        //NumObj *numo2 = new NumObj(14);
-        //Nodes[5]->call(Node::LookUp, numo2);
-        Nodes[4]->call(Node::_DebugRouteFromLeftToRight, NONE);
+        DateObj *dob = new DateObj(14, "bla");
+        Nodes[7]->call(Node::Insert, dob);
+        NumObj *numo2 = new NumObj(14);
+        Nodes[5]->call(Node::LookUp, numo2);
+        //Nodes[4]->call(Node::_DebugRouteFromLeftToRight, NONE);
+        //Nodes[7]->call(Node::_DebugRouteFromRightToLeft, NONE);
     }
 }
 

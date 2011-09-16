@@ -168,10 +168,11 @@ Action Node::FinishSearch(SearchJob *sj)
             break;
         case LOOKUP: {
             DATATYPE obj = data[sj->key]; //TODO replace by unordered_map.at() and catch the exception. than pack an empty string or so.
+            std::cout << "Lookup reached key:" << sj->key << " data: " << obj << "\n";
             Relay *temprelay = new Relay(sj->ido->id);
             DateObj *dob = new DateObj(sj->key, obj);
             temprelay->call(Node::ReceiveLookUp, dob);
-            delete temprelay;
+            //delete temprelay;
             break;
         }
         case JOIN: {
@@ -332,7 +333,6 @@ void Node::findNextIdealPosition(SearchJob *sj)
     }
 
     //TODO take end points into account: end points handled by FinishSearch
-    std::cout << "hashedkey: " << hashedkey << " <<>> " << "num: " << num << "\n";
     bool nearerToLeft;
     if (hashedkey >= num) {
         nearerToLeft = fabs((1 + left->num) / 2 - hashedkey) < fabs((1 + right->num / 2) - hashedkey);
@@ -423,6 +423,11 @@ Action Node::LookUp(NumObj *key)
 
 Action Node::ReceiveLookUp(DateObj *dob)
 {
+    if (dob->date != "") {
+        std::cout << "Node " << num << ": receives data for key " << dob->num << ":" << dob->date << "\n";
+    } else {
+        std::cout << "Node " << num << ": receives data for key " << dob->num << ": NULL\n";
+    }
     delete dob;
 }
 
@@ -582,6 +587,16 @@ Action Node::_DebugRouteFromLeftToRight()
     std::cout << num << "<-_DebugRouteFromLeftToRight() real?" << isReal << "\n";
     if (right != NULL) {
         right->out->call(Node::_DebugRouteFromLeftToRight, NONE);
+    } else {
+        std::cout << "END DEBUG\n";
+    }
+}
+
+Action Node::_DebugRouteFromRightToLeft()
+{
+    std::cout << num << "<-_DebugRouteFromRightToLeft() real?" << isReal << "\n";
+    if (left != NULL) {
+        left->out->call(Node::_DebugRouteFromRightToLeft, NONE);
     } else {
         std::cout << "END DEBUG\n";
     }
