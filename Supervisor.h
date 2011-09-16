@@ -30,6 +30,7 @@ public:
     Action Init(NumObj * num);
     Action SetLink(IdPair * id);
     Action Wakeup(NumObj * num);
+    Action RemoveRealChild(IdObj * ido);
 };
 
 #endif  // SUPERVISOR_H_

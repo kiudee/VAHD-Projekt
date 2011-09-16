@@ -56,12 +56,21 @@ Action Supervisor::Wakeup(NumObj *numo)
         call(Supervisor::Wakeup, numo);
     } else {
         // test Delete or Search
-        DateObj *dob = new DateObj(14, "bla");
-        Nodes[7]->call(Node::Insert, dob);
-        NumObj *numo2 = new NumObj(14);
-        Nodes[5]->call(Node::LookUp, numo2);
+        //DateObj *dob = new DateObj(14, "bla");
+        //Nodes[7]->call(Node::Insert, dob);
+        //NumObj *numo2 = new NumObj(14);
+        //Nodes[5]->call(Node::LookUp, numo2);
         //Nodes[4]->call(Node::_DebugRouteFromLeftToRight, NONE);
         //Nodes[7]->call(Node::_DebugRouteFromRightToLeft, NONE);
+        Nodes[5]->call(Node::Leave, NONE);
     }
+}
+
+Action Supervisor::RemoveRealChild(IdObj *ido)
+{
+    //delete(ido->id->_owner);
+    //TODO delete it
+    std::cout << "Node " << (ido->num - 1) << " leaves. Ciao.\n";
+    delete ido;
 }
 

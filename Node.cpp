@@ -18,6 +18,7 @@ Action Node::Init(InitObj *init)
     delete init;
 
     if (isReal) {
+        leftleaved = rightleaved = false;
         std::cout << num << "\n";
         // connect to supervisor:
         IdPair *idp = new IdPair(new IdObj(num, new Identity(in)),
@@ -126,7 +127,9 @@ Action Node::BuildDeBruijn()
 {
     //std::cout << num << "<-BuildDeBruijn();\n";
     BuildList(NULL);
-    Probing(NULL);
+    if (num < MAX) {
+        Probing(NULL);
+    }
 }
 
 /**
@@ -481,12 +484,10 @@ Action Node::TriggerDataTransfer(IdObj *ido)
 /**
  * Removes a real node from the data structure and transfer its data to the predecessor
  * @author Simon
- * @param the IdObj of the node, that is going to leave.
  */
-Action Node::Leave(IdObj *ido)
+Action Node::Leave()
 {
     //std::cout << num << "<-Leave(" << ido->num << ");\n";
-    //TODO remove/invalidate virtual nodes
     if (leftstable && left != NULL) { //first node must be a virtual node, so it must exist
         for (HashMap::iterator it = data.begin(); it != data.end(); ++it) {
             DateObj *dob = new DateObj(it->first, it->second);
@@ -494,7 +495,7 @@ Action Node::Leave(IdObj *ido)
         }
         data.clear();
 
-        //std::cout << "Node " << num << ": preparing to leave system.\n";
+        std::cout << "Node " << num << ": preparing to leave system.\n";
         num = num + MAX; // increase num to get to end of list
         delete in; // invalidate existing links/identities to 'in'
         in = new Relay; // create new 'in' to be used for new 'num'
@@ -502,7 +503,7 @@ Action Node::Leave(IdObj *ido)
         node0->call(Node::VirtualNodeLeave, NONE);
         node1->call(Node::VirtualNodeLeave, NONE);
     } else {
-        call(Node::Leave, ido);
+        call(Node::Leave, NONE);
     }
 }
 
@@ -635,9 +636,26 @@ Action Node::BuildList(IdObj *ido)
             tempido = new IdObj(num, new Identity(in));
             right->out->call(Node::BuildList, tempido);
         }
-        // prepare next timeout
-        NumObj *counter = new NumObj(5);
-        call(Node::Wakeup, counter);
+        if (right == NULL && num > MAX && idle(in)) {
+            if (isReal) {
+                if (leftleaved && rightleaved) {
+                    IdObj *ido = new IdObj(num, new Identity(in));
+                    parent->call(Supervisor::RemoveRealChild, ido);
+                } else {
+                    // prepare next timeout
+                    NumObj *counter = new NumObj(5);
+                    call(Node::Wakeup, counter);
+                }
+            } else {
+                std::cout << "Node " << (num - MAX) << " leaves. Ciao.\n";
+                DoubleObj *obj = new DoubleObj(num - MAX);
+                parent->call(Node::RemoveVirtualChild, obj);
+            }
+        } else {
+            // prepare next timeout
+            NumObj *counter = new NumObj(5);
+            call(Node::Wakeup, counter);
+        }
     } else {
         checkStable(ido->num);
         if (ido->num > num) {
@@ -674,6 +692,15 @@ Action Node::BuildList(IdObj *ido)
 
     //std::cout << "\n";
      */
+}
+
+Action Node::RemoveVirtualChild(DoubleObj *dob)
+{
+    if (dob->num == num / 2) {
+        leftleaved = true;
+    } else {
+        rightleaved = true;
+    }
 }
 
 /**

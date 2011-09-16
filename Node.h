@@ -22,6 +22,8 @@ protected:
     bool isReal;
     bool leftstable;
     bool rightstable;
+    bool leftleaved;
+    bool rightleaved;
     HashMap data;//for a datatransfer another data structure would be better e.g. a binary tree.
 
     // BuildDeBruijn:
@@ -50,7 +52,7 @@ public:
     Action Delete(NumObj * key);
     Action LookUp(NumObj * key);
     Action Join(IdObj * id);
-    Action Leave(IdObj * id);
+    Action Leave();
     Action VirtualNodeLeave();
     Action Probing(Probe * ido);
     Action BuildList(IdObj * id);
@@ -59,6 +61,7 @@ public:
     Action FinishSearch(SearchJob * sj);
     Action Search(SearchJob * sj);
     Action TriggerDataTransfer(IdObj * ido);
+    Action RemoveVirtualChild(DoubleObj * dob);
 
     Action _DebugRouteFromLeftToRight();
     Action _DebugRouteFromRightToLeft();
