@@ -8,6 +8,7 @@
 #include <fstream>
 #include <sstream>
 #include <iostream>
+#include <unordered_map>
 #include "Subjects1-6.h"
 
 // Workaround: Macro "new" collides with definition from <vector>
@@ -18,7 +19,7 @@
 #include "Node.h"
 #include "Hash.h"
 
-enum EdgeType { LEFT, RIGHT, EDGE1, EDGE0 };
+enum EdgeType { LEFT, RIGHT, EDGE1, EDGE0, LEFTRIGHT };
 
 SubjectType(Supervisor)
 {
@@ -29,6 +30,7 @@ protected:
     std::vector<IdObj *> StartID;
 
     std::vector<Subject *> Subjects;
+    void printGraph();
     void freezeGraph();
     void unfreezeGraph();
     std::string Node2GDL(int id, double num, bool isReal);
