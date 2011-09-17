@@ -37,6 +37,13 @@ public:
         num = value;
         id = d;
     }
+
+    /*
+     *IdObj(const IdObj& ido) : num(ido.num) {
+     *    id = new Identity;
+     *    *id = *ido.id;
+     *}
+     */
 };
 
 ObjectType(InitObj)
@@ -71,13 +78,11 @@ public:
     NodeRelay(IdObj * ido) {
         num = ido->num;
         out = new Relay(ido->id);
-        delete ido;
     }
 
     NodeRelay(double value, Identity * d) {
         num = value;
         out = new Relay(d);
-        delete d;
     }
 };
 
