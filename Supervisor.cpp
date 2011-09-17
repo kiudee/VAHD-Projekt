@@ -4,6 +4,7 @@ Action Supervisor::Init(NumObj *num)
 {
     total = num->num;
     count = 0;
+    printcount = 0;
 
     InitObj *tempObj;
     for (int i = 1; i <= num->num; i++) {
@@ -127,23 +128,32 @@ std::string Supervisor::Edge2GDL(int sourceid, int targetid, int edgetype)
     return result;
 }
 
-void Supervisor::freezeGraph()
-{
-    for (int i = 0; i < total; i++) {
-        freeze(Nodes[i]->out->_home);
-    }
-}
-
-void Supervisor::unfreezeGraph()
-{
-    for (int i = 0; i < total; i++) {
-        wakeup(Nodes[i]->out->_home);
-    }
-}
+/*
+ * TODO: If needed for incremental graph output,
+ * fix freezing of subjects.
+ *void Supervisor::freezeGraph()
+ *{
+ *    for (int i = 0; i < total; i++) {
+ *        freeze(Nodes[i]->out->_home);
+ *    }
+ *}
+ *
+ *void Supervisor::unfreezeGraph()
+ *{
+ *    for (int i = 0; i < total; i++) {
+ *        wakeup(Nodes[i]->out->_home);
+ *    }
+ *}
+ */
 
 void Supervisor::printGraph()
 {
-    std::ofstream out("graph.gdl");
+    std::string graphname("graph");
+    std::ostringstream s;
+    s << printcount;
+    graphname += s.str();
+    graphname += ".gdl";
+    std::ofstream out(graphname);
     out << "graph: {\n";
 
     // Colors:
@@ -153,6 +163,13 @@ void Supervisor::printGraph()
     out << "colorentry 35: 30 48 138\n"; //edge 1: darker blue
     out << "colorentry 36: 114 165 255\n"; //node real: light purple
     out << "colorentry 37: 255 210 114\n"; //node virtual: light sepia
+
+    // Graph Options:
+    out << "layoutalgorithm: maxdepthslow\n"; //Use slow algorithm which yields good quality
+    out << "manhattan_edges: yes\n"; //Orthogonal lines
+    out << "splines: yes\n"; //Slightly bended lines
+    out << "orientation: bottom_to_top\n"; //Edges above nodes
+    out << "yspace: 50\n"; //Edges above nodes
 
     std::unordered_map<int, int> alreadyLinked;
 
@@ -194,6 +211,10 @@ void Supervisor::printGraph()
 Action Supervisor::Wakeup(NumObj *numo)
 {
     if (numo->num > 0) {
+        if (numo->num % 8 == 0) {
+            printGraph();
+            printcount++;
+        }
         numo->num--;
         call(Supervisor::Wakeup, numo);
     } else {

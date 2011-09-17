@@ -31,8 +31,11 @@ protected:
 
     std::vector<Subject *> Subjects;
     void printGraph();
-    void freezeGraph();
-    void unfreezeGraph();
+    int printcount;
+    /*
+     *void freezeGraph();
+     *void unfreezeGraph();
+     */
     std::string Node2GDL(int id, double num, bool isReal);
     std::string Edge2GDL(int sourceid, int targetid, int edgetype);
 public:
