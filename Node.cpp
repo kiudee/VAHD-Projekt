@@ -518,8 +518,8 @@ Action Node::VirtualNodeLeave()
 void Node::checkStable(double id)
 {
     if (id == num) {
-		leftstable = left != NULL && left->num == id;
-		rightstable = right != NULL && right->num == id;
+        leftstable = left != NULL && left->num == id;
+        rightstable = right != NULL && right->num == id;
     } else if (id < num && left != NULL) {
         leftstable = left->num == id;
     } else if (id > num && right != NULL) {
@@ -541,12 +541,11 @@ void Node::BuildSide(IdObj *ido, NodeRelay **side, bool right)
     if (*side == NULL) { // link not yet defined
         //std::cout << "Node " << num << ": creating link to " << ido->num
         //          << ".\n";
-    	if(ido->num < MAX){
-    		*side = new NodeRelay(ido);//do not link to leaving nodes
-    	}
-    	else{
-    		delete ido; //ido references to a leaving node.
-    	}
+        if (ido->num < MAX) {
+            *side = new NodeRelay(ido);//do not link to leaving nodes
+        } else {
+            delete ido; //ido references to a leaving node.
+        }
     } else {
         if (compare(ido->num, (*side)->num)) { // ido beyond link
             //std::cout << "Node " << num << ": forwarding " << ido->num
@@ -642,13 +641,12 @@ Action Node::BuildList(IdObj *ido)
         if (right == NULL && num > MAX && idle(in)) {
             if (isReal) {
                 if (node0left && node1left) {
-                	DoubleObj *dob = new DoubleObj(num-MAX);
-                	parent->call(Supervisor::RemoveRealChild, dob);
+                    DoubleObj *dob = new DoubleObj(num - MAX);
+                    parent->call(Supervisor::RemoveRealChild, dob);
+                } else {
+                    call(Node::BuildList, ido);
                 }
-                else{
-                	call(Node::BuildList, ido);
-                }
-            }else{
+            } else {
                 std::cout << "Node " << (num - MAX) << " leaves. Ciao.\n";
                 DoubleObj *obj = new DoubleObj(num - MAX);
                 parent->call(Node::RemoveVirtualChild, obj);
@@ -703,8 +701,8 @@ Action Node::BuildList(IdObj *ido)
  */
 Action Node::RemoveVirtualChild(DoubleObj *dob)
 {
-    node0left = node0left || dob->num == (num-MAX) / 2;
-    node1left = node1left || dob->num == (1+(num-MAX)) / 2;
+    node0left = node0left || dob->num == (num - MAX) / 2;
+    node1left = node1left || dob->num == (1 + (num - MAX)) / 2;
 }
 
 

@@ -16,7 +16,7 @@
 #include "Node.h"
 #include "Hash.h"
 
-typedef std::unordered_map<double, Relay*> SubjectMap;
+typedef std::unordered_map<double, Relay *> SubjectMap;
 
 SubjectType(Supervisor)
 {

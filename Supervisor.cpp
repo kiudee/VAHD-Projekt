@@ -59,20 +59,20 @@ Action Supervisor::Wakeup(NumObj *numo)
         call(Supervisor::Wakeup, numo);
     } else {
 
-    	if(false){
-    		//Test Insert / Lookup / Delete
-			DateObj *dob = new DateObj(14, "me lov subjectz. lolz");
-			Nodes[7]->call(Node::Insert, dob);
-			NumObj *numo2 = new NumObj(14);
-			Nodes[5]->call(Node::LookUp, numo2);
-			NumObj *numo3 = new NumObj(14);
-			Nodes[0]->call(Node::Delete, numo3);
+        if (false) {
+            //Test Insert / Lookup / Delete
+            DateObj *dob = new DateObj(14, "me lov subjectz. lolz");
+            Nodes[7]->call(Node::Insert, dob);
+            NumObj *numo2 = new NumObj(14);
+            Nodes[5]->call(Node::LookUp, numo2);
+            NumObj *numo3 = new NumObj(14);
+            Nodes[0]->call(Node::Delete, numo3);
 
-    	}
+        }
 
-    	if(true){
-    		Nodes[5]->call(Node::Leave, NONE);
-    	}
+        if (true) {
+            Nodes[5]->call(Node::Leave, NONE);
+        }
         //Nodes[4]->call(Node::_DebugRouteFromLeftToRight, NONE);
         //Nodes[7]->call(Node::_DebugRouteFromRightToLeft, NONE);
     }
