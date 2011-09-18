@@ -25,6 +25,7 @@ protected:
     bool leftleaved;
     bool rightleaved;
     HashMap data;//for a datatransfer another data structure would be better e.g. a binary tree.
+    std::shared_ptr<std::ofstream> csvFile;
 
     // BuildDeBruijn:
     void checkDead(NodeRelay **side);

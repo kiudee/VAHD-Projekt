@@ -2,14 +2,16 @@
 
 Action Supervisor::Init(NumObj *num)
 {
-
     total = num->num;
     count = 0;
 
+    std::ofstream* tmpfilestream = new std::ofstream("data.csv");
+    csvFile = std::shared_ptr<std::ofstream>(tmpfilestream);
 
     InitObj *tempObj;
     for (int i = 1; i <= num->num; i++) {
-        tempObj = new InitObj(h(i), true);
+        std::shared_ptr<std::ofstream> tmpfile(csvFile);
+        tempObj = new InitObj(h(i), true, tmpfile);
         new(Node, tempObj);
     }
 

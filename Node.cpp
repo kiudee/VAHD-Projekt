@@ -15,6 +15,7 @@ Action Node::Init(InitObj *init)
     // Unpack initstructor object:
     num = init->num;
     isReal = init->isReal;
+    csvFile = init->csvFile;
     delete init;
 
     if (isReal) {
@@ -26,10 +27,12 @@ Action Node::Init(InitObj *init)
         parent->call(Supervisor::SetLink, idp);
 
         // create virtual nodes:
-        InitObj *n0 = new InitObj(num / 2, false);
+        std::shared_ptr<std::ofstream> tmpfile0(csvFile);
+        InitObj *n0 = new InitObj(num / 2, false, tmpfile0);
         new(Node, n0);
 
-        InitObj *n1 = new InitObj((1 + num) / 2, false);
+        std::shared_ptr<std::ofstream> tmpfile1(csvFile);
+        InitObj *n1 = new InitObj((1 + num) / 2, false, tmpfile1);
         new(Node, n1);
     } else {
         //std::cout << "virtual node init: " << num << "\n";
@@ -263,6 +266,13 @@ bool Node::doLastRoutingPhase(SearchJob *sj)
 
 void Node::delegateSearchJobToLastNode(SearchJob *sj)
 {
+    // Save hopcount to file:
+    if (sj->type == INSERT || sj->type == DELETE || sj->type == LOOKUP) {
+        *csvFile.get() << sj->round + 1 << "\n";
+        csvFile.get()->flush();
+    }
+
+
     //SearchJob *newsj = new SearchJob(sj);
     sj->sid = MAX;//TO DO this won't work because we want to search for MAX and not for g(MAX)! adjust searchjob=> fixed
     sj->round = 0;

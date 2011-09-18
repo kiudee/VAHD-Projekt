@@ -2,6 +2,18 @@
 #define OBJECTS_H_
 
 #include <iostream>
+#undef delete
+#undef new
+#include <memory>
+#undef delete
+#undef new
+
+// Workaround: Macro "new" collides with definition from <memory>
+#define new(subject,object) \
+    _create((Subject *) this, (Subject *) new subject((Object* &) object))
+// Workaround: Macro "delete" collides with definition from <memory>
+#define delete(subject) \
+    _kill((Subject *) this, subject)
 
 #define DATATYPE std::string
 
@@ -51,10 +63,12 @@ ObjectType(InitObj)
 public:
     bool isReal;
     double num;
+    std::shared_ptr<std::ofstream> csvFile;
 
-    InitObj(double value, bool real) {
+    InitObj(double value, bool real, std::shared_ptr<std::ofstream> file) {
         isReal = real;
         num = value;
+        csvFile = file;
     }
 };
 
