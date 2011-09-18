@@ -5,7 +5,7 @@
 
 #define DATATYPE std::string
 
-enum SearchJobType { INSERT, DELETE, LOOKUP, JOIN };
+enum SearchJobType { INSERT, DELETE, LOOKUP, JOIN, DATATRANSFER };
 
 ObjectType(NumObj)
 {
@@ -32,10 +32,12 @@ ObjectType(IdObj)
 public:
     double num;
     Identity *id;
+    int debugID;
 
-    IdObj(double value, Identity * d) {
+    IdObj(double value, Identity * d, int did) {
         num = value;
         id = d;
+        debugID = did;
     }
 };
 
@@ -67,17 +69,19 @@ ObjectType(NodeRelay)
 public:
     double num;
     Relay *out;
+    int debugID;
 
     NodeRelay(IdObj * ido) {
         num = ido->num;
         out = new Relay(ido->id);
+        debugID = ido->debugID;
         delete ido;
     }
 
-    NodeRelay(double n, Identity * i) {
-        num = n;
-        out = new Relay(i);
-        delete i;
+    NodeRelay(double value, Identity * d) {
+        num = value;
+        out = new Relay(d);
+        delete d;
     }
 };
 
@@ -93,8 +97,8 @@ public:
     double num;
     Identity *id;
 
-    Probe(double n, Identity * d, int p) {
-        num = n;
+    Probe(double v, Identity * d, int p) {
+        num = v;
         phase = p;
         id = d;
     }
@@ -147,6 +151,7 @@ public:
     int key;
 
     //if overloading not possible: one constructor with all arguments! (unneeded arguments are NULL)
+    //TODO make sure sid <= MAX && ido->num <=MAX (?)
     SearchJob(double s, int t, double b) {
         sid = s;
         dob = NULL;
@@ -196,6 +201,7 @@ public:
         key = k;
     }
 
+
 };
 
 /**
@@ -216,6 +222,19 @@ public:
     }
 };
 
+/**
+ * Used by supervisor to get to know the virtual nodes.
+ */
+ObjectType(NodePair)
+{
+public:
+    Subject *node0;
+    Subject *node1;
 
+    NodePair(Subject * n0, Subject * n1) {
+        node0 = n0;
+        node1 = n1;
+    }
+};
 
 #endif  // OBJECTS_H_

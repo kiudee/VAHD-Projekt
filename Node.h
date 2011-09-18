@@ -15,23 +15,33 @@ typedef std::unordered_map<int, DATATYPE> HashMap;
 SubjectType(Node)
 {
 protected:
-    NodeRelay *left, *right;//, *node0, *node1;
-    Relay *node0, *node1;
-    Relay *in;
-    double num;
-    bool isReal;
     bool leftstable;
     bool rightstable;
-    HashMap data;//was soll gespeichert werden?
+    HashMap data;//for a datatransfer another data structure would be better e.g. a binary tree.
 
+    // BuildDeBruijn:
     void checkDead(NodeRelay **side);
     void checkValid();
     double calcRoutingBound();
     void checkStable(double id);
     void BuildSide(IdObj * ido, NodeRelay **side, bool right);
+    bool isSelf(IdObj * ido);
+
+    // Search:
+    bool doLastRoutingPhase(SearchJob * sj);
+    bool doDebruijnHop(SearchJob * sj);
+    void findNextIdealPosition(SearchJob * sj);
+    void delegateSearchJobToLastNode(SearchJob * sj);
 
 
 public:
+    // Needed for Supervisor output:
+    double num;
+    bool isReal;
+    Relay *in;
+    NodeRelay *left, *right;//, *node0, *node1;
+    NodeRelay *node0, *node1;
+
     FirstAction(Node, Init)
 
     Action Init(InitObj * init);
@@ -43,6 +53,7 @@ public:
     Action LookUp(NumObj * key);
     Action Join(IdObj * id);
     Action Leave(IdObj * id);
+    Action VirtualNodeLeave();
     Action Probing(Probe * ido);
     Action BuildList(IdObj * id);
     Action BuildWeakConnectedComponent(NumObj * numo);
@@ -50,6 +61,8 @@ public:
     Action FinishSearch(SearchJob * sj);
     Action Search(SearchJob * sj);
     Action TriggerDataTransfer(IdObj * ido);
+
+    Action _DebugRouteFromLeftToRight();
 };
 
 
