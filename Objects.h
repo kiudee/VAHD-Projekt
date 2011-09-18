@@ -163,60 +163,38 @@ public:
     int type; //indicates the job type (the operation)
     double bound;
     int round;
+    int hopcount; //is basically the same as round, but round will sometimes be reset to 0.
     int key;
 
-    //if overloading not possible: one constructor with all arguments! (unneeded arguments are NULL)
     //TODO make sure sid <= MAX && ido->num <=MAX (?)
-    SearchJob(double s, int t, double b) {
-        sid = s;
-        dob = NULL;
-        ido = NULL;
-        type = t;
-        round = 0;
-        bound = b;
-        key = 0;
+    SearchJob(double s, int t, double b) :
+        sid(s), dob(NULL), ido(NULL), type(t),
+        round(0), bound(b), key(0), hopcount(0)
+    { }
+
+    SearchJob(double s, int t, double b, DateObj * d) :
+        sid(s), dob(d), ido(NULL), type(t),
+        round(0), bound(b), key(0), hopcount(0) {
+        /*insert*/
     }
 
-    SearchJob(double s, int t, double b, DateObj * d) { //insert
-        sid = s;
-        dob = d;
-        ido = NULL;
-        type = t;
-        round = 0;
-        bound = b;
-        key = 0;
+    SearchJob(double s, int t, double b, IdObj * i) :
+        sid(s), dob(NULL), ido(i), type(t),
+        round(0), bound(b), key(0), hopcount(0) {
+        /*join*/
     }
 
-    SearchJob(double s, int t, double b, IdObj * i) { //join
-        sid = s;
-        dob = NULL;
-        ido = i;
-        type = t;
-        round = 0;
-        bound = b;
-        key = 0;
-    }
-    SearchJob(double s, int t, double b, IdObj * i, int k) { //lookup
-        sid = s;
-        dob = NULL;
-        ido = i;
-        type = t;
-        round = 0;
-        bound = b;
-        key = k;
+    SearchJob(double s, int t, double b, IdObj * i, int k) :
+        sid(s), dob(NULL), ido(i), type(t),
+        round(0), bound(b), key(k), hopcount(0) {
+        /*lookup*/
     }
 
-    SearchJob(double s, int t, double b, int k) { //delete
-        sid = s;
-        dob = NULL;
-        ido = NULL;
-        type = t;
-        round = 0;
-        bound = b;
-        key = k;
+    SearchJob(double s, int t, double b, int k) :
+        sid(s), dob(NULL), ido(NULL), type(t),
+        round(0), bound(b), key(k), hopcount(0) {
+        /*delete*/
     }
-
-
 };
 
 /**
