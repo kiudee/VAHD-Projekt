@@ -18,7 +18,7 @@ Action Node::Init(InitObj *init)
     delete init;
 
     if (isReal) {
-        leftleaved = rightleaved = false;
+        node0left = node1left = false;
         std::cout << num << "\n";
         // connect to supervisor:
         IdPair *idp = new IdPair(new IdObj(num, new Identity(in)),
@@ -119,7 +119,7 @@ double Node::calcRoutingBound()
     } else if (left != NULL) {
         return -2 * log(fabs(num - left->num));//in expectancy: |s-pred(s)|=|s-succ(s)|; s is the node where we started a search
     } else {
-        return 0.0; //TODO what about this case? I think it is okay to return 0, because this way the last routing phase is introduced from the beginning. this would cause a routing time of O(n)
+        return 0.0; //I think it is okay to return 0, because this way the last routing phase is introduced from the beginning. this would cause a routing time of O(n)
     }
 }
 
@@ -127,9 +127,7 @@ Action Node::BuildDeBruijn()
 {
     //std::cout << num << "<-BuildDeBruijn();\n";
     BuildList(NULL);
-    if (num < MAX) {
-        Probing(NULL);
-    }
+    Probing(NULL);
 }
 
 /**
@@ -154,7 +152,7 @@ Action Node::Insert(DateObj *dob)
  */
 Action Node::FinishSearch(SearchJob *sj)
 {
-    //TODO dont insert data on leaving nodes! num > MAX!
+    //TO DO dont insert data on leaving nodes! num > MAX! => fixed in Search
     std::cout << num << "<-FinishSearch(" << sj->sid << ");\n";
     double hashedkey = sj->sid;
     if (sj->type == JOIN // SearchJob is a Join
@@ -335,7 +333,6 @@ void Node::findNextIdealPosition(SearchJob *sj)
         }
     }
 
-    //TODO take end points into account: end points handled by FinishSearch
     bool nearerToLeft;
     if (hashedkey >= num) {
         nearerToLeft = fabs((1 + left->num) / 2 - hashedkey) < fabs((1 + right->num / 2) - hashedkey);
@@ -387,12 +384,6 @@ Action Node::Search(SearchJob *sj)
         }
     }
 
-    //call(Node::Search, sj);//because of virtual nodes, every node will eventually have at least one neighbor
-
-    //left OR right are NULL, so finish Search
-    //if right==NULL, than we might be at the end of the list
-    //if left==NULL, than we don't care because hashedkey > num.
-    //FinishSearch(sj);
 }
 
 /**
@@ -507,6 +498,10 @@ Action Node::Leave()
     }
 }
 
+/**
+ * Preparing the virtual nodes to leave
+ * @author Simon
+ */
 Action Node::VirtualNodeLeave()
 {
     num = num + MAX;
@@ -522,14 +517,9 @@ Action Node::VirtualNodeLeave()
  */
 void Node::checkStable(double id)
 {
-    //TODO quorum needed? or is it checked by subjects environment?
     if (id == num) {
-        if (left != NULL && left->num == id) {
-            leftstable = true;
-        }
-        if (right != NULL && right->num == id) {
-            rightstable = true;
-        }
+		leftstable = left != NULL && left->num == id;
+		rightstable = right != NULL && right->num == id;
     } else if (id < num && left != NULL) {
         leftstable = left->num == id;
     } else if (id > num && right != NULL) {
@@ -539,7 +529,6 @@ void Node::checkStable(double id)
 
 void Node::BuildSide(IdObj *ido, NodeRelay **side, bool right)
 {
-    //TODO when a node is replaced: do we have to reset its stable flags?
     auto compare = [right](double x, double y) -> bool {
         if (right) {
             return x > y;
@@ -552,7 +541,12 @@ void Node::BuildSide(IdObj *ido, NodeRelay **side, bool right)
     if (*side == NULL) { // link not yet defined
         //std::cout << "Node " << num << ": creating link to " << ido->num
         //          << ".\n";
-        *side = new NodeRelay(ido);
+    	if(ido->num < MAX){
+    		*side = new NodeRelay(ido);//do not link to leaving nodes
+    	}
+    	else{
+    		delete ido; //ido references to a leaving node.
+    	}
     } else {
         if (compare(ido->num, (*side)->num)) { // ido beyond link
             //std::cout << "Node " << num << ": forwarding " << ido->num
@@ -575,6 +569,12 @@ void Node::BuildSide(IdObj *ido, NodeRelay **side, bool right)
     }
 }
 
+/**
+ * Checks if a given ido references to the current subject
+ * @author Simon
+ * @param the given ido
+ * @return true, if the ido references to itself, otherwise false
+ */
 bool Node::isSelf(IdObj *ido)
 {
     Identity *self = new Identity(in);
@@ -583,6 +583,10 @@ bool Node::isSelf(IdObj *ido)
     return r;
 }
 
+/**
+ * Simple routing from left to right for debugging reasons
+ * @author Simon
+ */
 Action Node::_DebugRouteFromLeftToRight()
 {
     std::cout << num << "<-_DebugRouteFromLeftToRight() real?" << isReal << "\n";
@@ -609,7 +613,6 @@ Action Node::_DebugRouteFromRightToLeft()
  */
 Action Node::BuildList(IdObj *ido)
 {
-    //TODO adjustments for delete needed!
 
     IdObj *tempido;
     // Check if there are dead links from both sides:
@@ -638,15 +641,14 @@ Action Node::BuildList(IdObj *ido)
         }
         if (right == NULL && num > MAX && idle(in)) {
             if (isReal) {
-                if (leftleaved && rightleaved) {
-                    IdObj *ido = new IdObj(num, new Identity(in));
-                    parent->call(Supervisor::RemoveRealChild, ido);
-                } else {
-                    // prepare next timeout
-                    NumObj *counter = new NumObj(5);
-                    call(Node::Wakeup, counter);
+                if (node0left && node1left) {
+                	DoubleObj *dob = new DoubleObj(num-MAX);
+                	parent->call(Supervisor::RemoveRealChild, dob);
                 }
-            } else {
+                else{
+                	call(Node::BuildList, ido);
+                }
+            }else{
                 std::cout << "Node " << (num - MAX) << " leaves. Ciao.\n";
                 DoubleObj *obj = new DoubleObj(num - MAX);
                 parent->call(Node::RemoveVirtualChild, obj);
@@ -694,14 +696,17 @@ Action Node::BuildList(IdObj *ido)
      */
 }
 
+/**
+ * Message that is called by the virtual nodes of a leaving real node, until its virtual nodes are ready to leave the system
+ * @author Simon
+ * @param the id of the leaving virtual node (num-MAX)
+ */
 Action Node::RemoveVirtualChild(DoubleObj *dob)
 {
-    if (dob->num == num / 2) {
-        leftleaved = true;
-    } else {
-        rightleaved = true;
-    }
+    node0left = node0left || dob->num == (num-MAX) / 2;
+    node1left = node1left || dob->num == (1+(num-MAX)) / 2;
 }
+
 
 /**
  * Ensures weak connected component to its de bruijn neighbors.

@@ -10,7 +10,8 @@ Action Supervisor::Init(NumObj *num)
     InitObj *tempObj;
     for (int i = 1; i <= num->num; i++) {
         tempObj = new InitObj(h(i), true);
-        new(Node, tempObj);
+        auto subject = new Node((Object* &) tempObj);
+        _create((Subject *) this, (Subject *) subject);
     }
 
     delete num;
@@ -20,7 +21,9 @@ Action Supervisor::SetLink(IdPair *idop)
 {
     NumObj *numo;
 
-    Nodes.push_back(new Relay(idop->ido1->id));
+    Relay *temprelay = new Relay(idop->ido1->id);//TODO please review
+    Nodes.push_back(temprelay);
+    subjects[idop->ido1->num] = temprelay;
     delete idop->ido1;
     StartID.push_back(idop->ido2);
     delete idop;
@@ -55,22 +58,36 @@ Action Supervisor::Wakeup(NumObj *numo)
         numo->num--;
         call(Supervisor::Wakeup, numo);
     } else {
-        // test Delete or Search
-        //DateObj *dob = new DateObj(14, "bla");
-        //Nodes[7]->call(Node::Insert, dob);
-        //NumObj *numo2 = new NumObj(14);
-        //Nodes[5]->call(Node::LookUp, numo2);
+
+    	if(false){
+    		//Test Insert / Lookup / Delete
+			DateObj *dob = new DateObj(14, "me lov subjectz. lolz");
+			Nodes[7]->call(Node::Insert, dob);
+			NumObj *numo2 = new NumObj(14);
+			Nodes[5]->call(Node::LookUp, numo2);
+			NumObj *numo3 = new NumObj(14);
+			Nodes[0]->call(Node::Delete, numo3);
+
+    	}
+
+    	if(true){
+    		Nodes[5]->call(Node::Leave, NONE);
+    	}
         //Nodes[4]->call(Node::_DebugRouteFromLeftToRight, NONE);
         //Nodes[7]->call(Node::_DebugRouteFromRightToLeft, NONE);
-        Nodes[5]->call(Node::Leave, NONE);
     }
 }
-
-Action Supervisor::RemoveRealChild(IdObj *ido)
+/**
+ * Removes a real node, which is ready to leave
+ * @param the id of the deleted node (MAX-id)
+ * @author Simon
+ */
+Action Supervisor::RemoveRealChild(DoubleObj *dob)
 {
-    //delete(ido->id->_owner);
-    //TODO delete it
-    std::cout << "Node " << (ido->num - 1) << " leaves. Ciao.\n";
-    delete ido;
+    std::cout << "Node " << (dob->num) << " leaves. Ciao.\n";
+    Relay *subj = subjects.at(dob->num);
+    subjects.erase(dob->num);
+    delete(subj);
+    delete dob;
 }
 

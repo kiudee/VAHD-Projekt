@@ -22,8 +22,8 @@ protected:
     bool isReal;
     bool leftstable;
     bool rightstable;
-    bool leftleaved;
-    bool rightleaved;
+    bool node0left;
+    bool node1left;
     HashMap data;//for a datatransfer another data structure would be better e.g. a binary tree.
 
     // BuildDeBruijn:
