@@ -544,6 +544,11 @@ void Node::BuildSide(IdObj *ido, NodeRelay **side, bool right)
         if (ido->num < MAX) {
             *side = new NodeRelay(ido);//do not link to leaving nodes
         } else {
+            if (right) {
+                rightstable = false;
+            } else {
+                leftstable = false;
+            }
             delete ido; //ido references to a leaving node.
         }
     } else {
@@ -586,11 +591,11 @@ bool Node::isSelf(IdObj *ido)
  * Simple routing from left to right for debugging reasons
  * @author Simon
  */
-Action Node::_DebugRouteFromLeftToRight()
+Action Node::_DebugRouteFromLeftToRight(NumObj *numo)
 {
-    std::cout << num << "<-_DebugRouteFromLeftToRight() real?" << isReal << "\n";
+    std::cout << num << "<-_DebugRouteFromLeftToRight() debugid?" << numo->num << " real?" << isReal << "\n";
     if (right != NULL) {
-        right->out->call(Node::_DebugRouteFromLeftToRight, NONE);
+        right->out->call(Node::_DebugRouteFromLeftToRight, numo);
     } else {
         std::cout << "END DEBUG\n";
     }
@@ -852,17 +857,31 @@ Action Node::BuildWeakConnectedComponent(NumObj *numo)
     if (numo->num == 0) {
         //envelope left neighbor
         //TODO check if left is existing before delegating. maybe this is not necessary because if the left is not exisiting, we would not come so far. otherwise the link to left might be broken.
-        tempido = new IdObj(left->num, extractIdentity(left->out));
-        delete left;
-        //link to v.0
-        left = new NodeRelay(num / 2, new Identity(node0));
-        //delegate old left neighbor to node0
-        left->out->call(Node::BuildList, tempido);
+        if (left != NULL) {
+            tempido = new IdObj(left->num, extractIdentity(left->out));
+            delete left;
+            leftstable = false;
+            //link to v.0
+            left = new NodeRelay(num / 2, new Identity(node0));
+            //delegate old left neighbor to node0
+            left->out->call(Node::BuildList, tempido);
+        } else {
+            leftstable = false;
+            //link to v.0
+            left = new NodeRelay(num / 2, new Identity(node0));
+        }
+
     } else if (numo->num == 1) {
-        tempido = new IdObj(right->num, extractIdentity(right->out));
-        delete right;
-        right = new NodeRelay((1 + num) / 2, new Identity(node1));
-        right->out->call(Node::BuildList, tempido);
+        if (right != NULL) {
+            tempido = new IdObj(right->num, extractIdentity(right->out));
+            delete right;
+            rightstable = false;
+            right = new NodeRelay((1 + num) / 2, new Identity(node1));
+            right->out->call(Node::BuildList, tempido);
+        } else {
+            rightstable = false;
+            right = new NodeRelay((1 + num) / 2, new Identity(node1));
+        }
     }
     delete numo;
 }

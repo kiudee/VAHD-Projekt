@@ -63,7 +63,7 @@ public:
     Action TriggerDataTransfer(IdObj * ido);
     Action RemoveVirtualChild(DoubleObj * dob);
 
-    Action _DebugRouteFromLeftToRight();
+    Action _DebugRouteFromLeftToRight(NumObj * numo);
     Action _DebugRouteFromRightToLeft();
 };
 

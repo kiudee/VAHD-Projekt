@@ -46,7 +46,7 @@ Action Supervisor::SetLink(IdPair *idop)
         }
 
         // wait 100 rounds till testing Delete or Search
-        numo = new NumObj(100);
+        numo = new NumObj(200);
         call(Supervisor::Wakeup, numo);
     }
 }
@@ -56,6 +56,16 @@ Action Supervisor::Wakeup(NumObj *numo)
 
     if (numo->num > 0) {
         numo->num--;
+
+        if (numo->num == 120) {
+            Nodes[7]->call(Node::Leave, NONE);
+        }
+
+        if (numo->num == 50) {
+            NumObj *debugsession2 = new NumObj(1);
+            Nodes[4]->call(Node::_DebugRouteFromLeftToRight, debugsession2);
+        }
+
         call(Supervisor::Wakeup, numo);
     } else {
 
@@ -70,10 +80,12 @@ Action Supervisor::Wakeup(NumObj *numo)
 
         }
 
+
         if (true) {
-            Nodes[5]->call(Node::Leave, NONE);
+            NumObj *debugsession = new NumObj(2);
+            Nodes[4]->call(Node::_DebugRouteFromLeftToRight, debugsession);
+
         }
-        //Nodes[4]->call(Node::_DebugRouteFromLeftToRight, NONE);
         //Nodes[7]->call(Node::_DebugRouteFromRightToLeft, NONE);
     }
 }
