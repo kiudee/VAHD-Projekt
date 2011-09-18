@@ -23,6 +23,8 @@
 #include "Node.h"
 #include "Hash.h"
 
+typedef std::unordered_map<double, Relay *> SubjectMap;
+
 SubjectType(Supervisor)
 {
 protected:
@@ -31,6 +33,7 @@ protected:
     std::vector<Relay *> Nodes;
     std::vector<IdObj *> StartID;
     std::shared_ptr<std::ofstream> csvFile;
+    SubjectMap subjects;
 
 public:
     FirstAction(Supervisor, Init)
@@ -38,7 +41,7 @@ public:
     Action Init(NumObj * num);
     Action SetLink(IdPair * id);
     Action Wakeup(NumObj * num);
-    Action RemoveRealChild(IdObj * ido);
+    Action RemoveRealChild(DoubleObj * dob);
 };
 
 #endif  // SUPERVISOR_H_

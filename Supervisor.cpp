@@ -12,7 +12,8 @@ Action Supervisor::Init(NumObj *num)
     for (int i = 1; i <= num->num; i++) {
         std::shared_ptr<std::ofstream> tmpfile(csvFile);
         tempObj = new InitObj(h(i), true, tmpfile);
-        new(Node, tempObj);
+        auto subject = new Node((Object* &) tempObj);
+        _create((Subject *) this, (Subject *) subject);
     }
 
     delete num;
@@ -22,7 +23,9 @@ Action Supervisor::SetLink(IdPair *idop)
 {
     NumObj *numo;
 
-    Nodes.push_back(new Relay(idop->ido1->id));
+    Relay *temprelay = new Relay(idop->ido1->id);//TODO please review
+    Nodes.push_back(temprelay);
+    subjects[idop->ido1->num] = temprelay;
     delete idop->ido1;
     StartID.push_back(idop->ido2);
     delete idop;
@@ -45,34 +48,98 @@ Action Supervisor::SetLink(IdPair *idop)
         }
 
         // wait 100 rounds till testing Delete or Search
-        numo = new NumObj(100);
+        numo = new NumObj(400);
         call(Supervisor::Wakeup, numo);
     }
+    if (count > total) {
+        numo = new NumObj(5);
+        Nodes[count-1]->call(Node::Wakeup, numo);
+    }
+
 }
 Action Supervisor::Wakeup(NumObj *numo)
 {
     //NumObj *searchnum;
 
     if (numo->num > 0) {
+
+        /////////////////////////////////////////////////////
+        //////// BEGIN TESTCASE INSERT LEAVE LOOKUP /////////
+        //Description: Insert, remove the responsible node, and fire a lookup
+        /*
+        		if(numo->num == 300){
+        			DateObj *dob = new DateObj(14, "me lov subjectz. lolz.");
+        			Nodes[0]->call(Node::Insert, dob);
+        		}
+
+        		if (numo->num == 200) {
+        			Nodes[0]->call(Node::Leave, NONE);
+        		}
+
+        		if(numo->num == 100){
+        			NumObj *numo2 = new NumObj(14);
+        			Nodes[4]->call(Node::LookUp, numo2);
+        		}*/
+        //////////////////////////////////////////////////
+        //////// END TESTCASE INSERT LEAVE LOOKUP ////////
+        //////////////////////////////////////////////////
+
+
+        /////////////////////////////////////////////////////
+        //////// BEGIN TESTCASE INSERT JOIN LOOKUP /////////
+        //Description: Insert, join a new responsible node, and fire a lookup
+        if (numo->num == 300) {
+            DateObj *dob = new DateObj(666, "some more data.");
+            Nodes[4]->call(Node::Insert, dob);
+            InitObj *tempObj = new InitObj(h(666), true);
+            new(Node, tempObj);
+        }
+
+        if (numo->num == 200) {
+
+            Nodes[0]->call(Node::Join, StartID[total]);
+        }
+
+        if (numo->num == 100) {
+            NumObj *numo2 = new NumObj(666);
+            Nodes[4]->call(Node::LookUp, numo2);
+        }
+
+
+        //////////////////////////////////////////////////
+        //////// END TESTCASE INSERT JOIN LOOKUP /////////
+        //////////////////////////////////////////////////
+
+
+        /////////////////////////////////////////////////////
+        //////// BEGIN TESTCASE INSERT LOOKUP DELETE /////////
+        //Test Insert / Lookup / Delete
+        /*        DateObj *dob = new DateObj(14, "me lov subjectz. lolz.");
+                Nodes[7]->call(Node::Insert, dob);
+                NumObj *numo2 = new NumObj(14);
+                Nodes[5]->call(Node::LookUp, numo2);
+                NumObj *numo3 = new NumObj(14);
+                Nodes[0]->call(Node::Delete, numo3);*/
+
+        //////////////////////////////////////////////////
+        //////// END TESTCASE INSERT LOOKUP DELETE /////////
+        //////////////////////////////////////////////////
+
         numo->num--;
         call(Supervisor::Wakeup, numo);
-    } else {
-        // test Delete or Search
-        //DateObj *dob = new DateObj(14, "bla");
-        //Nodes[7]->call(Node::Insert, dob);
-        //NumObj *numo2 = new NumObj(14);
-        //Nodes[5]->call(Node::LookUp, numo2);
-        //Nodes[4]->call(Node::_DebugRouteFromLeftToRight, NONE);
-        //Nodes[7]->call(Node::_DebugRouteFromRightToLeft, NONE);
-        Nodes[5]->call(Node::Leave, NONE);
     }
 }
-
-Action Supervisor::RemoveRealChild(IdObj *ido)
+/**
+ * Removes a real node, which is ready to leave
+ * @param the id of the deleted node (MAX-id)
+ * @author Simon
+ */
+Action Supervisor::RemoveRealChild(DoubleObj *dob)
 {
-    //delete(ido->id->_owner);
-    //TODO delete it
-    std::cout << "Node " << (ido->num - 1) << " leaves. Ciao.\n";
-    delete ido;
+    std::cout << "Node " << (dob->num) << " leaves. Ciao.\n";
+    Relay *subj = subjects.at(dob->num);
+    subjects.erase(dob->num);
+    delete(subj);
+    delete dob;
 }
 
