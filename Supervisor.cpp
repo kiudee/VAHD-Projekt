@@ -46,47 +46,85 @@ Action Supervisor::SetLink(IdPair *idop)
         }
 
         // wait 100 rounds till testing Delete or Search
-        numo = new NumObj(200);
+        numo = new NumObj(400);
         call(Supervisor::Wakeup, numo);
     }
+    if (count > total) {
+        numo = new NumObj(5);
+        Nodes[count-1]->call(Node::Wakeup, numo);
+    }
+
 }
 Action Supervisor::Wakeup(NumObj *numo)
 {
     //NumObj *searchnum;
 
     if (numo->num > 0) {
+
+        /////////////////////////////////////////////////////
+        //////// BEGIN TESTCASE INSERT LEAVE LOOKUP /////////
+        //Description: Insert, remove the responsible node, and fire a lookup
+        /*
+        		if(numo->num == 300){
+        			DateObj *dob = new DateObj(14, "me lov subjectz. lolz.");
+        			Nodes[0]->call(Node::Insert, dob);
+        		}
+
+        		if (numo->num == 200) {
+        			Nodes[0]->call(Node::Leave, NONE);
+        		}
+
+        		if(numo->num == 100){
+        			NumObj *numo2 = new NumObj(14);
+        			Nodes[4]->call(Node::LookUp, numo2);
+        		}*/
+        //////////////////////////////////////////////////
+        //////// END TESTCASE INSERT LEAVE LOOKUP ////////
+        //////////////////////////////////////////////////
+
+
+        /////////////////////////////////////////////////////
+        //////// BEGIN TESTCASE INSERT JOIN LOOKUP /////////
+        //Description: Insert, join a new responsible node, and fire a lookup
+        if (numo->num == 300) {
+            DateObj *dob = new DateObj(666, "some more data.");
+            Nodes[4]->call(Node::Insert, dob);
+            InitObj *tempObj = new InitObj(h(666), true);
+            new(Node, tempObj);
+        }
+
+        if (numo->num == 200) {
+
+            Nodes[0]->call(Node::Join, StartID[total]);
+        }
+
+        if (numo->num == 100) {
+            NumObj *numo2 = new NumObj(666);
+            Nodes[4]->call(Node::LookUp, numo2);
+        }
+
+
+        //////////////////////////////////////////////////
+        //////// END TESTCASE INSERT JOIN LOOKUP /////////
+        //////////////////////////////////////////////////
+
+
+        /////////////////////////////////////////////////////
+        //////// BEGIN TESTCASE INSERT LOOKUP DELETE /////////
+        //Test Insert / Lookup / Delete
+        /*        DateObj *dob = new DateObj(14, "me lov subjectz. lolz.");
+                Nodes[7]->call(Node::Insert, dob);
+                NumObj *numo2 = new NumObj(14);
+                Nodes[5]->call(Node::LookUp, numo2);
+                NumObj *numo3 = new NumObj(14);
+                Nodes[0]->call(Node::Delete, numo3);*/
+
+        //////////////////////////////////////////////////
+        //////// END TESTCASE INSERT LOOKUP DELETE /////////
+        //////////////////////////////////////////////////
+
         numo->num--;
-
-        if (numo->num == 120) {
-            Nodes[7]->call(Node::Leave, NONE);
-        }
-
-        if (numo->num == 50) {
-            NumObj *debugsession2 = new NumObj(1);
-            Nodes[4]->call(Node::_DebugRouteFromLeftToRight, debugsession2);
-        }
-
         call(Supervisor::Wakeup, numo);
-    } else {
-
-        if (false) {
-            //Test Insert / Lookup / Delete
-            DateObj *dob = new DateObj(14, "me lov subjectz. lolz");
-            Nodes[7]->call(Node::Insert, dob);
-            NumObj *numo2 = new NumObj(14);
-            Nodes[5]->call(Node::LookUp, numo2);
-            NumObj *numo3 = new NumObj(14);
-            Nodes[0]->call(Node::Delete, numo3);
-
-        }
-
-
-        if (true) {
-            NumObj *debugsession = new NumObj(2);
-            Nodes[4]->call(Node::_DebugRouteFromLeftToRight, debugsession);
-
-        }
-        //Nodes[7]->call(Node::_DebugRouteFromRightToLeft, NONE);
     }
 }
 /**

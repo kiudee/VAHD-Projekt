@@ -250,7 +250,7 @@ bool Node::doLastRoutingPhase(SearchJob *sj)
                 right->out->call(Node::Search, sj);
                 return true;
             } else {
-                //std::cout << "SearchJob " << sj->sid << " waiting at " << num << " (2)\n";
+                std::cout << "SearchJob " << sj->sid << " waiting at " << num << " (2)\n";
                 call(Node::Search, sj);
                 return true;
             }
@@ -447,12 +447,12 @@ Action Node::Join(IdObj *ido)
  */
 Action Node::TriggerDataTransfer(IdObj *ido)
 {
-    //std::cout << num << "<-TriggerDataTransfer(" << ido->num << ");\n";
+    std::cout << num << "<-TriggerDataTransfer(" << ido->num << ");\n";
 
     if (isReal) {
         Relay *temprelay = new Relay(ido->id);
         for (HashMap::iterator it = data.begin(); it != data.end(); ++it) {
-            if (g(it->first) > ido->num) {
+            if (g(it->first) >= ido->num) {//WAAAAAAAAAAAAAAAAAAAAAAHHHHHHHHHH!!!!!!!!!!!!!
                 DateObj *dob = new DateObj(it->first, it->second);
                 temprelay->call(Node::Insert, dob);//routing unnecessary (ido is the target)
             }
@@ -478,7 +478,7 @@ Action Node::TriggerDataTransfer(IdObj *ido)
  */
 Action Node::Leave()
 {
-    //std::cout << num << "<-Leave(" << ido->num << ");\n";
+    std::cout << num << "<-Leave();\n";
     if (leftstable && left != NULL) { //first node must be a virtual node, so it must exist
         for (HashMap::iterator it = data.begin(); it != data.end(); ++it) {
             DateObj *dob = new DateObj(it->first, it->second);
