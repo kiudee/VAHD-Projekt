@@ -91,7 +91,8 @@ Action Supervisor::Wakeup(NumObj *numo)
         if (numo->num == 300) {
             DateObj *dob = new DateObj(666, "some more data.");
             Nodes[4]->call(Node::Insert, dob);
-            InitObj *tempObj = new InitObj(h(666), true);
+            std::shared_ptr<std::ofstream> tmpfile(csvFile);
+            InitObj *tempObj = new InitObj(h(666), true, tmpfile);
             new(Node, tempObj);
         }
 
