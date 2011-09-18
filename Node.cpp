@@ -140,7 +140,7 @@ Action Node::BuildDeBruijn()
  */
 Action Node::Insert(DateObj *dob)
 {
-	std::cout << num << "<-Insert(key:" << dob->num << ", data:" << dob->date << ")\n";
+    std::cout << num << "<-Insert(key:" << dob->num << ", data:" << dob->date << ")\n";
     SearchJob *sj = new SearchJob(g(dob->num), INSERT,
                                   Node::calcRoutingBound(), dob);
     Search(sj);
@@ -156,7 +156,7 @@ Action Node::Insert(DateObj *dob)
 Action Node::FinishSearch(SearchJob *sj)
 {
     //TODO dont insert data on leaving nodes! num > MAX!
-	std::cout << num << "<-FinishSearch(" << sj->sid << ");\n";
+    std::cout << num << "<-FinishSearch(" << sj->sid << ");\n";
     double hashedkey = sj->sid;
     if (sj->type == JOIN // SearchJob is a Join
             || (isReal && right == NULL && num <= hashedkey) // There is no right node and this node is responsible
