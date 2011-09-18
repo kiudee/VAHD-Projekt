@@ -30,7 +30,7 @@ protected:
     std::vector<IdObj *> StartID;
 
     std::vector<Subject *> Subjects;
-    void printGraph();
+    void printGraph(bool lastPass);
     int printcount;
     /*
      *void freezeGraph();

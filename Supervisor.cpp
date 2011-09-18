@@ -146,9 +146,9 @@ std::string Supervisor::Edge2GDL(int sourceid, int targetid, int edgetype)
  *}
  */
 
-void Supervisor::printGraph()
+void Supervisor::printGraph(bool lastPass)
 {
-    std::string graphname("graph");
+    std::string graphname("gfx/graph");
     std::ostringstream s;
     s << printcount;
     graphname += s.str();
@@ -169,7 +169,7 @@ void Supervisor::printGraph()
     out << "manhattan_edges: yes\n"; //Orthogonal lines
     out << "splines: yes\n"; //Slightly bended lines
     out << "orientation: bottom_to_top\n"; //Edges above nodes
-    out << "yspace: 50\n"; //Edges above nodes
+    out << "yspace: 30\n"; //Edges above nodes
 
     std::unordered_map<int, int> alreadyLinked;
 
@@ -184,8 +184,12 @@ void Supervisor::printGraph()
         auto node = dynamic_cast<Node *>(Subjects[i]);
         auto subject = Subjects[i];
         if (node->right != NULL) {
-            out << Edge2GDL(subject->_debugID, node->right->debugID, LEFTRIGHT);
-            alreadyLinked[subject->_debugID] = node->right->debugID;
+            if (lastPass) {
+                out << Edge2GDL(subject->_debugID, node->right->debugID, LEFTRIGHT);
+                alreadyLinked[subject->_debugID] = node->right->debugID;
+            } else {
+                out << Edge2GDL(subject->_debugID, node->right->debugID, RIGHT);
+            }
         }
         if (node->node0 != NULL) {
             out << Edge2GDL(subject->_debugID, node->node0->debugID, EDGE0);
@@ -200,7 +204,7 @@ void Supervisor::printGraph()
         auto node = dynamic_cast<Node *>(Subjects[i]);
         auto subject = Subjects[i];
         if (node->left != NULL) {
-            if (alreadyLinked[node->left->debugID] != static_cast<int>(subject->_debugID)) {
+            if (!lastPass || alreadyLinked[node->left->debugID] != static_cast<int>(subject->_debugID)) {
                 out << Edge2GDL(subject->_debugID, node->left->debugID, LEFT);
             }
         }
@@ -212,14 +216,14 @@ Action Supervisor::Wakeup(NumObj *numo)
 {
     if (numo->num > 0) {
         if (numo->num % 8 == 0) {
-            printGraph();
+            printGraph(false);
             printcount++;
         }
         numo->num--;
         call(Supervisor::Wakeup, numo);
     } else {
         delete numo;
-        printGraph();
+        printGraph(true);
     }
 }
 
