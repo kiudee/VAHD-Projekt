@@ -28,11 +28,11 @@ Action Node::Init(InitObj *init)
 
         // create virtual nodes:
 
-		std::shared_ptr<std::ofstream> tmpfile0(csvFile);
+        std::shared_ptr<std::ofstream> tmpfile0(csvFile);
         InitObj *n0 = new InitObj(num / 2, false, tmpfile0);
         auto tmpnode0 = (Subject *) new Node((Object* &) n0);
 
-		std::shared_ptr<std::ofstream> tmpfile1(csvFile);
+        std::shared_ptr<std::ofstream> tmpfile1(csvFile);
         InitObj *n1 = new InitObj((1 + num) / 2, false, tmpfile1);
         auto tmpnode1 = (Subject *) new Node((Object* &) n1);
         NodePair *np = new NodePair(tmpnode0, tmpnode1);
@@ -269,7 +269,7 @@ bool Node::doLastRoutingPhase(SearchJob *sj)
                 right->out->call(Node::Search, sj);
                 return true;
             } else {
-                std::cout << "SearchJob " << sj->sid << " waiting at " << num << " (2)\n";
+                //std::cout << "SearchJob " << sj->sid << " waiting at " << num << " (2)\n";
                 call(Node::Search, sj);
                 return true;
             }
@@ -297,21 +297,26 @@ bool Node::doDebruijnHop(SearchJob *sj)
     double hashedkey = sj->sid;
 
     if (hashedkey < num) {
-        sj->round++;
-        sj->hopcount++;
         if (hashedkey > num / 2) {
             sj->bound =  -1; //introduce last routing phase
+            return false;
+        } else {
+            sj->round++;
+            sj->hopcount++;
+            std::cout << num << "<-doDebruijnHop() to " << (num / 2) << "\n";
+            node0->out->call(Node::Search, sj);
         }
-        std::cout << num << "<-doDebruijnHop() to " << (num / 2) << "\n";
-        node0->out->call(Node::Search, sj);
     } else if (hashedkey > num) {
-        sj->round++;
-        sj->hopcount++;
         if (hashedkey < (1 + num) / 2) {
             sj->bound =  -1; //introduce last routing phase
+            return false;
+        } else {
+
+            sj->round++;
+            sj->hopcount++;
+            std::cout << num << "<-doDebruijnHop() to " << ((1 + num) / 2) << "\n";
+            node1->out->call(Node::Search, sj);
         }
-        std::cout << num << "<-doDebruijnHop() to " << ((1 + num) / 2) << "\n";
-        node1->out->call(Node::Search, sj);
     } else { // hashedkey == num
         FinishSearch(sj);
     }
@@ -325,7 +330,8 @@ void Node::findNextIdealPosition(SearchJob *sj)
         //std::cout << "SearchJob " << sj->sid << " waiting at " << num << " (3)\n";
         call(Node::Search, sj);//because of virtual nodes, every node will eventually have at least one neighbor
         return;
-    } else if (left == NULL || right == NULL) {
+        //} else if (left == NULL || right == NULL) {
+    } else if (true) {
         //do normal routing if possible
         //TODO this code is redundant in doLastRoutingPhase
         if (hashedkey < num) {
