@@ -5,6 +5,7 @@
 #include <string>
 #include <unordered_map>
 #include <iostream>
+#include <cmath>
 #include "Subjects1-6.h"
 #include "Objects.h"
 #include "Supervisor.h"
@@ -17,7 +18,10 @@ SubjectType(Node)
 protected:
     bool leftstable;
     bool rightstable;
+    bool node0left;
+    bool node1left;
     HashMap data;//for a datatransfer another data structure would be better e.g. a binary tree.
+    std::shared_ptr<std::ofstream> csvFile;
 
     // BuildDeBruijn:
     void checkDead(NodeRelay **side);
@@ -52,7 +56,7 @@ public:
     Action Delete(NumObj * key);
     Action LookUp(NumObj * key);
     Action Join(IdObj * id);
-    Action Leave(IdObj * id);
+    Action Leave();
     Action VirtualNodeLeave();
     Action Probing(Probe * ido);
     Action BuildList(IdObj * id);
@@ -61,8 +65,10 @@ public:
     Action FinishSearch(SearchJob * sj);
     Action Search(SearchJob * sj);
     Action TriggerDataTransfer(IdObj * ido);
+    Action RemoveVirtualChild(DoubleObj * dob);
 
-    Action _DebugRouteFromLeftToRight();
+    Action _DebugRouteFromLeftToRight(NumObj * numo);
+    Action _DebugRouteFromRightToLeft();
 };
 
 

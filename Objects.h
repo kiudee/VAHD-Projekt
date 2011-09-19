@@ -2,6 +2,18 @@
 #define OBJECTS_H_
 
 #include <iostream>
+#undef delete
+#undef new
+#include <memory>
+#undef delete
+#undef new
+
+// Workaround: Macro "new" collides with definition from <memory>
+#define new(subject,object) \
+    _create((Subject *) this, (Subject *) new subject((Object* &) object))
+// Workaround: Macro "delete" collides with definition from <memory>
+#define delete(subject) \
+    _kill((Subject *) this, subject)
 
 #define DATATYPE std::string
 
@@ -39,6 +51,13 @@ public:
         id = d;
         debugID = did;
     }
+
+    /*
+     *IdObj(const IdObj& ido) : num(ido.num) {
+     *    id = new Identity;
+     *    *id = *ido.id;
+     *}
+     */
 };
 
 ObjectType(InitObj)
@@ -46,10 +65,12 @@ ObjectType(InitObj)
 public:
     bool isReal;
     double num;
+    std::shared_ptr<std::ofstream> csvFile;
 
-    InitObj(double value, bool real) {
+    InitObj(double value, bool real, std::shared_ptr<std::ofstream> file) {
         isReal = real;
         num = value;
+        csvFile = file;
     }
 };
 
@@ -75,13 +96,11 @@ public:
         num = ido->num;
         out = new Relay(ido->id);
         debugID = ido->debugID;
-        delete ido;
     }
 
     NodeRelay(double value, Identity * d) {
         num = value;
         out = new Relay(d);
-        delete d;
     }
 };
 
@@ -148,60 +167,44 @@ public:
     int type; //indicates the job type (the operation)
     double bound;
     int round;
+    int hopcount; //is basically the same as round, but round will sometimes be reset to 0.
     int key;
+    double startID;
 
-    //if overloading not possible: one constructor with all arguments! (unneeded arguments are NULL)
     //TODO make sure sid <= MAX && ido->num <=MAX (?)
-    SearchJob(double s, int t, double b) {
-        sid = s;
-        dob = NULL;
-        ido = NULL;
-        type = t;
-        round = 0;
-        bound = b;
-        key = 0;
+    SearchJob(double s, int t, double b) :
+        sid(s), dob(NULL), ido(NULL), type(t),
+        bound(b), round(0), hopcount(0), key(0),
+        startID(0.0)
+    { }
+
+    SearchJob(double s, int t, double b, DateObj * d, double startID) :
+        sid(s), dob(d), ido(NULL), type(t),
+        bound(b), round(0), hopcount(0), key(0),
+        startID(startID) {
+        /*insert*/
     }
 
-    SearchJob(double s, int t, double b, DateObj * d) { //insert
-        sid = s;
-        dob = d;
-        ido = NULL;
-        type = t;
-        round = 0;
-        bound = b;
-        key = 0;
+    SearchJob(double s, int t, double b, IdObj * i) :
+        sid(s), dob(NULL), ido(i), type(t),
+        bound(b), round(0), hopcount(0), key(0),
+        startID(0.0) {
+        /*join*/
     }
 
-    SearchJob(double s, int t, double b, IdObj * i) { //join
-        sid = s;
-        dob = NULL;
-        ido = i;
-        type = t;
-        round = 0;
-        bound = b;
-        key = 0;
-    }
-    SearchJob(double s, int t, double b, IdObj * i, int k) { //lookup
-        sid = s;
-        dob = NULL;
-        ido = i;
-        type = t;
-        round = 0;
-        bound = b;
-        key = k;
+    SearchJob(double s, int t, double b, IdObj * i, int k, double startID) :
+        sid(s), dob(NULL), ido(i), type(t),
+        bound(b), round(0), hopcount(0), key(k),
+        startID(startID) {
+        /*lookup*/
     }
 
-    SearchJob(double s, int t, double b, int k) { //delete
-        sid = s;
-        dob = NULL;
-        ido = NULL;
-        type = t;
-        round = 0;
-        bound = b;
-        key = k;
+    SearchJob(double s, int t, double b, int k, double startID) :
+        sid(s), dob(NULL), ido(NULL), type(t),
+        bound(b), round(0), hopcount(0), key(k),
+        startID(startID) {
+        /*delete*/
     }
-
-
 };
 
 /**
