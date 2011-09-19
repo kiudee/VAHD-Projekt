@@ -5,7 +5,7 @@ Action Supervisor::Init(NumObj *num)
     total = num->num;
     count = 0;
 
-    std::ofstream* tmpfilestream = new std::ofstream("data.csv");
+    std::ofstream* tmpfilestream = new std::ofstream("data.csv", std::ios::app);
     csvFile = std::shared_ptr<std::ofstream>(tmpfilestream);
 
     InitObj *tempObj;
@@ -47,8 +47,7 @@ Action Supervisor::SetLink(IdPair *idop)
             }
         }
 
-        // wait 100 rounds till testing Delete or Search
-        numo = new NumObj(400);
+        numo = new NumObj(14000);
         call(Supervisor::Wakeup, numo);
     }
     if (count > total) {
@@ -88,23 +87,25 @@ Action Supervisor::Wakeup(NumObj *numo)
         /////////////////////////////////////////////////////
         //////// BEGIN TESTCASE INSERT JOIN LOOKUP /////////
         //Description: Insert, join a new responsible node, and fire a lookup
-        if (numo->num == 300) {
-            DateObj *dob = new DateObj(666, "some more data.");
-            Nodes[4]->call(Node::Insert, dob);
-            std::shared_ptr<std::ofstream> tmpfile(csvFile);
-            InitObj *tempObj = new InitObj(h(666), true, tmpfile);
-            new(Node, tempObj);
-        }
-
-        if (numo->num == 200) {
-
-            Nodes[0]->call(Node::Join, StartID[total]);
-        }
-
-        if (numo->num == 100) {
-            NumObj *numo2 = new NumObj(666);
-            Nodes[4]->call(Node::LookUp, numo2);
-        }
+/*
+ *        if (numo->num == 300) {
+ *            DateObj *dob = new DateObj(666, "some more data.");
+ *            Nodes[4]->call(Node::Insert, dob);
+ *            std::shared_ptr<std::ofstream> tmpfile(csvFile);
+ *            InitObj *tempObj = new InitObj(h(666), true, tmpfile);
+ *            new(Node, tempObj);
+ *        }
+ *
+ *        if (numo->num == 200) {
+ *
+ *            Nodes[0]->call(Node::Join, StartID[total]);
+ *        }
+ *
+ *        if (numo->num == 100) {
+ *            NumObj *numo2 = new NumObj(666);
+ *            Nodes[4]->call(Node::LookUp, numo2);
+ *        }
+ */
 
 
         //////////////////////////////////////////////////
@@ -125,6 +126,36 @@ Action Supervisor::Wakeup(NumObj *numo)
         //////////////////////////////////////////////////
         //////// END TESTCASE INSERT LOOKUP DELETE /////////
         //////////////////////////////////////////////////
+
+        /////////////////////////////////////////////////////
+        /// BEGIN TESTCASE CONTINUOUS LOOKUPS DELETE ////////
+        // Description: Insert a few data elements and then 
+        // periodically ask random nodes to Lookup one of
+        // these items.
+        // Used for csv-file data gathering.
+        // Simulationrounds: 15000
+        if (numo->num == 12000) {
+            std::uniform_int_distribution<int> distribution(0,total-1);
+            std::mt19937 engine;
+            auto generator = std::bind(distribution, engine);
+            for (int i = 0; i < 10; i++) {
+                DateObj *dob = new DateObj(i, "JustOneTestElement");
+                Nodes[generator()]->call(Node::Insert, dob);
+            }
+        }
+        if (numo->num < 12000 && numo->num % 20 == 0) {
+            std::uniform_int_distribution<int> datedist(0,9);
+            std::uniform_int_distribution<int> nodedist(0,total-1);
+            std::mt19937 engine;
+            auto randNode = std::bind(nodedist, engine);
+            auto randDate = std::bind(datedist, engine);
+            auto numo = new NumObj(randDate());
+            Nodes[randNode()]->call(Node::LookUp, numo);
+        }
+
+        /////////////////////////////////////////////////////
+        /// BEGIN TESTCASE CONTINUOUS LOOKUPS DELETE ////////
+        /////////////////////////////////////////////////////
 
         numo->num--;
         call(Supervisor::Wakeup, numo);

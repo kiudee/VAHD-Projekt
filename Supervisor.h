@@ -10,6 +10,8 @@
 
 #include <iostream>
 #include <fstream>
+#include <random>
+#include <functional>
 #include "Subjects1-6.h"
 
 // Workaround: Macro "new" collides with definition from <vector>

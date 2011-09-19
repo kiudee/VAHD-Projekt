@@ -232,7 +232,7 @@ Background information and some tips:
 
 // WARNING messages to user: 0:OFF, 1:ON
 
-#define WARNING 1
+#define WARNING 0
 
 // DEBUG messages to user: 0:OFF, 1:ON, 2:step-by-step
 // Relays (including subject relays) and messages are numbered consecutively,
@@ -284,7 +284,7 @@ class _idLinks;   // list of identities
 
 #define SubjectType(type) \
     class type: public Subject \
- 
+
 #define FirstAction(type,verb) \
     type(Object* &object) { _handle((Subject *) this, new _Message((_SubjectCall) &type::verb, object)); }
 

@@ -169,30 +169,34 @@ public:
     //TODO make sure sid <= MAX && ido->num <=MAX (?)
     SearchJob(double s, int t, double b) :
         sid(s), dob(NULL), ido(NULL), type(t),
-        round(0), bound(b), key(0), hopcount(0)
+        bound(b), round(0), hopcount(0), key(0)
     { }
 
     SearchJob(double s, int t, double b, DateObj * d) :
         sid(s), dob(d), ido(NULL), type(t),
-        round(0), bound(b), key(0), hopcount(0) {
+        bound(b), round(0), hopcount(0), key(0)
+    {
         /*insert*/
     }
 
     SearchJob(double s, int t, double b, IdObj * i) :
         sid(s), dob(NULL), ido(i), type(t),
-        round(0), bound(b), key(0), hopcount(0) {
+        bound(b), round(0), hopcount(0), key(0)
+    {
         /*join*/
     }
 
     SearchJob(double s, int t, double b, IdObj * i, int k) :
         sid(s), dob(NULL), ido(i), type(t),
-        round(0), bound(b), key(k), hopcount(0) {
+        bound(b), round(0), hopcount(0), key(k)
+    {
         /*lookup*/
     }
 
     SearchJob(double s, int t, double b, int k) :
         sid(s), dob(NULL), ido(NULL), type(t),
-        round(0), bound(b), key(k), hopcount(0) {
+        bound(b), round(0), hopcount(0), key(k)
+    {
         /*delete*/
     }
 };

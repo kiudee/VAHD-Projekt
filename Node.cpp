@@ -166,9 +166,15 @@ Action Node::FinishSearch(SearchJob *sj)
         switch (sj->type) {
         case INSERT:
             data[sj->dob->num] = sj->dob->date;
+            //Save hopcount to csv file:
+            *csvFile << "Insert," << sj->hopcount << "\n";
+            csvFile->flush();
             break;
         case DELETE:
             data.erase(sj->key);
+            //Save hopcount to csv file:
+            *csvFile << "Delete," << sj->hopcount << "\n";
+            csvFile->flush();
             break;
         case LOOKUP: {
             DATATYPE obj = data[sj->key]; //TODO replace by unordered_map.at() and catch the exception. than pack an empty string or so.
@@ -177,6 +183,9 @@ Action Node::FinishSearch(SearchJob *sj)
             DateObj *dob = new DateObj(sj->key, obj);
             temprelay->call(Node::ReceiveLookUp, dob);
             //delete temprelay;
+            //Save hopcount to csv file:
+            *csvFile << "Lookup," << sj->hopcount << "\n";
+            csvFile->flush();
             break;
         }
         case JOIN: {
@@ -217,6 +226,8 @@ Action Node::FinishSearch(SearchJob *sj)
                 delegateSearchJobToLastNode(sj);
             }
         } else if (leftstable) {
+            sj->round++;
+            sj->hopcount++;
             left->out->call(Node::FinishSearch, sj);
             return;
         } else {
@@ -238,6 +249,7 @@ bool Node::doLastRoutingPhase(SearchJob *sj)
                 return true;
             } else if (leftstable) {
                 sj->round++;
+                sj->hopcount++;
                 std::cout << num << "<-doLastRoutingPhase() => left \n";
                 left->out->call(Node::Search, sj);
                 return true;
@@ -249,6 +261,7 @@ bool Node::doLastRoutingPhase(SearchJob *sj)
         } else if (hashedkey >= num) {//find the right end of a sequence of nodes with the same id
             if (rightstable) {//at this point right must be !=NULL, otherwise we would not reach this point
                 sj->round++;
+                sj->hopcount++;
                 std::cout << num << "<-doLastRoutingPhase() => right \n";
                 right->out->call(Node::Search, sj);
                 return true;
@@ -264,13 +277,6 @@ bool Node::doLastRoutingPhase(SearchJob *sj)
 
 void Node::delegateSearchJobToLastNode(SearchJob *sj)
 {
-    // Save hopcount to file:
-    if (sj->type == INSERT || sj->type == DELETE || sj->type == LOOKUP) {
-        *csvFile.get() << sj->round + 1 << "\n";
-        csvFile.get()->flush();
-    }
-
-
     //SearchJob *newsj = new SearchJob(sj);
     sj->sid = MAX;//TO DO this won't work because we want to search for MAX and not for g(MAX)! adjust searchjob=> fixed
     sj->round = 0;
@@ -289,6 +295,7 @@ bool Node::doDebruijnHop(SearchJob *sj)
 
     if (hashedkey < num) {
         sj->round++;
+        sj->hopcount++;
         if (hashedkey > num / 2) {
             sj->bound =  -1; //introduce last routing phase
         }
@@ -296,6 +303,7 @@ bool Node::doDebruijnHop(SearchJob *sj)
         node0->call(Node::Search, sj);
     } else if (hashedkey > num) {
         sj->round++;
+        sj->hopcount++;
         if (hashedkey < (1 + num) / 2) {
             sj->bound =  -1; //introduce last routing phase
         }
@@ -323,6 +331,7 @@ void Node::findNextIdealPosition(SearchJob *sj)
                 return;
             } else if (leftstable) {
                 sj->round++;
+                sj->hopcount++;
                 left->out->call(Node::Search, sj);
                 return;
             } else {
@@ -333,6 +342,7 @@ void Node::findNextIdealPosition(SearchJob *sj)
         } else if (hashedkey >= num) {//find the right end of a sequence of nodes with the same id
             if (rightstable) {//at this point right must be !=NULL, otherwise we would not reach this point
                 sj->round++;
+                sj->hopcount++;
                 right->out->call(Node::Search, sj);
                 return;
             } else {
@@ -353,6 +363,7 @@ void Node::findNextIdealPosition(SearchJob *sj)
     if (leftstable && nearerToLeft) {
         //left.1 is nearer to hashedkey than right.1 => go to left
         sj->round++;
+        sj->hopcount++;
         std::cout << num << "<-findNextIdealPosition() => left \n";
         left->out->call(Node::Search, sj);
     } else if (rightstable && !nearerToLeft) {
@@ -360,6 +371,7 @@ void Node::findNextIdealPosition(SearchJob *sj)
         //(=) when we are in the middle of a sequence of nodes with the same id, go to the right
         std::cout << num << "<-findNextIdealPosition() => right \n";
         sj->round++;
+        sj->hopcount++;
         right->out->call(Node::Search, sj);
     } else {
         //std::cout << "SearchJob " << sj->sid << " waiting at " << num << " (6), isReal = " << isReal << ", right==NULL =" << (right == NULL) << " rightstable =" << rightstable << "\n";
