@@ -98,7 +98,7 @@ public:
         debugID = ido->debugID;
     }
 
-    NodeRelay(double value, Identity * d) {
+    NodeRelay(double value, Identity * d, int did) {
         num = value;
         out = new Relay(d);
     }

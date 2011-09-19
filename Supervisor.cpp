@@ -54,7 +54,7 @@ Action Supervisor::SetLink(IdPair *idop)
     }
     if (count > total) {
         numo = new NumObj(5);
-        Nodes[count-1]->call(Node::Wakeup, numo);
+        Nodes[count-1]->out->call(Node::Wakeup, numo);
     }
 
 }
@@ -309,7 +309,7 @@ Action Supervisor::Wakeup(NumObj *numo)
             auto generator = std::bind(distribution, engine);
             for (int i = 0; i < 10; i++) {
                 DateObj *dob = new DateObj(i, "JustOneTestElement");
-                Nodes[generator()]->call(Node::Insert, dob);
+                Nodes[generator()]->out->call(Node::Insert, dob);
             }
         }
         if (numo->num < 12000 && numo->num % 20 == 0) {
@@ -319,7 +319,7 @@ Action Supervisor::Wakeup(NumObj *numo)
             auto randNode = std::bind(nodedist, engine);
             auto randDate = std::bind(datedist, engine);
             auto numo = new NumObj(randDate());
-            Nodes[randNode()]->call(Node::LookUp, numo);
+            Nodes[randNode()]->out->call(Node::LookUp, numo);
         }
 
         /////////////////////////////////////////////////////

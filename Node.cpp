@@ -884,29 +884,29 @@ Action Node::BuildWeakConnectedComponent(NumObj *numo)
         //envelope left neighbor
         //TODO check if left is existing before delegating. maybe this is not necessary because if the left is not exisiting, we would not come so far. otherwise the link to left might be broken.
         if (left != NULL) {
-            tempido = new IdObj(left->num, extractIdentity(left->out));
+            tempido = new IdObj(left->num, extractIdentity(left->out), left->debugID);
             delete left;
             leftstable = false;
             //link to v.0
-            left = new NodeRelay(num / 2, new Identity(node0->out));
+            left = new NodeRelay(num / 2, new Identity(node0->out), node0->debugID);
             //delegate old left neighbor to node0
             left->out->call(Node::BuildList, tempido);
         } else {
             leftstable = false;
             //link to v.0
-            left = new NodeRelay(num / 2, new Identity(node0->out));
+            left = new NodeRelay(num / 2, new Identity(node0->out), node0->debugID);
         }
 
     } else if (numo->num == 1) {
         if (right != NULL) {
-            tempido = new IdObj(right->num, extractIdentity(right->out));
+            tempido = new IdObj(right->num, extractIdentity(right->out), right->debugID);
             delete right;
             rightstable = false;
-            right = new NodeRelay((1 + num) / 2, new Identity(node1->out));
+            right = new NodeRelay((1 + num) / 2, new Identity(node1->out), node1->debugID);
             right->out->call(Node::BuildList, tempido);
         } else {
             rightstable = false;
-            right = new NodeRelay((1 + num) / 2, new Identity(node1->out));
+            right = new NodeRelay((1 + num) / 2, new Identity(node1->out), node1->debugID);
         }
     }
     delete numo;
