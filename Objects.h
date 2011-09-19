@@ -165,38 +165,40 @@ public:
     int round;
     int hopcount; //is basically the same as round, but round will sometimes be reset to 0.
     int key;
+    double startID;
 
     //TODO make sure sid <= MAX && ido->num <=MAX (?)
     SearchJob(double s, int t, double b) :
         sid(s), dob(NULL), ido(NULL), type(t),
-        bound(b), round(0), hopcount(0), key(0)
+        bound(b), round(0), hopcount(0), key(0),
+        startID(0.0)
     { }
 
-    SearchJob(double s, int t, double b, DateObj * d) :
+    SearchJob(double s, int t, double b, DateObj * d, double startID) :
         sid(s), dob(d), ido(NULL), type(t),
-        bound(b), round(0), hopcount(0), key(0)
-    {
+        bound(b), round(0), hopcount(0), key(0),
+        startID(startID) {
         /*insert*/
     }
 
     SearchJob(double s, int t, double b, IdObj * i) :
         sid(s), dob(NULL), ido(i), type(t),
-        bound(b), round(0), hopcount(0), key(0)
-    {
+        bound(b), round(0), hopcount(0), key(0),
+        startID(0.0) {
         /*join*/
     }
 
-    SearchJob(double s, int t, double b, IdObj * i, int k) :
+    SearchJob(double s, int t, double b, IdObj * i, int k, double startID) :
         sid(s), dob(NULL), ido(i), type(t),
-        bound(b), round(0), hopcount(0), key(k)
-    {
+        bound(b), round(0), hopcount(0), key(k),
+        startID(startID) {
         /*lookup*/
     }
 
-    SearchJob(double s, int t, double b, int k) :
+    SearchJob(double s, int t, double b, int k, double startID) :
         sid(s), dob(NULL), ido(NULL), type(t),
-        bound(b), round(0), hopcount(0), key(k)
-    {
+        bound(b), round(0), hopcount(0), key(k),
+        startID(startID) {
         /*delete*/
     }
 };

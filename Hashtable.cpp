@@ -9,7 +9,7 @@
 
 int main()
 {
-    NumObj *numSubjects = new NumObj(500);
+    NumObj *numSubjects = new NumObj(400);
     runSubjects(Supervisor, numSubjects, 15000);
     sys_pause();
 }

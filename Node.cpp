@@ -142,7 +142,7 @@ Action Node::Insert(DateObj *dob)
 {
     std::cout << num << "<-Insert(key:" << dob->num << ", data:" << dob->date << ")\n";
     SearchJob *sj = new SearchJob(g(dob->num), INSERT,
-                                  Node::calcRoutingBound(), dob);
+                                  Node::calcRoutingBound(), dob, num);
     Search(sj);
 
 }
@@ -167,13 +167,13 @@ Action Node::FinishSearch(SearchJob *sj)
         case INSERT:
             data[sj->dob->num] = sj->dob->date;
             //Save hopcount to csv file:
-            *csvFile << "Insert," << sj->hopcount << "\n";
+            *csvFile << "Insert," << sj->hopcount << "," << std::abs(sj->startID - num) << "\n";
             csvFile->flush();
             break;
         case DELETE:
             data.erase(sj->key);
             //Save hopcount to csv file:
-            *csvFile << "Delete," << sj->hopcount << "\n";
+            *csvFile << "Delete," << sj->hopcount << "," << std::abs(sj->startID - num) << "\n";
             csvFile->flush();
             break;
         case LOOKUP: {
@@ -184,8 +184,7 @@ Action Node::FinishSearch(SearchJob *sj)
             temprelay->call(Node::ReceiveLookUp, dob);
             //delete temprelay;
             //Save hopcount to csv file:
-            *csvFile << "Lookup," << sj->hopcount << "\n";
-            csvFile->flush();
+            *csvFile << "Lookup," << sj->hopcount << "," << std::abs(sj->startID - num) << "\n";
             break;
         }
         case JOIN: {
@@ -416,7 +415,7 @@ Action Node::Search(SearchJob *sj)
 Action Node::Delete(NumObj *key)
 {
     SearchJob *sj = new SearchJob(g(key->num), DELETE,
-                                  Node::calcRoutingBound(), key->num);
+                                  Node::calcRoutingBound(), key->num, num);
     Search(sj);
 }
 
@@ -433,7 +432,7 @@ Action Node::LookUp(NumObj *key)
 {
     IdObj *ido = new IdObj(num, new Identity(in));
     SearchJob *sj = new SearchJob(g(key->num), LOOKUP,
-                                  Node::calcRoutingBound(), ido, key->num);
+                                  Node::calcRoutingBound(), ido, key->num, num);
     Search(sj);
 }
 

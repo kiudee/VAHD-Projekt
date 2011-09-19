@@ -5,6 +5,7 @@
 #include <string>
 #include <unordered_map>
 #include <iostream>
+#include <cmath>
 #include "Subjects1-6.h"
 #include "Objects.h"
 #include "Supervisor.h"
