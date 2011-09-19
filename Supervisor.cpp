@@ -6,7 +6,8 @@ Action Supervisor::Init(NumObj *num)
     count = 0;
     printcount = 0;
 
-    std::ofstream *tmpfilestream = new std::ofstream("data.csv", std::ios::app);
+
+    std::ofstream *tmpfilestream = new std::ofstream("data.csv");
     csvFile = std::shared_ptr<std::ofstream>(tmpfilestream);
 
     InitObj *tempObj;
@@ -49,14 +50,13 @@ Action Supervisor::SetLink(IdPair *idop)
             }
         }
 
-        numo = new NumObj(14000);
+        numo = new NumObj(400);
         call(Supervisor::Wakeup, numo);
     }
     if (count > total) {
         numo = new NumObj(5);
-        Nodes[count-1]->out->call(Node::Wakeup, numo);
+        Nodes[count - 1]->out->call(Node::Wakeup, numo);
     }
-
 }
 
 Action Supervisor::AddVirtuals(NodePair *np)
@@ -256,6 +256,7 @@ Action Supervisor::Wakeup(NumObj *numo)
         /////////////////////////////////////////////////////
         //////// BEGIN TESTCASE INSERT JOIN LOOKUP /////////
         //Description: Insert, join a new responsible node, and fire a lookup
+
         /*
          *        if (numo->num == 300) {
          *            DateObj *dob = new DateObj(666, "some more data.");
@@ -275,7 +276,6 @@ Action Supervisor::Wakeup(NumObj *numo)
          *            Nodes[4]->call(Node::LookUp, numo2);
          *        }
          */
-
 
         //////////////////////////////////////////////////
         //////// END TESTCASE INSERT JOIN LOOKUP /////////
@@ -303,6 +303,7 @@ Action Supervisor::Wakeup(NumObj *numo)
         // these items.
         // Used for csv-file data gathering.
         // Simulationrounds: 15000
+
         if (numo->num == 12000) {
             std::uniform_int_distribution<int> distribution(0, total - 1);
             std::mt19937 engine(numo->num);
@@ -321,6 +322,7 @@ Action Supervisor::Wakeup(NumObj *numo)
             auto numo = new NumObj(randDate());
             Nodes[randNode()]->out->call(Node::LookUp, numo);
         }
+
 
         /////////////////////////////////////////////////////
         /// BEGIN TESTCASE CONTINUOUS LOOKUPS DELETE ////////

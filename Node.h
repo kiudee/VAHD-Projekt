@@ -53,6 +53,7 @@ public:
     Action Wakeup(NumObj * num);
     Action BuildDeBruijn();
     Action Insert(DateObj * dob);
+    Action DataInsert(DateObj * dob);
     Action Delete(NumObj * key);
     Action LookUp(NumObj * key);
     Action Join(IdObj * id);

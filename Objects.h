@@ -17,7 +17,7 @@
 
 #define DATATYPE std::string
 
-enum SearchJobType { INSERT, DELETE, LOOKUP, JOIN, DATATRANSFER };
+enum SearchJobType { INSERT, DELETE, LOOKUP, JOIN, DATATRANSFER, DATAINSERT};
 
 ObjectType(NumObj)
 {
@@ -101,6 +101,7 @@ public:
     NodeRelay(double value, Identity * d, int did) {
         num = value;
         out = new Relay(d);
+        debugID = did;
     }
 };
 
