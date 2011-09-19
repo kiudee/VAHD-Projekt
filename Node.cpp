@@ -28,11 +28,11 @@ Action Node::Init(InitObj *init)
 
         // create virtual nodes:
 
-		std::shared_ptr<std::ofstream> tmpfile0(csvFile);
+        std::shared_ptr<std::ofstream> tmpfile0(csvFile);
         InitObj *n0 = new InitObj(num / 2, false, tmpfile0);
         auto tmpnode0 = (Subject *) new Node((Object* &) n0);
 
-		std::shared_ptr<std::ofstream> tmpfile1(csvFile);
+        std::shared_ptr<std::ofstream> tmpfile1(csvFile);
         InitObj *n1 = new InitObj((1 + num) / 2, false, tmpfile1);
         auto tmpnode1 = (Subject *) new Node((Object* &) n1);
         NodePair *np = new NodePair(tmpnode0, tmpnode1);
@@ -148,7 +148,14 @@ Action Node::Insert(DateObj *dob)
     SearchJob *sj = new SearchJob(g(dob->num), INSERT,
                                   Node::calcRoutingBound(), dob, num);
     Search(sj);
+}
 
+Action Node::DataInsert(DateObj *dob)
+{
+    std::cout << num << "<-DataInsert(key:" << dob->num << ", data:" << dob->date << ")\n";
+    SearchJob *sj = new SearchJob(g(dob->num), DATAINSERT,
+                                  Node::calcRoutingBound(), dob, num);
+    FinishSearch(sj);
 }
 
 /**
@@ -168,6 +175,9 @@ Action Node::FinishSearch(SearchJob *sj)
             || (isReal && sj->sid == MAX)) { //The searchjob was delegated to the last node and now we reached the last node
         std::cout << num << ": Search terminated!(" << sj->sid << ");\n";
         switch (sj->type) {
+        case DATAINSERT:
+            data[sj->dob->num] = sj->dob->date;
+            break;
         case INSERT:
             data[sj->dob->num] = sj->dob->date;
             //Save hopcount to csv file:
@@ -185,10 +195,13 @@ Action Node::FinishSearch(SearchJob *sj)
             std::cout << "Lookup reached key:" << sj->key << " data: " << obj << "\n";
             Relay *temprelay = new Relay(sj->ido->id);
             DateObj *dob = new DateObj(sj->key, obj);
-            temprelay->call(Node::ReceiveLookUp, dob);
-            //delete temprelay;
+
             //Save hopcount to csv file:
             *csvFile << "Lookup," << sj->hopcount << "," << std::abs(sj->startID - num) << "\n";
+            csvFile->flush();
+
+            temprelay->call(Node::ReceiveLookUp, dob);
+            //delete temprelay;
             break;
         }
         case JOIN: {
@@ -479,7 +492,7 @@ Action Node::TriggerDataTransfer(IdObj *ido)
         for (HashMap::iterator it = data.begin(); it != data.end(); ++it) {
             if (g(it->first) >= ido->num) {//WAAAAAAAAAAAAAAAAAAAAAAHHHHHHHHHH!!!!!!!!!!!!!
                 DateObj *dob = new DateObj(it->first, it->second);
-                temprelay->call(Node::Insert, dob);//routing unnecessary (ido is the target)
+                temprelay->call(Node::DataInsert, dob);//routing unnecessary (ido is the target)
             }
         }
         //delete temprelay;
