@@ -136,7 +136,7 @@ Action Supervisor::Wakeup(NumObj *numo)
         // Simulationrounds: 15000
         if (numo->num == 12000) {
             std::uniform_int_distribution<int> distribution(0,total-1);
-            std::mt19937 engine;
+            std::mt19937 engine(numo->num);
             auto generator = std::bind(distribution, engine);
             for (int i = 0; i < 10; i++) {
                 DateObj *dob = new DateObj(i, "JustOneTestElement");
@@ -144,9 +144,9 @@ Action Supervisor::Wakeup(NumObj *numo)
             }
         }
         if (numo->num < 12000 && numo->num % 20 == 0) {
-            std::uniform_int_distribution<int> datedist(0,9);
             std::uniform_int_distribution<int> nodedist(0,total-1);
-            std::mt19937 engine;
+            std::uniform_int_distribution<int> datedist(0,9);
+            std::mt19937 engine(numo->num);
             auto randNode = std::bind(nodedist, engine);
             auto randDate = std::bind(datedist, engine);
             auto numo = new NumObj(randDate());
