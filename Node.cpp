@@ -121,13 +121,19 @@ void Node::checkValid()
  */
 double Node::calcRoutingBound()
 {
-    if (right != NULL) {
-        return -2 * log(fabs(num - right->num));
-    } else if (left != NULL) {
-        return -2 * log(fabs(num - left->num));//in expectancy: |s-pred(s)|=|s-succ(s)|; s is the node where we started a search
+    double r;
+    if (rightstable && right != NULL && right->num != num) {
+        r = -2 * log(fabs(num - right->num));
+    } else if (leftstable && left != NULL  && left->num != num) {
+        r = -2 * log(fabs(num - left->num));
+    } else if (right != NULL && right->num != num) {
+        r = -2 * log(fabs(num - right->num));
+    } else if (left != NULL  && left->num != num) {
+        r = -2 * log(fabs(num - left->num)); //in expectancy: |s-pred(s)|=|s-succ(s)|; s is the node where we started a search
     } else {
-        return 0.0; //it is a better strategy to wait until one neighbor is available instead of routing in O(n)
+        r = 0.0; //it is a better strategy to wait until one neighbor is available instead of routing in O(n)
     }
+    return r;
 }
 
 Action Node::BuildDeBruijn()
@@ -176,6 +182,7 @@ Action Node::FinishSearch(SearchJob *sj)
             || (isReal && num <= hashedkey)// There is a right node but not responsible
             || (isReal && sj->sid == MAX)) { //The searchjob was delegated to the last node and now we reached the last node
         std::cout << "(" << sj->_debugID << ") " << num << ": Search terminated!(" << sj->sid << ") after " << sj->hopcount << " hops  \n";
+
         switch (sj->type) {
         case DATAINSERT:
             data[sj->dob->num] = sj->dob->date;
@@ -348,11 +355,7 @@ void Node::doListHop(SearchJob *sj)
 Action Node::Search(SearchJob *sj)
 {
     double hashedkey = sj->sid;
-    double bound = Node::calcRoutingBound();
 
-    if (bound > sj->bound) {
-        sj->bound = bound;
-    }
     std::cout << "(" << sj->_debugID << ")" << num << "<-Search(" << sj->sid << ") bound: " << sj->bound << " type: " << sj->type << "\n";
     //responsible node for date was found
     if ((right == NULL && num <= hashedkey && num < MAX) // There is no right node and this node is responsible
@@ -367,6 +370,11 @@ Action Node::Search(SearchJob *sj)
     if (sj->round >= sj->bound) {
         doListHop(sj);
     } else {
+        //TODO check this if case
+        if ((rightstable || leftstable) && sj->round > 0) {
+            double bound = Node::calcRoutingBound();
+            sj->bound = bound;
+        }
         if (!doDebruijnHop(sj)) {
             doListHop(sj);
         }

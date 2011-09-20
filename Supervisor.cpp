@@ -288,7 +288,7 @@ Action Supervisor::Wakeup(NumObj *numo)
         /////////////////////////////////////////////////////
         //////// BEGIN TESTCASE INSERT LOOKUP DELETE /////////
         //Test Insert / Lookup / Delete
-        if (true) {
+        if (false) {
             if (numo->num == 5000) {
                 DateObj *dob = new DateObj(14, "me lov subjectz. lolz.");
                 Nodes[7]->out->call(Node::Insert, dob);
@@ -316,7 +316,7 @@ Action Supervisor::Wakeup(NumObj *numo)
         // Used for csv-file data gathering.
         // Simulationrounds: 15000
 
-        if (false) {
+        if (true) {
             if (numo->num == 12000) {
                 std::uniform_int_distribution<int> distribution(0, total - 1);
                 std::mt19937 engine(numo->num);
