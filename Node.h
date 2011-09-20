@@ -34,7 +34,7 @@ protected:
     // Search:
     bool doLastRoutingPhase(SearchJob * sj);
     bool doDebruijnHop(SearchJob * sj);
-    void findNextIdealPosition(SearchJob * sj);
+    void doListHop(SearchJob * sj);
     void delegateSearchJobToLastNode(SearchJob * sj);
 
 
