@@ -121,20 +121,26 @@ void Node::checkValid()
  */
 double Node::calcRoutingBound()
 {
-    if (right != NULL) {
-        return -2 * log(fabs(num - right->num));
-    } else if (left != NULL) {
-        return -2 * log(fabs(num - left->num));//in expectancy: |s-pred(s)|=|s-succ(s)|; s is the node where we started a search
+    double r;
+    if (rightstable && right != NULL && right->num != num) {
+        r = -2 * log(fabs(num - right->num));
+    } else if (leftstable && left != NULL  && left->num != num) {
+        r = -2 * log(fabs(num - left->num));
+    } else if (right != NULL && right->num != num) {
+        r = -2 * log(fabs(num - right->num));
+    } else if (left != NULL  && left->num != num) {
+        r = -2 * log(fabs(num - left->num)); //in expectancy: |s-pred(s)|=|s-succ(s)|; s is the node where we started a search
     } else {
-        return 0.0; //I think it is okay to return 0, because this way the last routing phase is introduced from the beginning. this would cause a routing time of O(n)
+        r = 0.0; //it is a better strategy to wait until one neighbor is available instead of routing in O(n)
     }
+    return r;
 }
 
 Action Node::BuildDeBruijn()
 {
     //std::cout << num << "<-BuildDeBruijn();\n";
     BuildList(NULL);
-    Probing(NULL);
+    Probing(NULL);//TODO check, if real necessary?
 }
 
 /**
@@ -144,7 +150,8 @@ Action Node::BuildDeBruijn()
  */
 Action Node::Insert(DateObj *dob)
 {
-    std::cout << num << "<-Insert(key:" << dob->num << ", data:" << dob->date << ")\n";
+
+    std::cout << "(" << dob->_debugID << ") " << num << "<-Insert(key:" << dob->num << ", data:" << dob->date << ")\n";
     SearchJob *sj = new SearchJob(g(dob->num), INSERT,
                                   Node::calcRoutingBound(), dob, num);
     Search(sj);
@@ -152,7 +159,8 @@ Action Node::Insert(DateObj *dob)
 
 Action Node::DataInsert(DateObj *dob)
 {
-    std::cout << num << "<-DataInsert(key:" << dob->num << ", data:" << dob->date << ")\n";
+
+    std::cout << "(" << dob->_debugID << ") " << num << "<-DataInsert(key:" << dob->num << ", data:" << dob->date << ")\n";
     SearchJob *sj = new SearchJob(g(dob->num), DATAINSERT,
                                   Node::calcRoutingBound(), dob, num);
     FinishSearch(sj);
@@ -173,7 +181,8 @@ Action Node::FinishSearch(SearchJob *sj)
             || (isReal && right == NULL && num <= hashedkey) // There is no right node and this node is responsible
             || (isReal && num <= hashedkey)// There is a right node but not responsible
             || (isReal && sj->sid == MAX)) { //The searchjob was delegated to the last node and now we reached the last node
-        std::cout << num << ": Search terminated!(" << sj->sid << ");\n";
+        std::cout << "(" << sj->_debugID << ") " << num << ": Search terminated!(" << sj->sid << ") after " << sj->hopcount << " hops  \n";
+
         switch (sj->type) {
         case DATAINSERT:
             data[sj->dob->num] = sj->dob->date;
@@ -181,13 +190,13 @@ Action Node::FinishSearch(SearchJob *sj)
         case INSERT:
             data[sj->dob->num] = sj->dob->date;
             //Save hopcount to csv file:
-            *csvFile << "Insert," << sj->hopcount << "," << std::abs(sj->startID - num) << "\n";
+            *csvFile << "Insert," << sj->hopcount << "," << std::abs(sj->startID - num) << "," << sj->startID << "," << num << "," << sj->bound << "," << "\n";
             csvFile->flush();
             break;
         case DELETE:
             data.erase(sj->key);
             //Save hopcount to csv file:
-            *csvFile << "Delete," << sj->hopcount << "," << std::abs(sj->startID - num) << "\n";
+            *csvFile << "Delete," << sj->hopcount << "," << std::abs(sj->startID - num) << "," << sj->startID << "," << num << "," << sj->bound << "," << "\n";
             csvFile->flush();
             break;
         case LOOKUP: {
@@ -197,7 +206,7 @@ Action Node::FinishSearch(SearchJob *sj)
             DateObj *dob = new DateObj(sj->key, obj);
 
             //Save hopcount to csv file:
-            *csvFile << "Lookup," << sj->hopcount << "," << std::abs(sj->startID - num) << "\n";
+            *csvFile << "Lookup," << sj->hopcount << "," << std::abs(sj->startID - num) << "," << sj->startID << "," << num << "," << sj->bound << "," << "\n";
             csvFile->flush();
 
             temprelay->call(Node::ReceiveLookUp, dob);
@@ -233,6 +242,7 @@ Action Node::FinishSearch(SearchJob *sj)
             break;
         }
         }
+        std::cout << "(" << sj->_debugID << ") " << "delete searchjob\n";
         delete sj;
         return;
     } else {
@@ -253,43 +263,7 @@ Action Node::FinishSearch(SearchJob *sj)
     }
 }
 
-bool Node::doLastRoutingPhase(SearchJob *sj)
-{
 
-    double hashedkey = sj->sid;
-    //search accoringly to the order of the list
-    if (sj->round >= sj->bound) {
-        if (hashedkey < num) {
-            if (left == NULL) {
-                delegateSearchJobToLastNode(sj);
-                return true;
-            } else if (leftstable) {
-                sj->round++;
-                sj->hopcount++;
-                std::cout << num << "<-doLastRoutingPhase() => left \n";
-                left->out->call(Node::Search, sj);
-                return true;
-            } else {
-                //std::cout << "SearchJob " << sj->sid << " waiting at " << num << " (1) \n";
-                call(Node::Search, sj);
-                return true;
-            }
-        } else if (hashedkey >= num) {//find the right end of a sequence of nodes with the same id
-            if (rightstable) {//at this point right must be !=NULL, otherwise we would not reach this point
-                sj->round++;
-                sj->hopcount++;
-                std::cout << num << "<-doLastRoutingPhase() => right \n";
-                right->out->call(Node::Search, sj);
-                return true;
-            } else {
-                std::cout << "SearchJob " << sj->sid << " waiting at " << num << " (2)\n";
-                call(Node::Search, sj);
-                return true;
-            }
-        }
-    }
-    return false;
-}
 
 void Node::delegateSearchJobToLastNode(SearchJob *sj)
 {
@@ -302,6 +276,8 @@ void Node::delegateSearchJobToLastNode(SearchJob *sj)
     return;
 }
 
+
+
 bool Node::doDebruijnHop(SearchJob *sj)
 {
     if (!isReal) {
@@ -310,90 +286,65 @@ bool Node::doDebruijnHop(SearchJob *sj)
     double hashedkey = sj->sid;
 
     if (hashedkey < num) {
-        sj->round++;
-        sj->hopcount++;
-        if (hashedkey > num / 2) {
-            sj->bound =  -1; //introduce last routing phase
+        if (fabs(hashedkey - num / 2) < fabs(hashedkey - num)) {
+            sj->round++;
+            sj->hopcount++;
+            std::cout << "(" << sj->_debugID << ")" << num << "<-doDebruijnHop(" << sj->sid << ") to " << (num / 2) << "\n";
+            node0->out->call(Node::Search, sj);
+            return true;
         }
-        std::cout << num << "<-doDebruijnHop() to " << (num / 2) << "\n";
-        node0->out->call(Node::Search, sj);
+
     } else if (hashedkey > num) {
-        sj->round++;
-        sj->hopcount++;
-        if (hashedkey < (1 + num) / 2) {
-            sj->bound =  -1; //introduce last routing phase
+        if (fabs(hashedkey - (1 + num) / 2) < fabs(hashedkey - num)) {
+            sj->round++;
+            sj->hopcount++;
+            std::cout << "(" << sj->_debugID << ")" << num << "<-doDebruijnHop(" << sj->sid << ") to " << ((1 + num) / 2) << "\n";
+            node1->out->call(Node::Search, sj);
+            return true;
         }
-        std::cout << num << "<-doDebruijnHop() to " << ((1 + num) / 2) << "\n";
-        node1->out->call(Node::Search, sj);
     } else { // hashedkey == num
         FinishSearch(sj);
     }
-    return true;
+    return false;//default: if no hop was performed, perform a list hop
 }
 
-void Node::findNextIdealPosition(SearchJob *sj)
+void Node::doListHop(SearchJob *sj)
 {
     double hashedkey = sj->sid;
     if (left == NULL && right == NULL) {
         //std::cout << "SearchJob " << sj->sid << " waiting at " << num << " (3)\n";
         call(Node::Search, sj);//because of virtual nodes, every node will eventually have at least one neighbor
         return;
-    } else if (left == NULL || right == NULL) {
-        //do normal routing if possible
-        //TODO this code is redundant in doLastRoutingPhase
-        if (hashedkey < num) {
-            if (left == NULL) {
-                delegateSearchJobToLastNode(sj);
-                return;
-            } else if (leftstable) {
-                sj->round++;
-                sj->hopcount++;
-                left->out->call(Node::Search, sj);
-                return;
-            } else {
-                //std::cout << "SearchJob " << sj->sid << " waiting at " << num << " (4)\n";
-                call(Node::Search, sj);
-                return;
-            }
-        } else if (hashedkey >= num) {//find the right end of a sequence of nodes with the same id
-            if (rightstable) {//at this point right must be !=NULL, otherwise we would not reach this point
-                sj->round++;
-                sj->hopcount++;
-                right->out->call(Node::Search, sj);
-                return;
-            } else {
-                //std::cout << "SearchJob " << sj->sid << " waiting at " << num << " (5)\n";
-                call(Node::Search, sj);
-                return;
-            }
+    }
+    //do normal routing if possible
+    if (hashedkey < num) {
+        if (left == NULL) {
+            delegateSearchJobToLastNode(sj);
+            return;
+        } else if (leftstable) {
+            sj->round++;
+            sj->hopcount++;
+            std::cout << "(" << sj->_debugID << ")" << num << "<-doListHop(" <<  sj->sid << ") => left \n";
+            left->out->call(Node::Search, sj);
+            return;
+        } else {
+            //std::cout << "SearchJob " << sj->sid << " waiting at " << num << " (4)\n";
+            call(Node::Search, sj);
+            return;
+        }
+    } else if (hashedkey >= num) {//find the right end of a sequence of nodes with the same id
+        if (rightstable) {//at this point right must be !=NULL, otherwise we would not reach this point
+            sj->round++;
+            sj->hopcount++;
+            std::cout << "(" << sj->_debugID << ")" << num << "<-doListHop(" <<  sj->sid << ") => right \n";
+            right->out->call(Node::Search, sj);
+            return;
+        } else {
+            //std::cout << "SearchJob " << sj->sid << " waiting at " << num << " (5)\n";
+            call(Node::Search, sj);
+            return;
         }
     }
-
-    bool nearerToLeft;
-    if (hashedkey >= num) {
-        nearerToLeft = fabs((1 + left->num) / 2 - hashedkey) < fabs((1 + right->num / 2) - hashedkey);
-    } else {
-        nearerToLeft = fabs(left->num / 2 - hashedkey) <= fabs(right->num / 2 - hashedkey);
-    }
-
-    if (leftstable && nearerToLeft) {
-        //left.1 is nearer to hashedkey than right.1 => go to left
-        sj->round++;
-        sj->hopcount++;
-        std::cout << num << "<-findNextIdealPosition() => left \n";
-        left->out->call(Node::Search, sj);
-    } else if (rightstable && !nearerToLeft) {
-        //(>) right.1 is nearer to hashedkey than left.1 => go to right
-        //(=) when we are in the middle of a sequence of nodes with the same id, go to the right
-        std::cout << num << "<-findNextIdealPosition() => right \n";
-        sj->round++;
-        sj->hopcount++;
-        right->out->call(Node::Search, sj);
-    } else {
-        //std::cout << "SearchJob " << sj->sid << " waiting at " << num << " (6), isReal = " << isReal << ", right==NULL =" << (right == NULL) << " rightstable =" << rightstable << "\n";
-        call(Node::Search, sj);
-    }
-    return;
 }
 
 /**
@@ -405,7 +356,7 @@ Action Node::Search(SearchJob *sj)
 {
     double hashedkey = sj->sid;
 
-    std::cout << num << "<-Search(" << sj->sid << ");\n";
+    std::cout << "(" << sj->_debugID << ")" << num << "<-Search(" << sj->sid << ") bound: " << sj->bound << " type: " << sj->type << "\n";
     //responsible node for date was found
     if ((right == NULL && num <= hashedkey && num < MAX) // There is no right node and this node is responsible
             || (num <= hashedkey && right->num > hashedkey && num < MAX)// There is a right node but not responsible
@@ -416,9 +367,16 @@ Action Node::Search(SearchJob *sj)
         return;
     }
 
-    if (!doLastRoutingPhase(sj)) {
+    if (sj->round >= sj->bound) {
+        doListHop(sj);
+    } else {
+        //TODO check this if case
+        if ((rightstable || leftstable) && sj->round > 0) {
+            double bound = Node::calcRoutingBound();
+            sj->bound = bound;
+        }
         if (!doDebruijnHop(sj)) {
-            findNextIdealPosition(sj);
+            doListHop(sj);
         }
     }
 
@@ -447,6 +405,8 @@ Action Node::Delete(NumObj *key)
  */
 Action Node::LookUp(NumObj *key)
 {
+
+    std::cout << num << "<-LookUp(" << g(key->num) << ")\n";
     IdObj *ido = new IdObj(num, new Identity(in), _debugID);
     SearchJob *sj = new SearchJob(g(key->num), LOOKUP,
                                   Node::calcRoutingBound(), ido, key->num, num);
@@ -472,7 +432,6 @@ Action Node::Join(IdObj *ido)
      * joins at the right place!
      */
     //std::cout << num << "<-Join(" << ido->num << ");\n";
-
     SearchJob *sj =
         new SearchJob(ido->num, JOIN, Node::calcRoutingBound(), ido);
     Search(sj);
@@ -783,11 +742,12 @@ Action Node::Probing(Probe *ido)
             }
         } else {
 
-            //probe reaches v.0 or v.1. finish probing.
-            if (num == ido->num / 2 || num == (1 + ido->num) / 2) {
-                delete ido;
-                return;
-            }
+            //probe reaches v.0 or v.1. finish probing. this shall never happen, because we are on a real node, but we're searching for a virtual one.
+            //if (num == ido->num / 2 || num == (1 + ido->num) / 2) {
+            //v.0 / v.1 has to be virtual
+            //delete ido;
+            //return;
+            //}
 
             /*probe came from the left, so we're searching for ido->num/2
              because we're on a real node, change the direction flag and
@@ -796,9 +756,24 @@ Action Node::Probing(Probe *ido)
                 //(3) we are on the real node w, so we switch the phase flag indicating, that we are on the left side of v.0.
                 //tempido = new Probe(ido->num, extractIdentity(ido->out), 1);
                 //delete ido;
-                ido->phase = 1;
-                node0->out->call(Node::Probing, ido);
-                return;
+                if (ido->phase == 0) {
+                    ido->phase = 1;
+                    node0->out->call(Node::Probing, ido);
+                    return;
+                } else {
+                    if (num <= ido->num / 2) {
+                        if (right != NULL) {
+                            right->out->call(Node::Probing, ido);
+                            return;
+                        }
+
+                    }
+
+                }
+                Relay *temprelay = new Relay(ido->id);
+                NumObj *numo = new NumObj(0);
+                temprelay->call(Node::BuildWeakConnectedComponent, numo);
+
             }
 
             /*probe came from the right, so we're searching for 1+ido->value/2
@@ -808,9 +783,21 @@ Action Node::Probing(Probe *ido)
                 //tempido = new Probe(ido->num, extractIdentity(ido->out), 1);
                 //delete ido;
                 // Unpack probe
-                ido->phase = 1;
-                node1->out->call(Node::Probing, ido);
-                return;
+                if (ido->phase == 0) {
+                    ido->phase = 1;
+                    node1->out->call(Node::Probing, ido);
+                    return;
+                } else {
+                    if (num >= ido->num / 2) {
+                        if (left != NULL) {
+                            left->out->call(Node::Probing, ido);
+                            return;
+                        }
+                    }
+                }
+                Relay *temprelay = new Relay(ido->id);
+                NumObj *numo = new NumObj(1);
+                temprelay->call(Node::BuildWeakConnectedComponent, numo);
             }
 
         }
@@ -885,8 +872,9 @@ Action Node::Probing(Probe *ido)
  */
 Action Node::BuildWeakConnectedComponent(NumObj *numo)
 {
+
     if (numo->num == 0) {
-        //std::cout << num << "<-BuildWeakConnectedComponent(0);\n";
+        //std::cout << num << "<-BuildWeakConnectedComponent(0) left==NULL? " << (left==NULL)  << " isreal " << isReal << ";\n";
     } else {
         //std::cout << num << "<-BuildWeakConnectedComponent(1);\n";
     }
