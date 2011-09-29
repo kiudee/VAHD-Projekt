@@ -24,7 +24,7 @@ protected:
     std::shared_ptr<std::ofstream> csvFile;
 
     // BuildDeBruijn:
-    void checkDead(NodeRelay **side);
+    void checkDead(NodeRelay **side, bool right);
     void checkValid();
     double calcRoutingBound();
     void checkStable(double id);

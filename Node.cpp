@@ -20,7 +20,7 @@ Action Node::Init(InitObj *init)
 
     if (isReal) {
         node0left = node1left = false;
-        std::cout << num << "\n";
+        //std::cout << num << " initialized\n";
         // connect to supervisor:
         IdPair *idp = new IdPair(new IdObj(num, new Identity(in), _debugID),
                                  new IdObj(num, new Identity(in), _debugID));
@@ -80,14 +80,22 @@ Action Node::Wakeup(NumObj *num)
 /**
  * Checks if the given NodeRelay is dead and deletes it.
  */
-void Node::checkDead(NodeRelay **side)
+void Node::checkDead(NodeRelay **side, bool right)
 {
     if ((*side) != NULL && outdeg((*side)->out) == 0) {
         NodeRelay *tmpptr = *side;
         delete tmpptr->out;
         delete *side;
         *side = NULL;
+        if (right) {
+
+            rightstable = false;
+        } else {
+
+            leftstable = false;
+        }
     }
+
 }
 
 /**
@@ -103,12 +111,16 @@ void Node::checkValid()
         tempido = new IdObj(left->num, extractIdentity(left->out), left->debugID);
         delete left;
         left = NULL;
+        leftstable = false;
+
         call(Node::BuildList, tempido);
     }
     if (right != NULL && right->num < num) {
         tempido = new IdObj(right->num, extractIdentity(right->out), right->debugID);
         delete right;
         right = NULL;
+        rightstable = false;
+
         call(Node::BuildList, tempido);
     }
 }
@@ -151,7 +163,7 @@ Action Node::BuildDeBruijn()
 Action Node::Insert(DateObj *dob)
 {
 
-    std::cout << "(" << dob->_debugID << ") " << num << "<-Insert(key:" << dob->num << ", data:" << dob->date << ")\n";
+    std::cout << num << "<-Insert(key: " << dob->num << ", data: " << dob->date << ")\n";
     SearchJob *sj = new SearchJob(g(dob->num), INSERT,
                                   Node::calcRoutingBound(), dob, num);
     Search(sj);
@@ -160,7 +172,7 @@ Action Node::Insert(DateObj *dob)
 Action Node::DataInsert(DateObj *dob)
 {
 
-    std::cout << "(" << dob->_debugID << ") " << num << "<-DataInsert(key:" << dob->num << ", data:" << dob->date << ")\n";
+    std::cout << num << "<-DataInsert(key: " << dob->num << ", data: " << dob->date << ")\n";
     SearchJob *sj = new SearchJob(g(dob->num), DATAINSERT,
                                   Node::calcRoutingBound(), dob, num);
     FinishSearch(sj);
@@ -175,14 +187,18 @@ Action Node::DataInsert(DateObj *dob)
 Action Node::FinishSearch(SearchJob *sj)
 {
     //TO DO dont insert data on leaving nodes! num > MAX! => fixed in Search
-    std::cout << num << "<-FinishSearch(" << sj->sid << ");\n";
+    if (sj->type == LOOKUP || sj->type == INSERT || sj->type == DELETE) {
+        std::cout << "(" << sj->_debugID << ") " << num << "<-FinishSearch(" << sj->sid << ")\n";
+    }
+
     double hashedkey = sj->sid;
     if (sj->type == JOIN // SearchJob is a Join
             || (isReal && right == NULL && num <= hashedkey) // There is no right node and this node is responsible
             || (isReal && num <= hashedkey)// There is a right node but not responsible
             || (isReal && sj->sid == MAX)) { //The searchjob was delegated to the last node and now we reached the last node
-        std::cout << "(" << sj->_debugID << ") " << num << ": Search terminated!(" << sj->sid << ") after " << sj->hopcount << " hops  \n";
-
+        if (sj->type == LOOKUP || sj->type == INSERT || sj->type == DELETE) {
+            std::cout << "(" << sj->_debugID << ") " << num << ": Search terminated!(" << sj->sid << ") after " << sj->hopcount << " hops  \n";
+        }
         switch (sj->type) {
         case DATAINSERT:
             data[sj->dob->num] = sj->dob->date;
@@ -201,7 +217,7 @@ Action Node::FinishSearch(SearchJob *sj)
             break;
         case LOOKUP: {
             DATATYPE obj = data[sj->key]; //TODO replace by unordered_map.at() and catch the exception. than pack an empty string or so.
-            std::cout << "Lookup reached key:" << sj->key << " data: " << obj << "\n";
+            //std::cout << "Lookup reached key:" << sj->key << " data: " << obj << "\n";
             Relay *temprelay = new Relay(sj->ido->id);
             DateObj *dob = new DateObj(sj->key, obj);
 
@@ -242,7 +258,7 @@ Action Node::FinishSearch(SearchJob *sj)
             break;
         }
         }
-        std::cout << "(" << sj->_debugID << ") " << "delete searchjob\n";
+        //std::cout << "(" << sj->_debugID << ") " << "delete searchjob\n";
         delete sj;
         return;
     } else {
@@ -289,7 +305,9 @@ bool Node::doDebruijnHop(SearchJob *sj)
         if (fabs(hashedkey - num / 2) < fabs(hashedkey - num)) {
             sj->round++;
             sj->hopcount++;
-            std::cout << "(" << sj->_debugID << ")" << num << "<-doDebruijnHop(" << sj->sid << ") to " << (num / 2) << "\n";
+            if (sj->type == LOOKUP || sj->type == INSERT || sj->type == DELETE) {
+                std::cout << "(" << sj->_debugID << ") " << num << "<-doDebruijnHop(" << sj->sid << ") to " << (num / 2) << "\n";
+            }
             node0->out->call(Node::Search, sj);
             return true;
         }
@@ -298,7 +316,9 @@ bool Node::doDebruijnHop(SearchJob *sj)
         if (fabs(hashedkey - (1 + num) / 2) < fabs(hashedkey - num)) {
             sj->round++;
             sj->hopcount++;
-            std::cout << "(" << sj->_debugID << ")" << num << "<-doDebruijnHop(" << sj->sid << ") to " << ((1 + num) / 2) << "\n";
+            if (sj->type == LOOKUP || sj->type == INSERT || sj->type == DELETE) {
+                std::cout << "(" << sj->_debugID << ") " << num << "<-doDebruijnHop(" << sj->sid << ") to " << ((1 + num) / 2) << "\n";
+            }
             node1->out->call(Node::Search, sj);
             return true;
         }
@@ -324,7 +344,9 @@ void Node::doListHop(SearchJob *sj)
         } else if (leftstable) {
             sj->round++;
             sj->hopcount++;
-            std::cout << "(" << sj->_debugID << ")" << num << "<-doListHop(" <<  sj->sid << ") => left \n";
+            if (sj->type == LOOKUP || sj->type == INSERT || sj->type == DELETE) {
+                std::cout << "(" << sj->_debugID << ") " << num << "<-doListHop(" <<  sj->sid << ") to left \n";
+            }
             left->out->call(Node::Search, sj);
             return;
         } else {
@@ -336,7 +358,9 @@ void Node::doListHop(SearchJob *sj)
         if (rightstable) {//at this point right must be !=NULL, otherwise we would not reach this point
             sj->round++;
             sj->hopcount++;
-            std::cout << "(" << sj->_debugID << ")" << num << "<-doListHop(" <<  sj->sid << ") => right \n";
+            if (sj->type == LOOKUP || sj->type == INSERT || sj->type == DELETE) {
+                std::cout << "(" << sj->_debugID << ") " << num << "<-doListHop(" <<  sj->sid << ") to right \n";
+            }
             right->out->call(Node::Search, sj);
             return;
         } else {
@@ -355,8 +379,7 @@ void Node::doListHop(SearchJob *sj)
 Action Node::Search(SearchJob *sj)
 {
     double hashedkey = sj->sid;
-
-    std::cout << "(" << sj->_debugID << ")" << num << "<-Search(" << sj->sid << ") bound: " << sj->bound << " type: " << sj->type << "\n";
+    //std::cout << "(" << sj->_debugID << ") " << num << "<-Search(" << sj->sid << ")\n";
     //responsible node for date was found
     if ((right == NULL && num <= hashedkey && num < MAX) // There is no right node and this node is responsible
             || (num <= hashedkey && right->num > hashedkey && num < MAX)// There is a right node but not responsible
@@ -416,9 +439,9 @@ Action Node::LookUp(NumObj *key)
 Action Node::ReceiveLookUp(DateObj *dob)
 {
     if (dob->date != "") {
-        std::cout << "Node " << num << ": receives data for key " << dob->num << ":" << dob->date << "\n";
+        std::cout << "Node " << num << " receives data for key " << dob->num << ": " << dob->date << "\n";
     } else {
-        std::cout << "Node " << num << ": receives data for key " << dob->num << ": NULL\n";
+        std::cout << "Node " << num << " receives data for key " << dob->num << ":  NULL\n";
     }
     delete dob;
 }
@@ -444,7 +467,7 @@ Action Node::Join(IdObj *ido)
  */
 Action Node::TriggerDataTransfer(IdObj *ido)
 {
-    std::cout << num << "<-TriggerDataTransfer(" << ido->num << ");\n";
+    //std::cout << num << "<-TriggerDataTransfer(" << ido->num << ")\n";
 
     if (isReal) {
         Relay *temprelay = new Relay(ido->id);
@@ -479,11 +502,19 @@ Action Node::Leave()
     if (leftstable && left != NULL) { //first node must be a virtual node, so it must exist
         for (HashMap::iterator it = data.begin(); it != data.end(); ++it) {
             DateObj *dob = new DateObj(it->first, it->second);
-            left->out->call(Node::Insert, dob);
+            if (left->_owner == node0->_owner) {
+                //the first real node whats to leave. the left neighbor is the very first node and it is node0, which is also leaving
+
+                SearchJob *sj = new SearchJob(MAX, INSERT,
+                                              Node::calcRoutingBound(), dob, num);
+                Search(sj);
+            } else {
+                left->out->call(Node::Insert, dob);//do not use DataInsert!
+            }
         }
         data.clear();
 
-        std::cout << "Node " << num << ": preparing to leave system.\n";
+        std::cout << "Node " << num << " is preparing to leave system.\n";
         num = num + MAX; // increase num to get to end of list
         delete in; // invalidate existing links/identities to 'in'
         in = new Relay; // create new 'in' to be used for new 'num'
@@ -514,14 +545,41 @@ Action Node::VirtualNodeLeave()
  */
 void Node::checkStable(double id)
 {
+    bool changedleftstable = leftstable;
+    bool changedrightstable = rightstable;
+
     if (id == num) {
-        leftstable = left != NULL && left->num == id;
-        rightstable = right != NULL && right->num == id;
+        if (left != NULL && left->num == id) {
+            leftstable = true;
+        }
+
+        if (right != NULL && right->num == id) {
+            rightstable = true;
+        }
+
     } else if (id < num && left != NULL) {
         leftstable = left->num == id;
     } else if (id > num && right != NULL) {
         rightstable = right->num == id;
     }
+
+    changedleftstable = changedleftstable != leftstable;
+    changedrightstable = changedrightstable != rightstable;
+
+    if ((leftstable || left == NULL) && (rightstable || right == NULL) && (changedleftstable || changedrightstable)) {
+        //if((leftstable) && (rightstable) &&  (changedleftstable || changedrightstable)) {
+        if (left != NULL && right != NULL) {
+            std::cout << left->num << " <-> " << num << " <-> " << right->num << "\n";
+        } else if (left != NULL) {
+            std::cout << left->num << " <-> " << num << " <-> NULL\n";
+        } else if (right != NULL) {
+            std::cout << "NULL <-> " << num << " <-> " << right->num << "\n";
+        } else {
+            std::cout << "NULL <-> " << num << " <-> NULL\n";
+        }
+    }
+
+
 }
 
 void Node::BuildSide(IdObj *ido, NodeRelay **side, bool right)
@@ -540,12 +598,15 @@ void Node::BuildSide(IdObj *ido, NodeRelay **side, bool right)
         //          << ".\n";
         if (ido->num < MAX) {
             *side = new NodeRelay(ido);//do not link to leaving nodes
-        } else {
+
             if (right) {
+
                 rightstable = false;
             } else {
+
                 leftstable = false;
             }
+        } else {
             delete ido; //ido references to a leaving node.
         }
     } else {
@@ -561,6 +622,12 @@ void Node::BuildSide(IdObj *ido, NodeRelay **side, bool right)
                 IdObj *tempido = new IdObj((*side)->num,
                                            extractIdentity((*side)->out),
                                            (*side)->debugID);
+
+                if (right) {
+                    rightstable = (rightstable && (*side)->num == ido->num);
+                } else {
+                    leftstable = (leftstable && (*side)->num == ido->num);
+                }
                 delete *side;
                 (*side) = new NodeRelay(ido);
                 (*side)->out->call(Node::BuildList, tempido);
@@ -619,8 +686,8 @@ Action Node::BuildList(IdObj *ido)
     IdObj *tempido;
     // Check if there are dead links from both sides:
     //   -> Delete if dead.
-    checkDead(&left);
-    checkDead(&right);
+    checkDead(&left, false);
+    checkDead(&right, true);
 
     // Check if both links are still valid:
     //   -> Call BuildDeBruijn if not.
@@ -727,6 +794,8 @@ Action Node::Probing(Probe *ido)
             if (left == NULL) {
                 tempido = new IdObj(num / 2, new Identity(node0->out), node0->debugID);
                 left = new NodeRelay(tempido);
+                leftstable = false;
+
             } else {
                 //(1) send probe to left introducing the first phase (indicating by parameter 0)
                 tempprobe = new Probe(num, new Identity(in), 0);
@@ -736,6 +805,8 @@ Action Node::Probing(Probe *ido)
             if (right == NULL) {
                 tempido = new IdObj((1 + num) / 2, new Identity(node1->out), node1->debugID);
                 right = new NodeRelay(tempido);
+                rightstable = false;
+
             } else {
                 tempprobe = new Probe(num, new Identity(in), 0);
                 right->out->call(Node::Probing, tempprobe);
@@ -873,27 +944,23 @@ Action Node::Probing(Probe *ido)
 Action Node::BuildWeakConnectedComponent(NumObj *numo)
 {
 
-    if (numo->num == 0) {
-        //std::cout << num << "<-BuildWeakConnectedComponent(0) left==NULL? " << (left==NULL)  << " isreal " << isReal << ";\n";
-    } else {
-        //std::cout << num << "<-BuildWeakConnectedComponent(1);\n";
-    }
-
     IdObj *tempido;
 
     if (numo->num == 0) {
         //envelope left neighbor
-        //TODO check if left is existing before delegating. maybe this is not necessary because if the left is not exisiting, we would not come so far. otherwise the link to left might be broken.
+        //TO DO check if left is existing before delegating. maybe this is not necessary because if the left is not exisiting, we would not come so far. otherwise the link to left might be broken.
         if (left != NULL) {
             tempido = new IdObj(left->num, extractIdentity(left->out), left->debugID);
             delete left;
             leftstable = false;
+
             //link to v.0
             left = new NodeRelay(num / 2, new Identity(node0->out), node0->debugID);
             //delegate old left neighbor to node0
             left->out->call(Node::BuildList, tempido);
         } else {
             leftstable = false;
+
             //link to v.0
             left = new NodeRelay(num / 2, new Identity(node0->out), node0->debugID);
         }
@@ -903,10 +970,12 @@ Action Node::BuildWeakConnectedComponent(NumObj *numo)
             tempido = new IdObj(right->num, extractIdentity(right->out), right->debugID);
             delete right;
             rightstable = false;
+
             right = new NodeRelay((1 + num) / 2, new Identity(node1->out), node1->debugID);
             right->out->call(Node::BuildList, tempido);
         } else {
             rightstable = false;
+
             right = new NodeRelay((1 + num) / 2, new Identity(node1->out), node1->debugID);
         }
     }
