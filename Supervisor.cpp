@@ -235,17 +235,20 @@ Action Supervisor::Wakeup(NumObj *numo)
         //////// BEGIN TESTCASE INSERT LEAVE LOOKUP /////////
         //Description: Insert, remove the responsible node, and fire a lookup
         if (false) { //activate testcase
-            if (numo->num == 300) {
-                DateObj *dob = new DateObj(0, "me lov subjectz. lolz.");
+            if (numo->num == 6000) {
+                DateObj *dob = new DateObj(89, "me lov subjectz. lolz.");
                 Nodes[0]->out->call(Node::Insert, dob);
+                //0, 0
             }
 
-            if (numo->num == 200) {
-                //Nodes[0]->call(Node::Leave, NONE);
+            if (numo->num == 2000) {
+                //Nodes[54]->out->call(Node::Leave, NONE);
+                Nodes[88]->out->call(Node::Leave, NONE);
+                //subjects[h(89)]->call(Node::Leave, NONE);
             }
 
-            if (numo->num == 100) {
-                NumObj *numo2 = new NumObj(0);
+            if (numo->num == 1000) {
+                NumObj *numo2 = new NumObj(89);
                 Nodes[4]->out->call(Node::LookUp, numo2);
             }
         }
@@ -259,8 +262,8 @@ Action Supervisor::Wakeup(NumObj *numo)
         //////// BEGIN TESTCASE INSERT JOIN LOOKUP /////////
         //Description: Insert, join a new responsible node, and fire a lookup
 
-        if (false) {
-            if (numo->num == 300) {
+        if (true) {
+            if (numo->num == 3000) {
                 DateObj *dob = new DateObj(666, "some more data.");
                 Nodes[4]->out->call(Node::Insert, dob);
                 std::shared_ptr<std::ofstream> tmpfile(csvFile);
@@ -268,12 +271,12 @@ Action Supervisor::Wakeup(NumObj *numo)
                 new(Node, tempObj);
             }
 
-            if (numo->num == 200) {
+            if (numo->num == 2000) {
 
                 Nodes[0]->out->call(Node::Join, StartID[total]);
             }
 
-            if (numo->num == 100) {
+            if (numo->num == 1000) {
                 NumObj *numo2 = new NumObj(666);
                 Nodes[4]->out->call(Node::LookUp, numo2);
             }
@@ -316,7 +319,7 @@ Action Supervisor::Wakeup(NumObj *numo)
         // Used for csv-file data gathering.
         // Simulationrounds: 15000
 
-        if (true) {
+        if (false) {
             if (numo->num == 12000) {
                 std::uniform_int_distribution<int> distribution(0, total - 1);
                 std::mt19937 engine(numo->num);
@@ -349,9 +352,10 @@ Action Supervisor::Wakeup(NumObj *numo)
         //smallest real node.
         // Simulationrounds: 15000
         if (false) {
-            if (numo->num == 1) {
+            if (numo->num == 1000) {
                 NumObj *numo2 = new NumObj(1);
-                Nodes[88]->out->call(Node::_DebugRouteFromLeftToRight, numo2);
+                Nodes[88]->out->call(Node::_DebugRouteFromLeftToRight, numo2);//n=100
+                //Nodes[4]->out->call(Node::_DebugRouteFromLeftToRight, numo2);//n=10
             }
         }
 
